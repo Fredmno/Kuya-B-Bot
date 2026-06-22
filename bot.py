@@ -30,6 +30,10 @@ AGENT_SECRET = os.environ.get("AGENT_SECRET") or WEBHOOK_SECRET
 # External URL (used to auto-set webhook). Set this to your Render service URL, e.g. https://kuyab-bot.onrender.com
 RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
 
+# Bot-to-Bot Integration: TeleClaw Bot (@claw)
+TELECLAW_BOT_CHAT_ID = int(os.environ.get("TELECLAW_BOT_CHAT_ID", "-4384703317"))
+GROUP_CHAT_ID = int(os.environ.get("GROUP_CHAT_ID", "-2607400749"))
+
 # Behaviour configuration
 # whole-word regex for "kuya b" variants
 KEYWORD_PATTERN = re.compile(r"\bkuya[-_ ]?b\b", flags=re.IGNORECASE)
@@ -38,7 +42,7 @@ TASK_TTL_SECONDS = int(os.environ.get("TASK_TTL_SECONDS", "1200"))  # 20 minutes
 
 FLIRTY_LINES = [
     "Uy, may nag-iisip ba sakin ngayon? 👀",
-    "Alam mo bang ang productive ng araw pag nakita ko username mo? 😏",
+    "Alam ko bang ang productive ng araw pag nakita ko username mo? 😏",
     "Hoy, miss na kita ah. Bakit di ka nagpaparamdam? 💔",
 ]
 
@@ -77,6 +81,8 @@ def load_state():
             state["conversations"] = {}
         if "last_flirty" not in state:
             state["last_flirty"] = ""
+        if "teleclaw_pending" not in state:
+            state["teleclaw_pending"] = {}
 
         # Cleanup expired tasks
         now_ts = int(time.time())
@@ -151,6 +157,36 @@ def send_message(chat_id, text, reply_to=None):
         return None
 
 
+def send_message_to_teleclaw(text: str, original_user: str) -> str:
+    """Send message to TeleClaw bot (fire and forget, non-blocking)"""
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    # Format message to indicate where it came from
+    formatted_text = f"<b>From {original_user}:</b>\n{text}"
+    payload = {"chat_id": TELECLAW_BOT_CHAT_ID, "text": formatted_text, "parse_mode": "HTML"}
+    try:
+        r = requests.post(url, json=payload, timeout=10)
+        if r.ok:
+            msg_data = r.json().get("result", {})
+            message_id = msg_data.get("message_id")
+            logging.info(f"Sent message to TeleClaw bot (msg_id: {message_id}) from user: {original_user}")
+            
+            # Track this pending request
+            state = load_state()
+            state["teleclaw_pending"][str(message_id)] = {
+                "original_user": original_user,
+                "created_at": int(time.time()),
+            }
+            save_state(state)
+            
+            return str(message_id)
+        else:
+            logging.warning(f"Failed to send to TeleClaw: {r.status_code} {r.text}")
+            return None
+    except Exception:
+        logging.exception("Failed to send message to TeleClaw")
+        return None
+
+
 def handle_message_text(text: str):
     text_lower = (text or "").lower()
     for keyword, replies in INTERACTIVE_REPLIES.items():
@@ -161,6 +197,30 @@ def handle_message_text(text: str):
 
 def message_is_from_bot(msg):
     return msg.get("from", {}).get("is_bot", False)
+
+
+def is_from_teleclaw_bot(msg):
+    """Check if message is from TeleClaw bot (@claw)"""
+    from_user = msg.get("from", {})
+    # Check if it's a bot and matches TeleClaw
+    if from_user.get("is_bot"):
+        username = from_user.get("username", "").lower()
+        if "claw" in username or username == "claw":
+            return True
+    return False
+
+
+def keyword_mentioned(msg):
+    """Check if 'kuya b' keyword is mentioned in message"""
+    text = msg.get("text", "") or ""
+    if not text:
+        return False
+    
+    # use whole-word regex for kuyab variants
+    if KEYWORD_PATTERN.search(text):
+        return True
+    
+    return False
 
 
 def bot_was_mentioned(msg):
@@ -213,7 +273,6 @@ def set_webhook_if_requested():
 
 
 # ---------------- Agent/task handling ----------------
-
 
 def process_message(message):
     # Called from webhook when incoming message should be forwarded to agent
@@ -314,8 +373,10 @@ def process_message(message):
             bot_msgs = sum(1 for m in h if m.get("role") == "assistant")
             reply = f"📊 Stats natin {sender_name}\nIkaw: {user_msgs} msgs\nAko: {bot_msgs} msgs\nTotal: {len(h)} messages"
         else:
-            # simple agent reply generation using conversation history
-            reply = internal_agent_reply(clean, sender_name, convo)
+            # Forward to TeleClaw bot (non-blocking, fire and forget)
+            logging.info(f"Forwarding message to TeleClaw: {clean}")
+            send_message_to_teleclaw(clean, sender_name)
+            reply = f"Sending your question to TeleClaw, {sender_name}! 🚀 Wait for the response in the group..."
 
         # Prevent exact echo: if reply equals the input, use fallback
         try:
@@ -422,8 +483,8 @@ def index():
     state = load_state()
     return jsonify({
         "status": "running",
-        "bot": BOT_USERNAME,
-        "agent": "external" if AGENT_URL else "internal",
+        "bot": "Kuya-B-Bot",
+        "integration": "teleclaw-bot",
         "time": datetime.now(timezone.utc).isoformat(),
         "tasks_pending": len(state.get("tasks", {})),
     })
@@ -436,6 +497,7 @@ def health():
         "status": "ok",
         "tasks_pending": len(state.get("tasks", {})),
         "conversations": len(state.get("conversations", {})),
+        "teleclaw_pending": len(state.get("teleclaw_pending", {})),
     })
 
 
@@ -451,11 +513,42 @@ def webhook():
 
     # basic check if we should handle
     try:
-        if message_is_from_bot(message):
+        if message_is_from_bot(message) and not is_from_teleclaw_bot(message):
             return jsonify({"ok": True})
         if not (message.get("text") or message.get("caption")):
             return jsonify({"ok": True})
-        if should_handle := (message.get("chat", {}).get("type") == "private") or bot_was_mentioned(message):
+        
+        chat_id = message.get("chat", {}).get("id")
+        
+        # Handle replies from TeleClaw bot
+        if is_from_teleclaw_bot(message) and chat_id == TELECLAW_BOT_CHAT_ID:
+            logging.info("Received message from TeleClaw bot")
+            reply_to = message.get("reply_to_message")
+            if reply_to:
+                original_msg_id = str(reply_to.get("message_id"))
+                reply_text = message.get("text") or message.get("caption") or ""
+                
+                # Check if this is a reply to a message we sent
+                state = load_state()
+                pending = state.get("teleclaw_pending", {}).get(original_msg_id)
+                
+                if pending:
+                    original_user = pending.get("original_user", "Unknown")
+                    # Format the response to post to group
+                    formatted_reply = f"<b>TeleClaw's reply to {original_user}:</b>\n{reply_text}"
+                    
+                    # Post to group chat
+                    send_message(GROUP_CHAT_ID, formatted_reply)
+                    
+                    # Clean up pending request
+                    state["teleclaw_pending"].pop(original_msg_id, None)
+                    save_state(state)
+                    
+                    logging.info(f"Posted TeleClaw reply to group chat")
+            return jsonify({"ok": True})
+        
+        # Handle regular messages with keyword
+        if keyword_mentioned(message):
             # process asynchronously
             threading.Thread(target=process_message, args=(message,), daemon=True).start()
     except Exception:
