@@ -11,4 +11,8 @@ services:
         sync: false
       - key: RENDER_EXTERNAL_URL
         sync: false
+      - key: TELECLAW_BOT_CHAT_ID
+        sync: false
+      - key: GROUP_CHAT_ID
+        sync: false
     healthCheckPath: /
