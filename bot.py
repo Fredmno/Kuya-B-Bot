@@ -517,46 +517,83 @@ def webhook():
     if not message:
         return jsonify({"ok": True})
 
-    # basic check if we should handle
     try:
-        if message_is_from_bot(message) and not is_from_teleclaw_bot(message):
-            return jsonify({"ok": True})
         if not (message.get("text") or message.get("caption")):
             return jsonify({"ok": True})
-        
+
         chat_id = message.get("chat", {}).get("id")
-        
-        # Handle replies from TeleClaw bot
-        if is_from_teleclaw_bot(message) and chat_id == TELECLAW_BOT_CHAT_ID:
-            logging.info("Received message from TeleClaw bot")
+        text = message.get("text") or message.get("caption") or ""
+
+        # 1) Handle replies from TeleClaw in Group A
+        if is_from_teleclaw_bot(message) and chat_id == TELECLAW_GROUP_ID:
+            logging.info("Received message from TeleClaw bot in Group A")
+
             reply_to = message.get("reply_to_message")
             if reply_to:
                 original_msg_id = str(reply_to.get("message_id"))
-                reply_text = message.get("text") or message.get("caption") or ""
-                
-                # Check if this is a reply to a message we sent
+                reply_text = text
+
                 state = load_state()
                 pending = state.get("teleclaw_pending", {}).get(original_msg_id)
-                
+
                 if pending:
                     original_user = pending.get("original_user", "Unknown")
-                    # Format the response to post to group
                     formatted_reply = f"<b>TeleClaw's reply to {original_user}:</b>\n{reply_text}"
-                    
-                    # Post to group chat
+
+                    # Send final answer to Group B
                     send_message(GROUP_CHAT_ID, formatted_reply)
-                    
+
                     # Clean up pending request
                     state["teleclaw_pending"].pop(original_msg_id, None)
                     save_state(state)
-                    
-                    logging.info(f"Posted TeleClaw reply to group chat")
+
+                    logging.info("Posted TeleClaw reply to Group B")
+
             return jsonify({"ok": True})
-        
-        # Handle regular messages with keyword
+
+        # Ignore other bot messages
+        if message_is_from_bot(message):
+            return jsonify({"ok": True})
+
+        # 2) Handle user messages containing "kuya b"
         if keyword_mentioned(message):
-            # process asynchronously
-            threading.Thread(target=process_message, args=(message,), daemon=True).start()
+            sender = message.get("from", {})
+            sender_name = sender.get("first_name") or sender.get("username") or "User"
+            clean = text.strip()
+
+            # Optional: remove "kuya b" from the forwarded text
+            clean_question = KEYWORD_PATTERN.sub("", clean).strip(" ,:-")
+
+            if not clean_question:
+                clean_question = clean
+
+            # Send to Group A and tag @claw
+            result = send_message(TELECLAW_GROUP_ID, f"@claw {clean_question}")
+
+            if result:
+                forwarded_msg_id = str(result.get("message_id"))
+                state = load_state()
+                state["teleclaw_pending"][forwarded_msg_id] = {
+                    "original_user": sender_name,
+                    "created_at": int(time.time()),
+                }
+                save_state(state)
+
+                logging.info(f"Forwarded message to Group A for TeleClaw (msg_id: {forwarded_msg_id})")
+
+                # Acknowledge back to the source chat
+                send_message(
+                    chat_id,
+                    f"Sending your question to TeleClaw, {sender_name}! 🚀 Wait for the response in Group B...",
+                    reply_to=message.get("message_id")
+                )
+            else:
+                send_message(
+                    chat_id,
+                    f"Sorry {sender_name}, I could not send your message to TeleClaw.",
+                    reply_to=message.get("message_id")
+                )
+
     except Exception:
         logging.exception("Error in webhook processing")
 
