@@ -325,11 +325,14 @@ def process_message(message):
         return False
 
     def task_worker():
+        state = load_state()
+        convo = state["conversations"].get(str(chat_id), {"history": []})
+
         payload = {
             "task_id": task_id,
             "chat_id": chat_id,
             "sender_name": sender_name,
-            "conversation": state["conversations"].get(str(chat_id), {"history": []}),
+            "conversation": convo,
             "text": clean,
             "callback_url": None,
         }
