@@ -62,9 +62,20 @@ def handle_message(text, chat_id):
 
 def main():
     state = load_state()
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    # Flirty daily message — send once per day
+    if state.get("last_flirty_date") != today:
+        group_id = -1004384703317
+        msg = random.choice(FLIRTY_LINES)
+        send(group_id, msg)
+        state["last_flirty_date"] = today
+        save_state(state)
+        print(f"[{today}] ✅ Flirty message sent to group")
+
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
 
-    resp = requests.get(url, params={"offset": state["last_update_id"], "timeout": 30}, timeout=35)
+    resp = requests.get(url, params={"offset": state.get("last_update_id", 0), "timeout": 30}, timeout=35)
     updates = resp.json().get("result", [])
 
     for update in updates:
@@ -76,19 +87,12 @@ def main():
         state["chat_id"] = chat_id
         text = msg.get("text", "")
         if text.startswith("/"):
+            handle_command(text, chat_id)
             continue
         handle_message(text, chat_id)
 
-Send flirty message every day (check if sent today)
-    now = datetime.now()
-    today = now.strftime("%Y-%m-%d")
-    last_flirty = state.get("last_flirty", "")
-
-    if last_flirty != today and state.get("chat_id"):
-        send(state["chat_id"], random.choice(FLIRTY_LINES))
-        state["last_flirty"] = today
-
     save_state(state)
+    print(f"[{today}] Bot polled {len(updates)} updates")
 
-if name == "main":
+if __name__ == "__main__":
     main()
