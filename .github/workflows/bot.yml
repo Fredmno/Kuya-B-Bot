@@ -2,19 +2,22 @@ name: Run Flirty Bot
 
 on:
   schedule:
-    - cron: '*/1 * * * *'   # every 5 minutes
-  workflow_dispatch:         # manual trigger din
+    - cron: '*/1 * * * *'
+  workflow_dispatch:
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
       - name: Install dependencies
-        run: pip install requests
+        run: pip install -r requirements.txt
+
       - name: Run bot
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
