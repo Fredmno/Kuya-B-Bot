@@ -33,6 +33,8 @@ RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
 # Bot-to-Bot Integration: TeleClaw Bot (@claw)
 TELECLAW_GROUP_ID = int(os.environ.get("TELECLAW_GROUP_ID", "-1004384703317"))
 GROUP_CHAT_ID = int(os.environ.get("GROUP_CHAT_ID", "-1004384703317"))
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 
 # Behaviour configuration
 # whole-word regex for "kuya b" variants
