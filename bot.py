@@ -16,15 +16,24 @@ if not re.match(r'^\d+:[A-Za-z0-9_-]{35,}$', BOT_TOKEN):
     # Warn but continue — some tokens vary in length, so exit only if you prefer strictness
     print("Warning: BOT_TOKEN doesn't look like a typical Telegram token.", file=sys.stderr)
 
-# Optional: verify token works at startup (uncomment if you want an early runtime check)
-# try:
-#     r = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/getMe", timeout=10)
-#     if not r.ok or not r.json().get("ok"):
-#         raise SystemExit("BOT_TOKEN appears invalid: Telegram API returned an error.")
-# except Exception as e:
-#     raise SystemExit(f"Failed to validate BOT_TOKEN with Telegram API: {e}")
+# Attempt to get bot info (username and id) so we can detect mentions reliably
+BOT_USERNAME = None
+BOT_ID = None
+try:
+    r = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/getMe", timeout=10)
+    if r.ok:
+        info = r.json().get("result", {})
+        BOT_USERNAME = info.get("username")
+        BOT_ID = info.get("id")
+    else:
+        print("Warning: getMe returned non-ok response; mention detection may be less reliable.", file=sys.stderr)
+except Exception as e:
+    print(f"Warning: Failed to call getMe: {e}. Mention detection may be less reliable.", file=sys.stderr)
 
 DATA_FILE = "state.json"
+
+# Plain-text name variants we should respond to in group chats (case-insensitive)
+KEYWORD_MENTIONS = ["kuyab", "kuya b", "kuya-b", "kuya_b"]
 
 FLIRTY_LINES = [
     "Uy, may nag-iisip ba sakin ngayon? 👀",
@@ -80,6 +89,51 @@ def handle_message(text, chat_id):
             return True
     return False
 
+def message_is_from_bot(msg):
+    return msg.get("from", {}).get("is_bot", False)
+
+def bot_was_mentioned(msg):
+    # Uses entities and reply-to to detect mentions reliably when we have BOT_USERNAME or BOT_ID
+    text = msg.get("text", "") or ""
+    if not text:
+        return False
+
+    text_lower = text.lower()
+
+    # Check entities for mention or text_mention
+    entities = msg.get("entities", []) or []
+    for ent in entities:
+        ent_type = ent.get("type")
+        if ent_type == "mention":
+            # slice the text to get the mentioned string
+            offset = ent.get("offset", 0)
+            length = ent.get("length", 0)
+            mention = text[offset:offset+length].lower()
+            if BOT_USERNAME and mention == ("@" + BOT_USERNAME.lower()):
+                return True
+        elif ent_type == "text_mention":
+            user = ent.get("user", {})
+            if BOT_ID and user.get("id") == BOT_ID:
+                return True
+
+    # Fallback: plain-text search for @username if we have it
+    if BOT_USERNAME and ("@" + BOT_USERNAME.lower()) in text_lower:
+        return True
+
+    # Check if this message is a reply to a message from the bot
+    reply = msg.get("reply_to_message")
+    if reply and reply.get("from", {}).get("id") == BOT_ID:
+        return True
+
+    # Additional fallback: detect plain-text name mentions in group chats (e.g., "kuyab", "KuyaB", etc.)
+    chat_type = msg.get("chat", {}).get("type", "")
+    if chat_type not in ("private", None):
+        for kw in KEYWORD_MENTIONS:
+            if kw in text_lower:
+                return True
+
+    return False
+
 def main():
     state = load_state()
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
@@ -92,12 +146,31 @@ def main():
         msg = update.get("message")
         if not msg:
             continue
+
+        # ignore messages from other bots to avoid loops
+        if message_is_from_bot(msg):
+            continue
+
         chat_id = msg["chat"]["id"]
         state["chat_id"] = chat_id
-        text = msg.get("text", "")
+        text = msg.get("text", "") or ""
+
+        # skip bot commands
         if text.startswith("/"):
             continue
-        handle_message(text, chat_id)
+
+        # First try interactive replies
+        handled = handle_message(text, chat_id)
+
+        # If not handled, check whether we should echo: private DM or mentioned in group
+        chat_type = msg.get("chat", {}).get("type", "")
+        is_private = chat_type == "private"
+        mentioned = bot_was_mentioned(msg)
+
+        if not handled and (is_private or mentioned):
+            # simple echo: send the same text back (you can change prefix if you want)
+            if text.strip():
+                send(chat_id, text)
 
     # Send flirty message every day (check if sent today)
     now = datetime.now()
