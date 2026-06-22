@@ -329,7 +329,7 @@ def process_message(message):
             "task_id": task_id,
             "chat_id": chat_id,
             "sender_name": sender_name,
-            "conversation": convo,
+            "conversation": state["conversations"].get(str(chat_id), {"history": []}),
             "text": clean,
             "callback_url": None,
         }
