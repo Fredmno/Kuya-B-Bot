@@ -7,6 +7,9 @@ import random
 import json
 import logging
 import requests
+import threading
+import uuid
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -20,31 +23,18 @@ if not BOT_TOKEN:
 # Optional separate secret for the webhook path; if not set we fall back to BOT_TOKEN (less ideal)
 WEBHOOK_SECRET = os.environ.get("WEBHOOK_SECRET") or BOT_TOKEN
 
+# Agent config: external agent URL + secret (optional). If AGENT_URL not set, use internal free agent.
+AGENT_URL = os.environ.get("AGENT_URL")
+AGENT_SECRET = os.environ.get("AGENT_SECRET") or WEBHOOK_SECRET
+
 # External URL (used to auto-set webhook). Set this to your Render service URL, e.g. https://kuyab-bot.onrender.com
 RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
 
-# Basic Telegram token format check (warn-only)
-if not re.match(r'^\d+:[A-Za-z0-9_-]{35,}$', BOT_TOKEN):
-    logging.warning("BOT_TOKEN doesn't look like a typical Telegram token format.")
-
-# Try to discover bot username and id for better mention detection
-BOT_USERNAME = None
-BOT_ID = None
-try:
-    r = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/getMe", timeout=10)
-    if r.ok:
-        info = r.json().get("result", {})
-        BOT_USERNAME = info.get("username")
-        BOT_ID = info.get("id")
-        logging.info(f"Discovered bot username={BOT_USERNAME} id={BOT_ID}")
-    else:
-        logging.warning("getMe returned non-ok response; mention detection may be less reliable.")
-except Exception as e:
-    logging.warning(f"Failed to call getMe: {e}. Mention detection may be less reliable.")
-
 # Behaviour configuration
-KEYWORD_MENTIONS = ["kuyab", "kuya b", "kuya-b", "kuya_b"]
+# whole-word regex for "kuya b" variants
+KEYWORD_PATTERN = re.compile(r"\bkuya[-_ ]?b\b", flags=re.IGNORECASE)
 COOLDOWN_SECONDS = int(os.environ.get("COOLDOWN_SECONDS", "5"))
+TASK_TTL_SECONDS = int(os.environ.get("TASK_TTL_SECONDS", "1200"))  # 20 minutes default
 
 FLIRTY_LINES = [
     "Uy, may nag-iisip ba sakin ngayon? 👀",
@@ -60,10 +50,63 @@ INTERACTIVE_REPLIES = {
     "good night": ["Goodnight! Pangarapin mo naman ako ha? 😴💭", "Matutulog na pero naka-ngiti kasi nakausap kita 😊🌙", "Goodnight, ingatan mo yung puso mo... akin yan eh 😌💕"],
 }
 
-# Simple in-memory cooldown tracker
+# State file and lock for thread-safety
+DATA_FILE = "state.json"
+_state_lock = threading.Lock()
+
+# In-memory cooldown tracker (per process)
 _last_reply_ts = {}
 
-DATA_FILE = "state.json"
+
+def load_state():
+    with _state_lock:
+        if os.path.exists(DATA_FILE):
+            try:
+                with open(DATA_FILE, "r") as f:
+                    state = json.load(f)
+            except Exception:
+                logging.exception("Failed to read state file, starting fresh")
+                state = {}
+        else:
+            state = {}
+
+        # Ensure expected keys
+        if "tasks" not in state:
+            state["tasks"] = {}
+        if "conversations" not in state:
+            state["conversations"] = {}
+        if "last_flirty" not in state:
+            state["last_flirty"] = ""
+
+        # Cleanup expired tasks
+        now_ts = int(time.time())
+        expired = []
+        for tid, meta in list(state["tasks"].items()):
+            created = meta.get("created_at", 0)
+            if created and now_ts - created > TASK_TTL_SECONDS:
+                expired.append(tid)
+        for tid in expired:
+            logging.info(f"Cleaning up expired task {tid}")
+            state["tasks"].pop(tid, None)
+
+        return state
+
+
+def save_state(state):
+    # atomic write
+    tmp = DATA_FILE + ".tmp"
+    with _state_lock:
+        try:
+            with open(tmp, "w") as f:
+                json.dump(state, f)
+            os.replace(tmp, DATA_FILE)
+        except Exception:
+            logging.exception("Failed to save state")
+            try:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
+            except Exception:
+                pass
 
 
 def _should_reply(chat_id: int) -> bool:
@@ -75,32 +118,37 @@ def _should_reply(chat_id: int) -> bool:
     return True
 
 
-def safe_send(chat_id, text):
+def send_action(chat_id, action="typing"):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendChatAction"
+    try:
+        requests.post(url, json={"chat_id": chat_id, "action": action}, timeout=5)
+    except Exception:
+        pass
+
+
+def send_message(chat_id, text, reply_to=None):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+    if reply_to:
+        payload["reply_to_message_id"] = reply_to
     try:
         r = requests.post(url, json=payload, timeout=10)
-    except requests.RequestException as e:
-        logging.exception("Failed to send message")
-        return False
-
-    if r.status_code == 429:
-        try:
-            data = r.json()
-            retry_after = int(data.get("parameters", {}).get("retry_after") or data.get("retry_after") or 1)
-        except Exception:
-            retry_after = 1
-        logging.warning(f"Rate limited by Telegram, sleeping {retry_after+1}s then retrying")
-        time.sleep(retry_after + 1)
-        try:
+        if r.status_code == 429:
+            try:
+                data = r.json()
+                retry_after = int(data.get("parameters", {}).get("retry_after") or data.get("retry_after") or 1)
+            except Exception:
+                retry_after = 1
+            logging.warning(f"Rate limited by Telegram, sleeping {retry_after+1}s then retrying")
+            time.sleep(retry_after + 1)
             r = requests.post(url, json=payload, timeout=10)
-        except requests.RequestException:
-            logging.exception("Retry failed")
-            return False
-
-    if not r.ok:
-        logging.warning(f"Telegram API returned non-ok status {r.status_code}: {r.text}")
-    return r.ok
+        if not r.ok:
+            logging.warning(f"Telegram sendMessage failed ({r.status_code}): {r.text}")
+            return None
+        return r.json().get("result")
+    except Exception:
+        logging.exception("Failed to send message")
+        return None
 
 
 def handle_message_text(text: str):
@@ -142,11 +190,9 @@ def bot_was_mentioned(msg):
     if reply and reply.get("from", {}).get("id") == BOT_ID:
         return True
 
-    chat_type = msg.get("chat", {}).get("type", "")
-    if chat_type not in ("private", None):
-        for kw in KEYWORD_MENTIONS:
-            if kw in text_lower:
-                return True
+    # use whole-word regex for kuyab variants
+    if KEYWORD_PATTERN.search(text):
+        return True
 
     return False
 
@@ -166,58 +212,249 @@ def set_webhook_if_requested():
         logging.exception("Exception while setting webhook")
 
 
-@app.route("/", methods=["GET"])
-def health():
-    return "OK", 200
+# ---------------- Agent/task handling ----------------
+
+def process_message(message):
+    # Called from webhook when incoming message should be forwarded to agent
+    chat = message.get("chat", {})
+    chat_id = chat.get("id")
+    if chat_id is None:
+        return
+
+    message_id = message.get("message_id")
+    sender = message.get("from", {})
+    sender_name = sender.get("first_name") or sender.get("username") or "User"
+    text = message.get("text") or message.get("caption") or ""
+    clean = (text or "").strip()
+
+    state = load_state()
+
+    # Ensure conversation exists
+    convo = state["conversations"].get(str(chat_id), {"history": []})
+    # Append user message to conversation
+    convo["history"].append({"role": "user", "text": clean, "from": sender_name, "ts": int(time.time())})
+    state["conversations"][str(chat_id)] = convo
+
+    # Save state early
+    save_state(state)
+
+    # Create task
+    task_id = str(uuid.uuid4())
+    task_meta = {"chat_id": chat_id, "message_id": message_id, "created_at": int(time.time())}
+    state = load_state()
+    state["tasks"][task_id] = task_meta
+    save_state(state)
+    logging.info(f"Created task {task_id} for chat {chat_id}")
+
+    # Try external agent if configured (non-blocking)
+    def call_external_task(tid, payload):
+        headers = {"Content-Type": "application/json"}
+        if AGENT_SECRET:
+            headers["Authorization"] = f"Bearer {AGENT_SECRET}"
+        try:
+            resp = requests.post(AGENT_URL, json=payload, headers=headers, timeout=10)
+            if resp.ok:
+                data = resp.json()
+                reply = data.get("reply")
+                if reply:
+                    # deliver reply via callback handler logic (reuse internal callback)
+                    deliver_agent_reply(tid, reply)
+                    return True
+        except Exception:
+            logging.exception("External agent call failed")
+        return False
+
+    def task_worker():
+        payload = {
+            "task_id": task_id,
+            "chat_id": chat_id,
+            "sender_name": sender_name,
+            "conversation": convo,
+            "text": clean,
+            "callback_url": None,
+        }
+
+        # If AGENT_URL is set try calling external agent
+        if AGENT_URL:
+            logging.info(f"Posting task {task_id} to external agent")
+            ok = call_external_task(task_id, payload)
+            if ok:
+                # external agent handled it
+                state = load_state()
+                state["tasks"].pop(task_id, None)
+                save_state(state)
+                return
+            logging.info("External agent failed or returned no reply; falling back to internal agent")
+
+        # Internal agent processing (free)
+        send_action(chat_id)
+        reply = None
+
+        # Handle commands locally
+        if clean.lower() == "/start":
+            reply = f"Uy {sender_name}! Ako si Kuya B — group bot! I-message mo lang ako o i-mention sa group, sasagot ako agad! 🤖💪"
+        elif clean.lower() in ("/help", "/commands"):
+            reply = (
+                f"Kuya B Commands\n"
+                f"• /start — Simula\n"
+                f"• /help — Tulong to\n"
+                f"• /forget — Kalimutan usapan\n"
+                f"• /stats — Stats ng convo\n\n"
+                f"DM or mention me lang!"
+            )
+        elif clean.lower() == "/forget":
+            state = load_state()
+            state["conversations"][str(chat_id)] = {"history": []}
+            save_state(state)
+            reply = f"Sige {sender_name}, nakalimutan ko na usapan natin! Bagong simula! 🧹"
+        elif clean.lower() == "/stats":
+            h = convo.get("history", [])
+            user_msgs = sum(1 for m in h if m.get("role") == "user")
+            bot_msgs = sum(1 for m in h if m.get("role") == "assistant")
+            reply = f"📊 Stats natin {sender_name}\nIkaw: {user_msgs} msgs\nAko: {bot_msgs} msgs\nTotal: {len(h)} messages"
+        else:
+            # simple agent reply generation using conversation history
+            reply = internal_agent_reply(clean, sender_name, convo)
+
+        # Save reply to conversation and clean up task
+        try:
+            state = load_state()
+            convo = state["conversations"].get(str(chat_id), {"history": []})
+            convo["history"].append({"role": "assistant", "text": reply, "ts": int(time.time())})
+            state["conversations"][str(chat_id)] = convo
+            state["tasks"].pop(task_id, None)
+            save_state(state)
+        except Exception:
+            logging.exception("Failed to save conversation after agent reply")
+
+        # send reply
+        send_message(chat_id, reply, reply_to=message_id)
+
+    # schedule worker thread
+    threading.Thread(target=task_worker, daemon=True).start()
 
 
-@app.route(f"/webhook/<token>", methods=["POST"])
-def webhook(token):
-    if token != WEBHOOK_SECRET:
-        logging.warning("Received webhook with invalid token")
-        return "invalid token", 403
-
-    update = request.get_json(force=True, silent=True)
-    if not update:
-        return jsonify({"ok": False, "error": "no json"}), 400
-
-    msg = update.get("message") or update.get("edited_message") or update.get("channel_post") or update.get("edited_channel_post")
-    if not msg:
-        return jsonify({"ok": True})
+def deliver_agent_reply(task_id, reply_text):
+    # Called by external agent callback or internal worker to deliver reply
+    state = load_state()
+    task = state.get("tasks", {}).get(task_id)
+    if not task:
+        logging.warning(f"deliver_agent_reply: unknown task {task_id}")
+        return False
+    chat_id = task.get("chat_id")
+    message_id = task.get("message_id")
 
     try:
-        if message_is_from_bot(msg):
-            return jsonify({"ok": True})
-
-        chat = msg.get("chat", {})
-        chat_id = chat.get("id")
-        if chat_id is None:
-            return jsonify({"ok": True})
-
-        text = msg.get("text") or msg.get("caption") or ""
-
-        if text and text.startswith("/"):
-            return jsonify({"ok": True})
-
-        reply_text = handle_message_text(text)
-        chat_type = chat.get("type", "")
-        is_private = chat_type == "private"
-        mentioned = bot_was_mentioned(msg)
-
-        if reply_text:
-            if _should_reply(chat_id):
-                safe_send(chat_id, reply_text)
-        elif text.strip() and (is_private or mentioned):
-            if _should_reply(chat_id):
-                safe_send(chat_id, text)
-
+        # append to conversation
+        convo = state["conversations"].get(str(chat_id), {"history": []})
+        convo["history"].append({"role": "assistant", "text": reply_text, "ts": int(time.time())})
+        state["conversations"][str(chat_id)] = convo
+        # remove task
+        state["tasks"].pop(task_id, None)
+        save_state(state)
     except Exception:
-        logging.exception("Error handling update")
+        logging.exception("Failed to persist agent reply")
+
+    send_message(chat_id, reply_text, reply_to=message_id)
+    return True
+
+
+def internal_agent_reply(clean, sender_name, convo):
+    # Very simple pattern / template based logic for a free internal agent
+    # If recent user message asks question words, try to answer
+    q_words = ("ano", "sino", "bakit", "paano", "kailan", "sino", "saan")
+    low = clean.lower()
+    if any(low.startswith(w + " ") or low == w for w in q_words):
+        return f"Good question, {sender_name}! Hindi ako sigurado pero baka ... (free agent reply) 😅"
+
+    # Echo with persona
+    choices = [
+        f"{sender_name}, interesting yan! Pero ano sa tingin mo? 🤔",
+        f"Ah, {sender_name}, ang ganda ng tanong mo — nakakaintriga! 😏",
+        f"Ooh, usapan na yan! Para sakin, {sender_name}, baka kasi...",
+    ]
+    return random.choice(choices)
+
+
+@app.route("/agent_callback/<secret>", methods=["POST"])
+def agent_callback(secret):
+    # validate secret and Authorization header
+    auth = request.headers.get("Authorization", "")
+    if secret != (os.environ.get("AGENT_CALLBACK_SECRET") or AGENT_SECRET):
+        logging.warning("agent_callback: invalid path secret")
+        return jsonify({"ok": False}), 403
+    if AGENT_SECRET and auth != f"Bearer {AGENT_SECRET}":
+        logging.warning("agent_callback: invalid auth header")
+        return jsonify({"ok": False}), 403
+
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"ok": False}), 400
+    task_id = data.get("task_id")
+    reply = data.get("reply")
+    if not task_id or reply is None:
+        return jsonify({"ok": False}), 400
+
+    ok = deliver_agent_reply(task_id, reply)
+    return jsonify({"ok": ok})
+
+
+@app.route("/", methods=["GET"])
+def index():
+    state = load_state()
+    return jsonify({
+        "status": "running",
+        "bot": BOT_USERNAME,
+        "agent": "external" if AGENT_URL else "internal",
+        "time": datetime.now(timezone.utc).isoformat(),
+        "tasks_pending": len(state.get("tasks", {})),
+    })
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    state = load_state()
+    return jsonify({
+        "status": "ok",
+        "tasks_pending": len(state.get("tasks", {})),
+        "conversations": len(state.get("conversations", {})),
+    })
+
+
+@app.route(f"/webhook/{WEBHOOK_SECRET}", methods=["POST"])
+def webhook():
+    update = request.get_json(force=True, silent=True)
+    if not update:
+        return jsonify({"ok": False}), 400
+
+    message = update.get("message")
+    if not message:
+        return jsonify({"ok": True})
+
+    # basic check if we should handle
+    try:
+        if message_is_from_bot(message):
+            return jsonify({"ok": True})
+        if not (message.get("text") or message.get("caption")):
+            return jsonify({"ok": True})
+        if should_handle := (message.get("chat", {}).get("type") == "private") or bot_was_mentioned(message):
+            # process asynchronously
+            threading.Thread(target=process_message, args=(message,), daemon=True).start()
+    except Exception:
+        logging.exception("Error in webhook processing")
 
     return jsonify({"ok": True})
 
 
-if __name__ == "__main__":
-    # Try to set webhook automatically if RENDER_EXTERNAL_URL is provided
+def initialize_and_run():
+    # ensure state file and lock are initialized
+    _ = load_state()
+    # try to set webhook automatically if RENDER_EXTERNAL_URL is provided
     set_webhook_if_requested()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
+
+if __name__ == "__main__":
+    initialize_and_run()
+    port = int(os.environ.get("PORT", 10000))
+    # run with Flask for local; in production use gunicorn (Dockerfile)
+    app.run(host="0.0.0.0", port=port)
