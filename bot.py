@@ -64,7 +64,6 @@ def main():
     state = load_state()
     today = datetime.now().strftime("%Y-%m-%d")
 
-    # Flirty daily message — send once per day
     if state.get("last_flirty_date") != today:
         group_id = -1004384703317
         msg = random.choice(FLIRTY_LINES)
