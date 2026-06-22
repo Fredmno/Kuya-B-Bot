@@ -1,10 +1,29 @@
 import os
+import re
+import sys
 import requests
 import random
 import json
 from datetime import datetime
 
-BOT_TOKEN = os.environ["BOT_TOKEN"]
+# Load token safely and validate basic format
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+if not BOT_TOKEN:
+    raise SystemExit("Environment variable BOT_TOKEN is not set. Set BOT_TOKEN to your Telegram bot token.")
+
+# Basic Telegram token format check (e.g. 123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ...)
+if not re.match(r'^\d+:[A-Za-z0-9_-]{35,}$', BOT_TOKEN):
+    # Warn but continue — some tokens vary in length, so exit only if you prefer strictness
+    print("Warning: BOT_TOKEN doesn't look like a typical Telegram token.", file=sys.stderr)
+
+# Optional: verify token works at startup (uncomment if you want an early runtime check)
+# try:
+#     r = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/getMe", timeout=10)
+#     if not r.ok or not r.json().get("ok"):
+#         raise SystemExit("BOT_TOKEN appears invalid: Telegram API returned an error.")
+# except Exception as e:
+#     raise SystemExit(f"Failed to validate BOT_TOKEN with Telegram API: {e}")
+
 DATA_FILE = "state.json"
 
 FLIRTY_LINES = [
