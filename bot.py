@@ -64,10 +64,10 @@ def main():
     state = load_state()
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
 
-resp = requests.get(url, params={"offset": state["last_update_id"], "timeout": 30}, timeout=35)
-updates = resp.json().get("result", [])
+    resp = requests.get(url, params={"offset": state["last_update_id"], "timeout": 30}, timeout=35)
+    updates = resp.json().get("result", [])
 
-for update in updates:
+    for update in updates:
         state["last_update_id"] = update["update_id"] + 1
         msg = update.get("message")
         if not msg:
