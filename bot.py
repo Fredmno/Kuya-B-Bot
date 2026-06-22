@@ -4,6 +4,7 @@ import sys
 import requests
 import random
 import json
+import time
 from datetime import datetime
 
 # Load token safely and validate basic format
@@ -35,6 +36,9 @@ DATA_FILE = "state.json"
 # Plain-text name variants we should respond to in group chats (case-insensitive)
 KEYWORD_MENTIONS = ["kuyab", "kuya b", "kuya-b", "kuya_b"]
 
+# default cooldown (seconds) between replies to the same chat
+COOLDOWN_SECONDS = int(os.environ.get("COOLDOWN_SECONDS", "5"))
+
 FLIRTY_LINES = [
     "Uy, may nag-iisip ba sakin ngayon? 👀",
     "Alam mo bang ang productive ng araw pag nakita ko username mo? 😏",
@@ -63,6 +67,10 @@ INTERACTIVE_REPLIES = {
     "ganda": ["Naku, mapapa-blush ako jan 🥰", "Kung nakikita mo lang itsura ko ngayon, naka-smile ako dahil sayo 💖", "Ang totoo, ikaw yung maganda/gwapo dito, nagpapa-cute lang ako 😏"],
 }
 
+# in-memory per-chat cooldown tracker
+_last_reply_ts = {}
+
+
 def load_state():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE) as f:
@@ -70,27 +78,66 @@ def load_state():
     # Use empty string for last_flirty so it compares with YYYY-MM-DD strings below
     return {"last_update_id": 0, "last_flirty": "", "chat_id": None}
 
+
 def save_state(state):
     with open(DATA_FILE, "w") as f:
         json.dump(state, f)
 
-def send(chat_id, text):
+
+def _should_reply(chat_id: int) -> bool:
+    """Return True and record timestamp if we are allowed to reply to this chat now."""
+    now_ts = time.time()
+    last = _last_reply_ts.get(chat_id, 0)
+    if now_ts - last < COOLDOWN_SECONDS:
+        return False
+    _last_reply_ts[chat_id] = now_ts
+    return True
+
+
+def safe_send(chat_id, text):
+    """Send a message and handle Telegram rate limits (429). Returns True on success.
+
+    This function will respect the retry_after field returned by Telegram and retry once.
+    """
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
     try:
-        requests.post(url, json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"}, timeout=10)
-    except Exception:
-        pass
+        r = requests.post(url, json=payload, timeout=10)
+    except requests.RequestException:
+        return False
+
+    # Handle 429 rate limit
+    if r.status_code == 429:
+        try:
+            data = r.json()
+            retry_after = int(data.get("parameters", {}).get("retry_after") or data.get("retry_after") or 1)
+        except Exception:
+            retry_after = 1
+        # wait and retry once
+        time.sleep(retry_after + 1)
+        try:
+            r = requests.post(url, json=payload, timeout=10)
+        except requests.RequestException:
+            return False
+
+    return r.ok
+
 
 def handle_message(text, chat_id):
-    text_lower = text.lower()
+    """Return a reply text if an interactive reply should be sent, otherwise None.
+
+    This avoids making network calls inside the helper so callers can check cooldowns.
+    """
+    text_lower = (text or "").lower()
     for keyword, replies in INTERACTIVE_REPLIES.items():
         if keyword in text_lower:
-            send(chat_id, random.choice(replies))
-            return True
-    return False
+            return random.choice(replies)
+    return None
+
 
 def message_is_from_bot(msg):
     return msg.get("from", {}).get("is_bot", False)
+
 
 def bot_was_mentioned(msg):
     # Uses entities and reply-to to detect mentions reliably when we have BOT_USERNAME or BOT_ID
@@ -134,54 +181,100 @@ def bot_was_mentioned(msg):
 
     return False
 
-def main():
+
+def run_loop():
     state = load_state()
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
+    offset = state.get("last_update_id", 0)
 
-    resp = requests.get(url, params={"offset": state["last_update_id"], "timeout": 30}, timeout=35)
-    updates = resp.json().get("result", [])
+    # Track the day for the daily flirty message
+    last_flirty_day = state.get("last_flirty", "")
 
-    for update in updates:
-        state["last_update_id"] = update["update_id"] + 1
-        msg = update.get("message")
-        if not msg:
+    while True:
+        try:
+            resp = requests.get(
+                f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates",
+                params={"offset": offset, "timeout": 30},
+                timeout=35,
+            )
+        except requests.RequestException:
+            # network issue; back off a bit and retry
+            time.sleep(2)
             continue
 
-        # ignore messages from other bots to avoid loops
-        if message_is_from_bot(msg):
+        if resp.status_code == 429:
+            # respect Telegram's retry_after if present
+            try:
+                data = resp.json()
+                retry_after = int(data.get("parameters", {}).get("retry_after") or data.get("retry_after") or 1)
+            except Exception:
+                retry_after = 1
+            time.sleep(retry_after + 1)
             continue
 
-        chat_id = msg["chat"]["id"]
-        state["chat_id"] = chat_id
-        text = msg.get("text", "") or ""
-
-        # skip bot commands
-        if text.startswith("/"):
+        if not resp.ok:
+            # transient error; wait and continue
+            time.sleep(1)
             continue
 
-        # First try interactive replies
-        handled = handle_message(text, chat_id)
+        updates = resp.json().get("result", [])
 
-        # If not handled, check whether we should echo: private DM or mentioned in group
-        chat_type = msg.get("chat", {}).get("type", "")
-        is_private = chat_type == "private"
-        mentioned = bot_was_mentioned(msg)
+        for update in updates:
+            offset = update["update_id"] + 1
+            msg = update.get("message")
+            if not msg:
+                continue
 
-        if not handled and (is_private or mentioned):
-            # simple echo: send the same text back (you can change prefix if you want)
-            if text.strip():
-                send(chat_id, text)
+            # ignore messages from other bots to avoid loops
+            if message_is_from_bot(msg):
+                continue
 
-    # Send flirty message every day (check if sent today)
-    now = datetime.now()
-    today = now.strftime("%Y-%m-%d")
-    last_flirty = state.get("last_flirty", "")
+            chat = msg.get("chat", {})
+            chat_id = chat.get("id")
+            if chat_id is None:
+                continue
 
-    if last_flirty != today and state.get("chat_id"):
-        send(state["chat_id"], random.choice(FLIRTY_LINES))
-        state["last_flirty"] = today
+            # remember last chat for daily flirty fallback
+            state["chat_id"] = chat_id
 
-    save_state(state)
+            text = msg.get("text", "") or ""
+
+            # skip bot commands
+            if text.startswith("/"):
+                continue
+
+            # First try interactive replies
+            reply_text = handle_message(text, chat_id)
+
+            # Determine whether to echo: private DM or mentioned in group
+            chat_type = chat.get("type", "")
+            is_private = chat_type == "private"
+            mentioned = bot_was_mentioned(msg)
+
+            if reply_text:
+                if _should_reply(chat_id):
+                    safe_send(chat_id, reply_text)
+            elif text.strip() and (is_private or mentioned):
+                if _should_reply(chat_id):
+                    safe_send(chat_id, text)
+
+        # persist offset and last_flirty once per loop
+        state["last_update_id"] = offset
+
+        # daily flirty message — send once per day to last seen chat
+        now = datetime.now()
+        today = now.strftime("%Y-%m-%d")
+        if last_flirty_day != today and state.get("chat_id"):
+            if _should_reply(state["chat_id"]):
+                safe_send(state["chat_id"], random.choice(FLIRTY_LINES))
+            last_flirty_day = today
+            state["last_flirty"] = today
+
+        save_state(state)
+
+
+def main():
+    run_loop()
+
 
 if __name__ == "__main__":
     main()
