@@ -214,6 +214,7 @@ def set_webhook_if_requested():
 
 # ---------------- Agent/task handling ----------------
 
+
 def process_message(message):
     # Called from webhook when incoming message should be forwarded to agent
     chat = message.get("chat", {})
@@ -240,7 +241,7 @@ def process_message(message):
 
     # Create task
     task_id = str(uuid.uuid4())
-    task_meta = {"chat_id": chat_id, "message_id": message_id, "created_at": int(time.time())}
+    task_meta = {"chat_id": chat_id, "message_id": message_id, "created_at": int(time.time()), "text": clean}
     state = load_state()
     state["tasks"][task_id] = task_meta
     save_state(state)
@@ -316,8 +317,15 @@ def process_message(message):
             # simple agent reply generation using conversation history
             reply = internal_agent_reply(clean, sender_name, convo)
 
-        # Save reply to conversation and clean up task
+        # Prevent exact echo: if reply equals the input, use fallback
         try:
+            if reply and clean and reply.strip().lower() == clean.strip().lower():
+                logging.info(f"Detected exact-echo for task {task_id}: original='{clean}' reply='{reply}' — applying fallback")
+                reply = f"Hmm, narinig kita — parang ikaw ngayon? 😅"
+
+            logging.info(f"Task {task_id} internal reply prepared: original='{clean}' reply='{reply}'")
+
+            # Save reply to conversation and clean up task
             state = load_state()
             convo = state["conversations"].get(str(chat_id), {"history": []})
             convo["history"].append({"role": "assistant", "text": reply, "ts": int(time.time())})
@@ -328,6 +336,7 @@ def process_message(message):
             logging.exception("Failed to save conversation after agent reply")
 
         # send reply
+        logging.info(f"Sending reply for task {task_id} to chat {chat_id}")
         send_message(chat_id, reply, reply_to=message_id)
 
     # schedule worker thread
@@ -343,8 +352,16 @@ def deliver_agent_reply(task_id, reply_text):
         return False
     chat_id = task.get("chat_id")
     message_id = task.get("message_id")
+    original_text = task.get("text", "")
 
     try:
+        # Prevent exact echo from external agent
+        if reply_text and original_text and reply_text.strip().lower() == original_text.strip().lower():
+            logging.info(f"deliver_agent_reply: detected exact-echo for task {task_id}; applying fallback")
+            reply_text = f"Hmm, narinig kita — parang ikaw ngayon? 😅"
+
+        logging.info(f"deliver_agent_reply: task={task_id} original='{original_text}' reply='{reply_text}'")
+
         # append to conversation
         convo = state["conversations"].get(str(chat_id), {"history": []})
         convo["history"].append({"role": "assistant", "text": reply_text, "ts": int(time.time())})
@@ -355,6 +372,7 @@ def deliver_agent_reply(task_id, reply_text):
     except Exception:
         logging.exception("Failed to persist agent reply")
 
+    logging.info(f"Sending agent reply for task {task_id} to chat {chat_id}")
     send_message(chat_id, reply_text, reply_to=message_id)
     return True
 
