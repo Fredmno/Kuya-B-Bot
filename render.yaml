@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: kuyab-bot
+    env: docker
+    repo: https://github.com/Fredmno/Kuya-B-Bot
+    plan: free
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
+      - key: RENDER_EXTERNAL_URL
+        sync: false
+    healthCheckPath: /
