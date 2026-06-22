@@ -31,8 +31,8 @@ AGENT_SECRET = os.environ.get("AGENT_SECRET") or WEBHOOK_SECRET
 RENDER_EXTERNAL_URL = os.environ.get("RENDER_EXTERNAL_URL")
 
 # Bot-to-Bot Integration: TeleClaw Bot (@claw)
-TELECLAW_GROUP_ID = int(os.environ.get("TELECLAW_GROUP_ID", "-4384703317"))
-GROUP_CHAT_ID = int(os.environ.get("GROUP_CHAT_ID", "-4384703317"))
+TELECLAW_GROUP_ID = int(os.environ.get("TELECLAW_GROUP_ID", "-1004384703317"))
+GROUP_CHAT_ID = int(os.environ.get("GROUP_CHAT_ID", "-1004384703317"))
 
 # Behaviour configuration
 # whole-word regex for "kuya b" variants
