@@ -65,7 +65,7 @@ def main():
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
 
 resp = requests.get(url, params={"offset": state["last_update_id"], "timeout": 30}, timeout=35)
-    updates = resp.json().get("result", [])
+updates = resp.json().get("result", [])
 
     for update in updates:
         state["last_update_id"] = update["update_id"] + 1
