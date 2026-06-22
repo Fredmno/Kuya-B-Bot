@@ -275,7 +275,6 @@ def set_webhook_if_requested():
 # ---------------- Agent/task handling ----------------
 
 def process_message(message):
-    # Called from webhook when incoming message should be forwarded to agent
     chat = message.get("chat", {})
     chat_id = chat.get("id")
     if chat_id is None:
@@ -287,26 +286,32 @@ def process_message(message):
     text = message.get("text") or message.get("caption") or ""
     clean = (text or "").strip()
 
+    # load state and save conversation
     state = load_state()
-
-    # Ensure conversation exists
     convo = state["conversations"].get(str(chat_id), {"history": []})
-    # Append user message to conversation
-    convo["history"].append({"role": "user", "text": clean, "from": sender_name, "ts": int(time.time())})
+    convo["history"].append({
+        "role": "user",
+        "text": clean,
+        "from": sender_name,
+        "ts": int(time.time())
+    })
     state["conversations"][str(chat_id)] = convo
-
-    # Save state early
     save_state(state)
 
-    # Create task
+    # create task
     task_id = str(uuid.uuid4())
-    task_meta = {"chat_id": chat_id, "message_id": message_id, "created_at": int(time.time()), "text": clean}
+    task_meta = {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "created_at": int(time.time()),
+        "text": clean,
+    }
+
     state = load_state()
     state["tasks"][task_id] = task_meta
     save_state(state)
     logging.info(f"Created task {task_id} for chat {chat_id}")
 
-    # Try external agent if configured (non-blocking)
     def call_external_task(tid, payload):
         headers = {"Content-Type": "application/json"}
         if AGENT_SECRET:
@@ -317,7 +322,6 @@ def process_message(message):
                 data = resp.json()
                 reply = data.get("reply")
                 if reply:
-                    # deliver reply via callback handler logic (reuse internal callback)
                     deliver_agent_reply(tid, reply)
                     return True
         except Exception:
@@ -337,23 +341,19 @@ def process_message(message):
             "callback_url": None,
         }
 
-        # If AGENT_URL is set try calling external agent
         if AGENT_URL:
             logging.info(f"Posting task {task_id} to external agent")
             ok = call_external_task(task_id, payload)
             if ok:
-                # external agent handled it
                 state = load_state()
                 state["tasks"].pop(task_id, None)
                 save_state(state)
                 return
             logging.info("External agent failed or returned no reply; falling back to internal agent")
 
-        # Internal agent processing (free)
         send_action(chat_id)
         reply = None
 
-        # Handle commands locally
         if clean.lower() == "/start":
             reply = f"Uy {sender_name}! Ako si Kuya B — group bot! I-message mo lang ako o i-mention sa group, sasagot ako agad! 🤖💪"
         elif clean.lower() in ("/help", "/commands"):
@@ -376,12 +376,14 @@ def process_message(message):
             bot_msgs = sum(1 for m in h if m.get("role") == "assistant")
             reply = f"📊 Stats natin {sender_name}\nIkaw: {user_msgs} msgs\nAko: {bot_msgs} msgs\nTotal: {len(h)} messages"
         else:
-            # Forward to TeleClaw bot (non-blocking, fire and forget)
             logging.info(f"Forwarding message to TeleClaw: {clean}")
-            send_message_to_teleclaw(clean, sender_name)
-            reply = f"Sending your question to TeleClaw, {sender_name}! 🚀 Wait for the response in the group..."
+            teleclaw_result = send_message_to_teleclaw(clean, sender_name)
 
-        # Prevent exact echo: if reply equals the input, use fallback
+            if teleclaw_result:
+                reply = f"Sending your question to TeleClaw, {sender_name}! 🚀 Wait for the response in the group..."
+            else:
+                reply = f"Sorry {sender_name}, I could not send your message to TeleClaw."
+
         try:
             if reply and clean and reply.strip().lower() == clean.strip().lower():
                 logging.info(f"Detected exact-echo for task {task_id}: original='{clean}' reply='{reply}' — applying fallback")
@@ -389,21 +391,22 @@ def process_message(message):
 
             logging.info(f"Task {task_id} internal reply prepared: original='{clean}' reply='{reply}'")
 
-            # Save reply to conversation and clean up task
             state = load_state()
             convo = state["conversations"].get(str(chat_id), {"history": []})
-            convo["history"].append({"role": "assistant", "text": reply, "ts": int(time.time())})
+            convo["history"].append({
+                "role": "assistant",
+                "text": reply,
+                "ts": int(time.time())
+            })
             state["conversations"][str(chat_id)] = convo
             state["tasks"].pop(task_id, None)
             save_state(state)
         except Exception:
             logging.exception("Failed to save conversation after agent reply")
 
-        # send reply
         logging.info(f"Sending reply for task {task_id} to chat {chat_id}")
         send_message(chat_id, reply, reply_to=message_id)
 
-    # schedule worker thread
     threading.Thread(target=task_worker, daemon=True).start()
 
 
