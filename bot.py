@@ -160,14 +160,15 @@ async def lifespan(app):
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logging.exception("Exception while handling an
+    logging.exception("Exception while handling an update:", exc_info=context.error)
 
-                      
+
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("game", game))
 application.add_handler(CommandHandler("profile", profile))
 application.add_handler(CommandHandler("leaderboard", leaderboard))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_answer))
+
 application.add_error_handler(error_handler)
 
 
