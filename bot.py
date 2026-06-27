@@ -92,7 +92,7 @@ async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_te
     scrambled_word = "".join(scrambled)
 
     context.chat_data["current_answer"] = answer
-    await delete_previous_game_message(context, update.message
+    await delete_previous_game_message(context, update.message.chat_id)
 
     intro = ""
 
