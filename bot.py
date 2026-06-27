@@ -1,30 +1,27 @@
-import os
-import requests
-import logging
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-CHAT_ID = os.environ.get("CHAT_ID")
+# Define a command handler (optional)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Hello! I am your bot.')
 
-def main():
-    if not BOT_TOKEN or not CHAT_ID:
-        print("BOT_TOKEN and CHAT_ID must be set")
-        return
+async def main():
+    # Ensure your BOT_TOKEN is set as an environment variable
+    import os
+    TOKEN = os.getenv("BOT_TOKEN")
+    if not TOKEN:
+        raise ValueError("BOT_TOKEN environment variable not set")
     
-    # Example: send a message
-    send_message(CHAT_ID, "Bot is online!")
+    # Create the application
+    app = ApplicationBuilder().token(TOKEN).build()
 
-def send_message(chat_id, text):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": text,
-        "parse_mode": "HTML"
-    }
-    r = requests.post(url, json=payload)
-    if r.ok:
-        print("Message sent")
-    else:
-        print("Failed to send message:", r.text)
+    # Register command handlers
+    app.add_handler(CommandHandler("start", start))
+    # Add other handlers here
 
-if __name__ == "__main__":
-    main()
+    # Run the bot until you manually stop it
+    await app.run_polling()
+
+if __name__ == '__main__':
+    import asyncio
+    asyncio.run(main())
