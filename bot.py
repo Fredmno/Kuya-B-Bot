@@ -1,5 +1,6 @@
 import os
 import logging
+from contextlib import asynccontextmanager
 
 import uvicorn
 from starlette.applications import Starlette
@@ -22,6 +23,8 @@ PORT = int(os.getenv("PORT", 10000))
 
 WEBHOOK_PATH = "/telegram"
 WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
+
+application = Application.builder().token(BOT_TOKEN).build()
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -47,18 +50,18 @@ async def health_check(request: Request):
     return PlainTextResponse("WordQuest Bot is running.")
 
 
-async def startup():
+@asynccontextmanager
+async def lifespan(app):
     await application.initialize()
     await application.bot.set_webhook(WEBHOOK_URL)
     await application.start()
 
+    yield
 
-async def shutdown():
     await application.stop()
     await application.shutdown()
 
 
-application = Application.builder().token(BOT_TOKEN).build()
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("game", game))
 
@@ -68,8 +71,7 @@ starlette_app = Starlette(
         Route("/", health_check, methods=["GET"]),
         Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
     ],
-    on_startup=[startup],
-    on_shutdown=[shutdown],
+    lifespan=lifespan,
 )
 
 
