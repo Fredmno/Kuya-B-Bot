@@ -11,7 +11,7 @@ from starlette.routing import Route
 
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-from database import init_db, get_player, add_xp
+from database import init_db, get_player, add_xp, get_leaderboard
 
 
 logging.basicConfig(
@@ -105,6 +105,34 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Level: {level}\n"
         f"Wins: {wins}"
     )
+
+### GAME FUNCTION - LEADERBOARD ###
+###--------------------------------------------------------------------------------------------------
+async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    players = get_leaderboard(10)
+
+    if not players:
+        await update.message.reply_text(
+            "🏆 WordQuest Leaderboard\n\n"
+            "No players yet. Use /game to start earning XP."
+        )
+        return
+
+    message = "🏆 WordQuest Leaderboard\n\n"
+
+    for index, player in enumerate(players, start=1):
+        xp = player["xp"]
+        wins = player["wins"]
+        level = (xp // 100) + 1
+        name = player["name"] or "Player"
+
+        message += (
+            f"{index}. {name} — "
+            f"{xp} XP | Lv {level} | {wins} wins\n"
+        )
+
+    await update.message.reply_text(message)
+
 
 async def telegram_webhook(request: Request):
     data = await request.json()
