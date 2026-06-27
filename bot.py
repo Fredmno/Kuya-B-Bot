@@ -10,7 +10,7 @@ from starlette.responses import PlainTextResponse
 from starlette.routing import Route
 
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
 
 logging.basicConfig(
@@ -34,6 +34,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+### GAME FUNCTION - SCRAMBLED LETTERS ###
 async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
     words = ["apple", "banana", "orange", "puzzle", "python", "telegram", "quest"]
 
@@ -52,6 +53,24 @@ async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown",
     )
 
+async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    current_answer = context.chat_data.get("current_answer")
+
+    if not current_answer:
+        return
+
+    user_answer = update.message.text.strip().lower()
+
+    if user_answer == current_answer.lower():
+        user_name = update.effective_user.first_name
+
+        context.chat_data["current_answer"] = None
+
+        await update.message.reply_text(
+            f"✅ Correct, {user_name}!\n\n"
+            f"The answer was: {current_answer}\n"
+            f"+20 XP"
+        )
 
 async def telegram_webhook(request: Request):
     data = await request.json()
