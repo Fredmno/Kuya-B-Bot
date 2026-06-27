@@ -38,6 +38,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ### GAME FUNCTION - SCRAMBLED LETTERS ###
 ###--------------------------------------------------------------------------------------------------
 async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    current_answer = context.chat_data.get("current_answer")
+
+    if current_answer:
+        await update.message.reply_text(
+            "⚠️ A game is already active.\n\n"
+            "Solve the current puzzle first before starting a new one."
+        )
+        return
+
     words = ["apple", "banana", "orange", "puzzle", "python", "telegram", "quest"]
 
     answer = random.choice(words)
@@ -55,6 +64,8 @@ async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown",
     )
 
+### GAME FUNCTION - ANSWER VALIDATION ###
+###--------------------------------------------------------------------------------------------------
 async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_answer = context.chat_data.get("current_answer")
 
