@@ -116,3 +116,24 @@ def add_xp(user_id, username, name, xp_amount):
         "wins": wins,
         "level": level
     }
+
+def get_leaderboard(limit=10):
+    conn = get_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    cursor.execute(
+        """
+        SELECT user_id, username, name, xp, wins
+        FROM players
+        ORDER BY xp DESC, wins DESC
+        LIMIT %s
+        """,
+        (limit,)
+    )
+
+    players = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return players
