@@ -95,7 +95,7 @@ async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-### GAME FUNCTION - USERS PROFILE COMMAN ###
+### GAME FUNCTION - USERS PROFILE COMMAND ###
 ###--------------------------------------------------------------------------------------------------
 async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
