@@ -2,6 +2,7 @@ import os
 import logging
 from contextlib import asynccontextmanager
 
+import random
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -34,8 +35,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    words = ["apple", "banana", "orange", "puzzle", "python", "telegram", "quest"]
+
+    answer = random.choice(words)
+    scrambled = list(answer)
+    random.shuffle(scrambled)
+    scrambled_word = "".join(scrambled)
+
+    context.chat_data["current_answer"] = answer
+
     await update.message.reply_text(
-        "🎮 Game feature coming next."
+        f"🧩 Word Scramble\n\n"
+        f"Unscramble this word:\n\n"
+        f"`{scrambled_word}`\n\n"
+        f"First correct answer gets +20 XP!",
+        parse_mode="Markdown",
     )
 
 
