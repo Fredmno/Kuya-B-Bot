@@ -11,6 +11,7 @@ from starlette.routing import Route
 
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from database import init_db, get_player, add_xp
 
 
 logging.basicConfig(
@@ -65,33 +66,20 @@ async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_answer == current_answer.lower():
         user = update.effective_user
         user_id = str(user.id)
-        user_name = user.first_name
+        username = user.username or ""
+        user_name = user.first_name or "Player"
 
-        players = context.chat_data.get("players", {})
+        result = add_xp(user_id, username, user_name, 20)
 
-        if user_id not in players:
-            players[user_id] = {
-                "name": user_name,
-                "xp": 0,
-                "wins": 0,
-            }
-
-        players[user_id]["name"] = user_name
-        players[user_id]["xp"] += 20
-        players[user_id]["wins"] += 1
-
-        total_xp = players[user_id]["xp"]
-        level = (total_xp // 100) + 1
-
-        context.chat_data["players"] = players
         context.chat_data["current_answer"] = None
 
         await update.message.reply_text(
             f"✅ Correct, {user_name}!\n\n"
             f"The answer was: {current_answer}\n"
             f"+20 XP\n\n"
-            f"Total XP: {total_xp}\n"
-            f"Level: {level}"
+            f"Total XP: {result['xp']}\n"
+            f"Level: {result['level']}\n"
+            f"Wins: {result['wins']}"
         )
 
 
@@ -100,22 +88,11 @@ async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_id = str(user.id)
-    user_name = user.first_name
+    username = user.username or ""
+    user_name = user.first_name or "Player"
 
-    players = context.chat_data.get("players", {})
+    player = get_player(user_id, username, user_name)
 
-    if user_id not in players:
-        await update.message.reply_text(
-            f"👤 Player Profile\n\n"
-            f"Name: {user_name}\n"
-            f"XP: 0\n"
-            f"Level: 1\n"
-            f"Wins: 0\n\n"
-            f"Play /game to start earning XP."
-        )
-        return
-
-    player = players[user_id]
     xp = player["xp"]
     wins = player["wins"]
     level = (xp // 100) + 1
@@ -123,6 +100,7 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"👤 Player Profile\n\n"
         f"Name: {player['name']}\n"
+        f"Username: @{player['username'] if player['username'] else 'N/A'}\n"
         f"XP: {xp}\n"
         f"Level: {level}\n"
         f"Wins: {wins}"
@@ -141,6 +119,8 @@ async def health_check(request: Request):
 
 @asynccontextmanager
 async def lifespan(app):
+    init_db()
+
     await application.initialize()
     await application.bot.set_webhook(WEBHOOK_URL)
     await application.start()
