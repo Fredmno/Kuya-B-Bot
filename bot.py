@@ -97,6 +97,7 @@ async def lifespan(app):
 
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("game", game))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_answer))
 
 
 starlette_app = Starlette(
