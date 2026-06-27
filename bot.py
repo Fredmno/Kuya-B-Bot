@@ -35,6 +35,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 ### GAME FUNCTION - SCRAMBLED LETTERS ###
+###--------------------------------------------------------------------------------------------------
 async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
     words = ["apple", "banana", "orange", "puzzle", "python", "telegram", "quest"]
 
@@ -62,14 +63,35 @@ async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_answer = update.message.text.strip().lower()
 
     if user_answer == current_answer.lower():
-        user_name = update.effective_user.first_name
+        user = update.effective_user
+        user_id = str(user.id)
+        user_name = user.first_name
 
+        players = context.chat_data.get("players", {})
+
+        if user_id not in players:
+            players[user_id] = {
+                "name": user_name,
+                "xp": 0,
+                "wins": 0,
+            }
+
+        players[user_id]["name"] = user_name
+        players[user_id]["xp"] += 20
+        players[user_id]["wins"] += 1
+
+        total_xp = players[user_id]["xp"]
+        level = (total_xp // 100) + 1
+
+        context.chat_data["players"] = players
         context.chat_data["current_answer"] = None
 
         await update.message.reply_text(
             f"✅ Correct, {user_name}!\n\n"
             f"The answer was: {current_answer}\n"
-            f"+20 XP"
+            f"+20 XP\n\n"
+            f"Total XP: {total_xp}\n"
+            f"Level: {level}"
         )
 
 async def telegram_webhook(request: Request):
