@@ -94,6 +94,40 @@ async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Level: {level}"
         )
 
+
+### GAME FUNCTION - USERS PROFILE COMMAN ###
+###--------------------------------------------------------------------------------------------------
+async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    user_id = str(user.id)
+    user_name = user.first_name
+
+    players = context.chat_data.get("players", {})
+
+    if user_id not in players:
+        await update.message.reply_text(
+            f"👤 Player Profile\n\n"
+            f"Name: {user_name}\n"
+            f"XP: 0\n"
+            f"Level: 1\n"
+            f"Wins: 0\n\n"
+            f"Play /game to start earning XP."
+        )
+        return
+
+    player = players[user_id]
+    xp = player["xp"]
+    wins = player["wins"]
+    level = (xp // 100) + 1
+
+    await update.message.reply_text(
+        f"👤 Player Profile\n\n"
+        f"Name: {player['name']}\n"
+        f"XP: {xp}\n"
+        f"Level: {level}\n"
+        f"Wins: {wins}"
+    )
+
 async def telegram_webhook(request: Request):
     data = await request.json()
     update = Update.de_json(data, application.bot)
