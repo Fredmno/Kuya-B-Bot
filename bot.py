@@ -48,13 +48,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def game_buttons():
     keyboard = [
         [
-            InlineKeyboardButton("✅ SUBMIT", callback_data="submit_answer"),
             InlineKeyboardButton("🆕 NEW", callback_data="new_game"),
-        ],
-        [
             InlineKeyboardButton("⏭️ SKIP", callback_data="skip_game"),
             InlineKeyboardButton("🛑 STOP", callback_data="stop_game"),
-        ],
+        ]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -111,37 +108,37 @@ async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_te
     await delete_previous_game_message(context, chat_id)
 
     word_bank = [
-        {"word": "apple", "category": "Food"},
-        {"word": "banana", "category": "Food"},
-        {"word": "orange", "category": "Food"},
-        {"word": "puzzle", "category": "Game"},
-        {"word": "python", "category": "Technology"},
-        {"word": "telegram", "category": "Technology"},
-        {"word": "quest", "category": "Adventure"},
-        {"word": "castle", "category": "Place"},
-        {"word": "dragon", "category": "Fantasy"},
-        {"word": "planet", "category": "Space"},
-        {"word": "wizard", "category": "Fantasy"},
-        {"word": "server", "category": "Technology"},
-        {"word": "coffee", "category": "Food"},
-        {"word": "island", "category": "Place"},
-        {"word": "rocket", "category": "Space"},
+        {"word": "apple", "hint": "Food"},
+        {"word": "banana", "hint": "Food"},
+        {"word": "orange", "hint": "Food"},
+        {"word": "coffee", "hint": "Food"},
+        {"word": "puzzle", "hint": "Game"},
+        {"word": "quest", "hint": "Adventure"},
+        {"word": "castle", "hint": "Place"},
+        {"word": "island", "hint": "Place"},
+        {"word": "dragon", "hint": "Fantasy"},
+        {"word": "wizard", "hint": "Fantasy"},
+        {"word": "planet", "hint": "Space"},
+        {"word": "rocket", "hint": "Space"},
+        {"word": "python", "hint": "Technology"},
+        {"word": "telegram", "hint": "Technology"},
+        {"word": "server", "hint": "Technology"},
     ]
 
     selected = random.choice(word_bank)
     answer = selected["word"]
-    category = selected["category"]
+    hint = selected["hint"]
 
     scrambled = list(answer)
     random.shuffle(scrambled)
     scrambled_word = "".join(scrambled).upper()
 
-    # Avoid showing the same word if shuffle returns the original word.
+    # Avoid showing the original word after shuffle.
     if scrambled_word == answer.upper() and len(answer) > 1:
-        scrambled = list(answer)
-        while "".join(scrambled).upper() == answer.upper():
+        while scrambled_word == answer.upper():
+            scrambled = list(answer)
             random.shuffle(scrambled)
-        scrambled_word = "".join(scrambled).upper()
+            scrambled_word = "".join(scrambled).upper()
 
     context.chat_data["current_answer"] = answer
 
@@ -151,17 +148,17 @@ async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_te
 
     sent_message = await message.reply_text(
         f"{intro}"
-        f"<b>🧩 Word Scramble</b>\n\n"
-        f"<b>Category Hint:</b> {category}\n\n"
-        f"<b>Unscramble this word:</b>\n\n"
+        f"╔════════════════════╗\n"
+        f"       🧩 <b>WORD SCRAMBLE</b>\n"
+        f"╚════════════════════╝\n\n"
+        f"<b>Hint:</b>{hint}\n\n"
+        f"<b>Unscramble this word:</b>\n"
         f"<pre>           {scrambled_word}</pre>\n"
-        f"<b>Rules:</b>\n"
+        f"<pre>Rules:\n"
+        f"• Reply to this puzzle message with your answer\n"
         f"• Correct answer: +20 XP\n"
         f"• Incorrect answer: 0 XP\n"
-        f"• First correct answer wins the round\n"
-        f"• Use SKIP to change the puzzle\n"
-        f"• Use STOP to end the current puzzle\n\n"
-        f"<i>Type or reply with your answer in the chat.</i>",
+        f"• First correct answer wins the round</pre>",
         parse_mode="HTML",
         reply_markup=game_buttons(),
     )
@@ -188,6 +185,14 @@ async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_answer = context.chat_data.get("current_answer")
 
     if not current_answer:
+        return
+
+    last_game_message_id = context.chat_data.get("last_game_message_id")
+
+    if not update.message.reply_to_message:
+        return
+
+    if update.message.reply_to_message.message_id != last_game_message_id:
         return
 
     user_answer = update.message.text.strip().lower()
@@ -334,16 +339,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     action = query.data
 
-    if action == "submit_answer":
-        await query.message.reply_text(
-            "✅ <b>Submit Answer</b>\n\n"
-            "Please type your answer in the group chat.\n"
-            "Example: <code>QUEST</code>",
-            parse_mode="HTML",
-        )
-        return
-
-    elif action == "new_game":
+    if action == "new_game":
         current_answer = context.chat_data.get("current_answer")
 
         if current_answer:
@@ -361,7 +357,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         current_answer = context.chat_data.get("current_answer")
 
         if current_answer:
-            prefix_text = f"⏭️ <b>Puzzle skipped.</b>\n\nPrevious answer was: <code>{current_answer.upper()}</code>"
+            prefix_text = (
+                f"⏭️ <b>Puzzle skipped.</b>\n\n"
+                f"Previous answer was: <code>{current_answer.upper()}</code>"
+            )
         else:
             prefix_text = "⏭️ <b>No active puzzle found.</b> Starting a new one."
 
