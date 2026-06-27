@@ -154,7 +154,7 @@ async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_te
         f"<b>Hint: </b>{hint}\n\n"
         f"```Unscramble this word:\n"
         f"<pre>{scrambled_word}</pre>\n"
-        f"```\n"
+        f"```\n\n"
         f"<pre>```Rules:\n"
         f"• Reply to this puzzle message with your answer\n"
         f"• Correct answer: +20 XP\n"
