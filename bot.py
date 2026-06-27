@@ -1,8 +1,8 @@
 import os
 import logging
 from contextlib import asynccontextmanager
-
 import random
+
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -18,6 +18,7 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
+
 from database import init_db, get_player, add_xp, get_leaderboard
 
 
@@ -42,8 +43,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-### Add helper function for game buttons
-### ----------------------------------------------------------------------------------------------------
 def game_buttons():
     keyboard = [
         [
@@ -56,8 +55,6 @@ def game_buttons():
     return InlineKeyboardMarkup(keyboard)
 
 
-### Add helper function -- Delete Previous Bot Game Message
-### ----------------------------------------------------------------------------------------------------
 async def delete_previous_game_message(context: ContextTypes.DEFAULT_TYPE, chat_id):
     last_message_id = context.chat_data.get("last_game_message_id")
 
@@ -70,15 +67,11 @@ async def delete_previous_game_message(context: ContextTypes.DEFAULT_TYPE, chat_
             message_id=last_message_id,
         )
     except Exception:
-        # Ignore if message was already deleted or cannot be deleted
         pass
 
     context.chat_data["last_game_message_id"] = None
 
 
-
-### Add helper function to start a puzzle
-### ----------------------------------------------------------------------------------------------------
 async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_text=None):
     chat_id = message.chat_id
 
@@ -92,7 +85,6 @@ async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_te
     scrambled_word = "".join(scrambled)
 
     context.chat_data["current_answer"] = answer
-    await delete_previous_game_message(context, update.message.chat_id)
 
     intro = ""
 
@@ -112,8 +104,6 @@ async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_te
     context.chat_data["last_game_message_id"] = sent_message.message_id
 
 
-### GAME FUNCTION - SCRAMBLED LETTERS ###
-###--------------------------------------------------------------------------------------------------
 async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_answer = context.chat_data.get("current_answer")
 
@@ -127,8 +117,7 @@ async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await send_new_puzzle(update.message, context)
 
-### GAME FUNCTION - ANSWER VALIDATION ###
-###--------------------------------------------------------------------------------------------------
+
 async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_answer = context.chat_data.get("current_answer")
 
@@ -147,6 +136,8 @@ async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         context.chat_data["current_answer"] = None
 
+        await delete_previous_game_message(context, update.message.chat_id)
+
         await update.message.reply_text(
             f"✅ Correct, {user_name}!\n\n"
             f"The answer was: {current_answer}\n"
@@ -157,8 +148,6 @@ async def check_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-### GAME FUNCTION - USERS PROFILE COMMAND ###
-###--------------------------------------------------------------------------------------------------
 async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_id = str(user.id)
@@ -180,8 +169,7 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Wins: {wins}"
     )
 
-### GAME FUNCTION - LEADERBOARD ###
-###--------------------------------------------------------------------------------------------------
+
 async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     players = get_leaderboard(10)
 
@@ -207,8 +195,7 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(message)
 
-### Add complete /open menu function
-###--------------------------------------------------------------------------------------------------
+
 async def open_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [
@@ -225,15 +212,14 @@ async def open_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup,
     )
 
-### Add complete button handler
-###--------------------------------------------------------------------------------------------------
+
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
     action = query.data
 
-    if action == "game_new":
+    if action == "new_game":
         current_answer = context.chat_data.get("current_answer")
 
         if current_answer:
@@ -246,7 +232,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await send_new_puzzle(query.message, context)
 
-    elif action == "game_skip":
+    elif action == "skip_game":
         current_answer = context.chat_data.get("current_answer")
 
         if current_answer:
@@ -256,29 +242,29 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await send_new_puzzle(query.message, context, prefix_text=prefix_text)
 
-    elif action == "game_stop":
-    current_answer = context.chat_data.get("current_answer")
+    elif action == "stop_game":
+        current_answer = context.chat_data.get("current_answer")
 
-    if not current_answer:
-        await query.message.reply_text(
-            "⚠️ No active puzzle right now.\n\n"
-            "Press NEW or use /game to start one.",
+        if not current_answer:
+            await query.message.reply_text(
+                "⚠️ No active puzzle right now.\n\n"
+                "Press NEW or use /game to start one.",
+                reply_markup=game_buttons(),
+            )
+            return
+
+        context.chat_data["current_answer"] = None
+
+        await delete_previous_game_message(context, query.message.chat_id)
+
+        sent_message = await query.message.reply_text(
+            f"🛑 Puzzle stopped.\n\n"
+            f"The correct answer was: {current_answer}\n\n"
+            f"Press NEW or use /game to start another puzzle.",
             reply_markup=game_buttons(),
         )
-        return
 
-    context.chat_data["current_answer"] = None
-
-    await delete_previous_game_message(context, query.message.chat_id)
-
-    sent_message = await query.message.reply_text(
-        f"🛑 Puzzle stopped.\n\n"
-        f"The correct answer was: {current_answer}\n\n"
-        f"Press NEW or use /game to start another puzzle.",
-        reply_markup=game_buttons(),
-    )
-
-    context.chat_data["last_game_message_id"] = sent_message.message_id
+        context.chat_data["last_game_message_id"] = sent_message.message_id
 
     elif action == "menu_profile":
         user = query.from_user
@@ -364,7 +350,7 @@ application.add_handler(CommandHandler("open", open_menu))
 
 application.add_handler(CallbackQueryHandler(button_handler))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_answer))
-application.add_handler
+
 application.add_error_handler(error_handler)
 
 
