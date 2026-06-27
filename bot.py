@@ -55,9 +55,35 @@ def game_buttons():
 
     return InlineKeyboardMarkup(keyboard)
 
+
+### Add helper function -- Delete Previous Bot Game Message
+### ----------------------------------------------------------------------------------------------------
+async def delete_previous_game_message(context: ContextTypes.DEFAULT_TYPE, chat_id):
+    last_message_id = context.chat_data.get("last_game_message_id")
+
+    if not last_message_id:
+        return
+
+    try:
+        await context.bot.delete_message(
+            chat_id=chat_id,
+            message_id=last_message_id,
+        )
+    except Exception:
+        # Ignore if message was already deleted or cannot be deleted
+        pass
+
+    context.chat_data["last_game_message_id"] = None
+
+
+
 ### Add helper function to start a puzzle
 ### ----------------------------------------------------------------------------------------------------
 async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_text=None):
+    chat_id = message.chat_id
+
+    await delete_previous_game_message(context, chat_id)
+
     words = ["apple", "banana", "orange", "puzzle", "python", "telegram", "quest"]
 
     answer = random.choice(words)
@@ -66,13 +92,14 @@ async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_te
     scrambled_word = "".join(scrambled)
 
     context.chat_data["current_answer"] = answer
+    await delete_previous_game_message(context, update.message
 
     intro = ""
 
     if prefix_text:
         intro = f"{prefix_text}\n\n"
 
-    await message.reply_text(
+    sent_message = await message.reply_text(
         f"{intro}"
         f"🧩 Word Scramble\n\n"
         f"Unscramble this word:\n\n"
@@ -81,6 +108,8 @@ async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_te
         parse_mode="Markdown",
         reply_markup=game_buttons(),
     )
+
+    context.chat_data["last_game_message_id"] = sent_message.message_id
 
 
 ### GAME FUNCTION - SCRAMBLED LETTERS ###
@@ -228,24 +257,28 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_new_puzzle(query.message, context, prefix_text=prefix_text)
 
     elif action == "game_stop":
-        current_answer = context.chat_data.get("current_answer")
+    current_answer = context.chat_data.get("current_answer")
 
-        if not current_answer:
-            await query.message.reply_text(
-                "⚠️ No active puzzle right now.\n\n"
-                "Press NEW or use /game to start one.",
-                reply_markup=game_buttons(),
-            )
-            return
-
-        context.chat_data["current_answer"] = None
-
+    if not current_answer:
         await query.message.reply_text(
-            f"🛑 Puzzle stopped.\n\n"
-            f"The correct answer was: {current_answer}\n\n"
-            f"Press NEW or use /game to start another puzzle.",
+            "⚠️ No active puzzle right now.\n\n"
+            "Press NEW or use /game to start one.",
             reply_markup=game_buttons(),
         )
+        return
+
+    context.chat_data["current_answer"] = None
+
+    await delete_previous_game_message(context, query.message.chat_id)
+
+    sent_message = await query.message.reply_text(
+        f"🛑 Puzzle stopped.\n\n"
+        f"The correct answer was: {current_answer}\n\n"
+        f"Press NEW or use /game to start another puzzle.",
+        reply_markup=game_buttons(),
+    )
+
+    context.chat_data["last_game_message_id"] = sent_message.message_id
 
     elif action == "menu_profile":
         user = query.from_user
