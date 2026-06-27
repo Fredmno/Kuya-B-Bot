@@ -148,17 +148,19 @@ async def send_new_puzzle(message, context: ContextTypes.DEFAULT_TYPE, prefix_te
 
     sent_message = await message.reply_text(
         f"{intro}"
-        f"╔════════════════════╗\n"
-        f"       🧩 <b>WORD SCRAMBLE</b>\n"
-        f"╚════════════════════╝\n\n"
-        f"<b>Hint:</b>{hint}\n\n"
-        f"<b>Unscramble this word:</b>\n"
-        f"<pre>           {scrambled_word}</pre>\n"
-        f"<pre>Rules:\n"
+        f"\n"
+        f"🧩 <b>WORD SCRAMBLE</b>\n"
+        f"\n\n"
+        f"<b>Hint: </b>{hint}\n\n"
+        f"```Unscramble this word:\n"
+        f"<pre>{scrambled_word}</pre>\n"
+        f"```\n"
+        f"<pre>```Rules:\n"
         f"• Reply to this puzzle message with your answer\n"
         f"• Correct answer: +20 XP\n"
         f"• Incorrect answer: 0 XP\n"
-        f"• First correct answer wins the round</pre>",
+        f"• First correct answer wins the round\n"
+        f"```</pre>",
         parse_mode="HTML",
         reply_markup=game_buttons(),
     )
