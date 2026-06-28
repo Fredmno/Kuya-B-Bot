@@ -1,6 +1,7 @@
 from database import get_connection
 from psycopg2.extras import RealDictCursor
 
+
 def init_birthday_db():
     conn = get_connection()
     cursor = conn.cursor()
@@ -44,7 +45,13 @@ def add_birthday(chat_id, name, birthday_mmdd, added_by_user_id, added_by_name):
             added_by_name = EXCLUDED.added_by_name
         RETURNING id, chat_id, name, birthday_mmdd
         """,
-        (chat_id, name, birthday_mmdd, added_by_user_id, added_by_name)
+        (
+            chat_id,
+            name,
+            birthday_mmdd,
+            added_by_user_id,
+            added_by_name,
+        ),
     )
 
     birthday = cursor.fetchone()
@@ -62,12 +69,12 @@ def get_birthdays(chat_id):
 
     cursor.execute(
         """
-        SELECT id, name, birthday_mmdd
+        SELECT id, chat_id, name, birthday_mmdd
         FROM birthdays
         WHERE chat_id = %s
         ORDER BY birthday_mmdd ASC, name ASC
         """,
-        (chat_id,)
+        (chat_id,),
     )
 
     birthdays = cursor.fetchall()
@@ -87,7 +94,7 @@ def delete_birthday(chat_id, birthday_id):
         DELETE FROM birthdays
         WHERE chat_id = %s AND id = %s
         """,
-        (chat_id, birthday_id)
+        (chat_id, birthday_id),
     )
 
     deleted_count = cursor.rowcount
