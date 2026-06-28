@@ -1,3 +1,4 @@
+from database import get_connection
 from psycopg2.extras import RealDictCursor
 
 def init_birthday_db():
