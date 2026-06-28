@@ -1,9 +1,10 @@
 import os
 import logging
-from contextlib import asynccontextmanager
 import random
-
+import yt_dlp
 import uvicorn
+
+from contextlib import asynccontextmanager
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
@@ -64,6 +65,34 @@ def open_menu_buttons():
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
+async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = update.message.text.strip()
+
+    if not url.startswith("http"):
+        await update.message.reply_text("Send me a video URL.")
+        return
+
+    await update.message.reply_text("Downloading...")
+
+    ydl_opts = {
+        "outtmpl": "downloads/%(title)s.%(ext)s",
+        "format": "mp4/best",
+        "noplaylist": True,
+    }
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
+
+        await update.message.reply_video(video=open(filename, "rb"))
+
+        os.remove(filename)
+
+    except Exception as e:
+        await update.message.reply_text(str(e))
 
 
 async def delete_previous_game_message(context: ContextTypes.DEFAULT_TYPE, chat_id):
@@ -440,6 +469,9 @@ application.add_handler(CallbackQueryHandler(button_handler))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_answer))
 
 application.add_error_handler(error_handler)
+
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, download))
+application.run_polling()
 
 
 starlette_app = Starlette(
