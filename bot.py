@@ -16,6 +16,13 @@ from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu
 
+from features.BirthDay.bday_database import init_birthday_db
+from features.BirthDay.Birthdays import (
+    api_get_birthdays,
+    api_add_birthday,
+    api_delete_birthday,
+)
+
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -54,6 +61,7 @@ async def health_check(request: Request):
 @asynccontextmanager
 async def lifespan(app):
     init_db()
+    init_birthday_db()
 
     await application.initialize()
     await application.bot.set_webhook(WEBHOOK_URL)
@@ -84,6 +92,11 @@ starlette_app = Starlette(
     routes=[
         Route("/", health_check, methods=["GET", "HEAD"]),
         Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
+
+        Route("/api/birthdays", api_get_birthdays, methods=["GET"]),
+        Route("/api/birthdays", api_add_birthday, methods=["POST"]),
+        Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
+
         Mount("/app", StaticFiles(directory="webapp", html=True), name="app"),
     ],
     lifespan=lifespan,
