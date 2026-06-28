@@ -34,11 +34,8 @@ application = Application.builder().token(BOT_TOKEN).build()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "🤖 Kuya B is online!
-
-"
-        "Use /kuya_b to open the Mini App.
-"
+        "🤖 Kuya B is online!"
+        "Use /kuya_b to open the Mini App."
         "Use /game to start Word Scramble."
     )
 
