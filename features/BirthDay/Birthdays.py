@@ -4,7 +4,11 @@ import re
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from database import get_birthdays, add_birthday, delete_birthday
+from features.BirthDay.bday_database import (
+    get_birthdays,
+    add_birthday,
+    delete_birthday,
+)
 
 
 DEFAULT_CHAT_ID = "mini_app_default"
