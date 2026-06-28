@@ -2,3 +2,4 @@ python-telegram-bot
 starlette
 uvicorn
 psycopg2-binary
+yt-dlp
