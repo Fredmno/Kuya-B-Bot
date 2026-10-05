@@ -36,6 +36,15 @@ import {
     displayReminders
 } from "./modules/reminders.js";
 
+import {
+    loadVault,
+    setVaultType,
+    showVaultForm,
+    hideVaultForm,
+    saveVaultItem,
+    displayVaultItems
+} from "./modules/vault.js";
+
 // ---------------------------------------------------------
 // NAVIGATION & PAGE ROUTING
 // ---------------------------------------------------------
@@ -45,20 +54,25 @@ function hideAllForms() {
     hideLogForm();
     hideTaskForm();
     hideReminderForm();
+    hideVaultForm();
 }
 
 function showDashboard() {
-    const dashboard = document.getElementById("dashboardPage");
-    const birthdays = document.getElementById("birthdaysPage");
-    const dailyLogs = document.getElementById("dailyLogsPage");
-    const tasksPage = document.getElementById("tasksPage");
-    const remindersPage = document.getElementById("remindersPage");
+    const pages = [
+        "birthdaysPage",
+        "dailyLogsPage",
+        "tasksPage",
+        "remindersPage",
+        "vaultPage"
+    ];
 
+    pages.forEach(id => {
+        const page = document.getElementById(id);
+        if (page) page.style.display = "none";
+    });
+
+    const dashboard = document.getElementById("dashboardPage");
     if (dashboard) dashboard.style.display = "block";
-    if (birthdays) birthdays.style.display = "none";
-    if (dailyLogs) dailyLogs.style.display = "none";
-    if (tasksPage) tasksPage.style.display = "none";
-    if (remindersPage) remindersPage.style.display = "none";
 
     hideAllForms();
 
@@ -67,55 +81,13 @@ function showDashboard() {
     }
 }
 
-function showBirthdays() {
+function showPage(pageId, renderFn) {
     showDashboard();
     document.getElementById("dashboardPage").style.display = "none";
-    const page = document.getElementById("birthdaysPage");
+    const page = document.getElementById(pageId);
     if (page) page.style.display = "block";
 
-    displayBirthdays();
-
-    if (tg?.BackButton) {
-        tg.BackButton.show();
-        tg.BackButton.onClick(showDashboard);
-    }
-}
-
-function showDailyLogs() {
-    showDashboard();
-    document.getElementById("dashboardPage").style.display = "none";
-    const page = document.getElementById("dailyLogsPage");
-    if (page) page.style.display = "block";
-
-    displayDailyLogs();
-
-    if (tg?.BackButton) {
-        tg.BackButton.show();
-        tg.BackButton.onClick(showDashboard);
-    }
-}
-
-function showTasks() {
-    showDashboard();
-    document.getElementById("dashboardPage").style.display = "none";
-    const page = document.getElementById("tasksPage");
-    if (page) page.style.display = "block";
-
-    displayTasks();
-
-    if (tg?.BackButton) {
-        tg.BackButton.show();
-        tg.BackButton.onClick(showDashboard);
-    }
-}
-
-function showReminders() {
-    showDashboard();
-    document.getElementById("dashboardPage").style.display = "none";
-    const page = document.getElementById("remindersPage");
-    if (page) page.style.display = "block";
-
-    displayReminders();
+    if (renderFn) renderFn();
 
     if (tg?.BackButton) {
         tg.BackButton.show();
@@ -132,39 +104,54 @@ function initApp() {
     loadDailyLogs();
     loadTasks();
     loadReminders();
+    loadVault();
     showDashboard();
 
     document.addEventListener("click", function (e) {
-        // --- Navigation ---
+        // --- Navigation: Personal ---
         if (e.target.closest('[data-feature="birthdays"]')) {
             e.preventDefault();
             triggerHaptic("light");
-            showBirthdays();
+            showPage("birthdaysPage", displayBirthdays);
             return;
         }
 
         if (e.target.closest('[data-feature="daily"]')) {
             e.preventDefault();
             triggerHaptic("light");
-            showDailyLogs();
+            showPage("dailyLogsPage", displayDailyLogs);
             return;
         }
 
         if (e.target.closest('[data-feature="tasks"]')) {
             e.preventDefault();
             triggerHaptic("light");
-            showTasks();
+            showPage("tasksPage", displayTasks);
             return;
         }
 
         if (e.target.closest('[data-feature="reminders"]')) {
             e.preventDefault();
             triggerHaptic("light");
-            showReminders();
+            showPage("remindersPage", displayReminders);
             return;
         }
 
-        if (e.target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton")) {
+        // --- Navigation: Vault (Videos, Pictures, Other) ---
+        const vaultTrigger = e.target.closest(
+            '[data-feature="videos"], [data-feature="pictures"], [data-feature="other"]'
+        );
+        if (vaultTrigger) {
+            e.preventDefault();
+            triggerHaptic("light");
+            const type = vaultTrigger.dataset.feature;
+            setVaultType(type);
+            showPage("vaultPage", displayVaultItems);
+            return;
+        }
+
+        // Back to Dashboard
+        if (e.target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton, #vaultBackButton")) {
             e.preventDefault();
             triggerHaptic("light");
             showDashboard();
@@ -250,35 +237,51 @@ function initApp() {
             return;
         }
 
-        // --- Future Placeholders ---
-        if (e.target.closest("#addContentButton")) {
+        // --- Vault Actions ---
+        if (e.target.closest("#addVaultItemButton")) {
             e.preventDefault();
-            alert("Add Content modal coming soon!");
+            triggerHaptic("light");
+            showVaultForm();
             return;
         }
+        if (e.target.closest("#cancelVaultItemButton")) {
+            e.preventDefault();
+            hideVaultForm();
+            return;
+        }
+        if (e.target.closest("#saveVaultItemButton")) {
+            e.preventDefault();
+            saveVaultItem();
+            return;
+        }
+
+        // --- Bottom Actions & Placeholders ---
+        if (e.target.closest("#addContentButton")) {
+            e.preventDefault();
+            triggerHaptic("light");
+            setVaultType("other");
+            showPage("vaultPage", () => {
+                displayVaultItems();
+                showVaultForm();
+            });
+            return;
+        }
+
         if (e.target.closest("#gameButton")) {
             e.preventDefault();
             alert("Word Scramble launcher ready!");
             return;
         }
-        if (e.target.closest("#searchButton")) {
-            e.preventDefault();
-            alert("Universal Search coming in Phase 5!");
-            return;
-        }
 
-        const featureTile = e.target.closest("[data-feature]");
-        if (featureTile) {
-            const name = featureTile.dataset.feature;
-            if (!["birthdays", "daily", "tasks", "reminders"].includes(name)) {
-                e.preventDefault();
-                alert(`${name.charAt(0).toUpperCase() + name.slice(1)} module coming soon.`);
-            }
+        if (e.target.closest('#searchButton, [data-feature="search"]')) {
+            e.preventDefault();
+            alert("Universal Search coming next!");
+            return;
         }
     });
 
-    // Enter key submission on Task & Reminder title inputs
-    ["taskTitle", "reminderTitle"].forEach(id => {
+    // Enter key submissions
+    ["taskTitle", "reminderTitle", "vaultItemTitle"].forEach(id => {
         const input = document.getElementById(id);
         if (input) {
             input.addEventListener("keydown", function (e) {
@@ -286,6 +289,7 @@ function initApp() {
                     e.preventDefault();
                     if (id === "taskTitle") saveTask();
                     if (id === "reminderTitle") saveReminder();
+                    if (id === "vaultItemTitle") saveVaultItem();
                 }
             });
         }
