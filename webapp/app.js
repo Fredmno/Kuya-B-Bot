@@ -133,19 +133,177 @@ function displayBirthdays(birthdays) {
     if (!birthdays || birthdays.length === 0) {
 
         birthdayList.innerHTML = `
-            <div style="
-                text-align:center;
-                color:#94a3b8;
-                padding:30px;
-            ">
-                🎂 No birthdays yet.
-                <br><br>
-                Tap "Add Birthday" to add one.
+            <div class="empty-state">
+                <div class="empty-icon">🎂</div>
+
+                <strong>No birthdays yet</strong>
+
+                <small>
+                    Add someone's birthday and
+                    Kuya B will keep it safe.
+                </small>
             </div>
         `;
 
         return;
     }
+
+
+    birthdayList.innerHTML = "";
+
+
+    const today = new Date();
+
+    const currentMonth =
+        today.getMonth() + 1;
+
+    const currentDay =
+        today.getDate();
+
+
+    birthdays.forEach(birthday => {
+
+        const parts =
+            birthday.birthday_mmdd.split("-");
+
+        const month =
+            Number(parts[0]);
+
+        const day =
+            Number(parts[1]);
+
+
+        const birthdayDate =
+            new Date(
+                today.getFullYear(),
+                month - 1,
+                day
+            );
+
+
+        const todayDate =
+            new Date(
+                today.getFullYear(),
+                currentMonth - 1,
+                currentDay
+            );
+
+
+        if (birthdayDate < todayDate) {
+
+            birthdayDate.setFullYear(
+                today.getFullYear() + 1
+            );
+
+        }
+
+
+        const difference =
+            birthdayDate - todayDate;
+
+
+        const daysUntil =
+            Math.ceil(
+                difference /
+                (1000 * 60 * 60 * 24)
+            );
+
+
+        let dateText;
+
+        if (daysUntil === 0) {
+
+            dateText = "🎉 Today!";
+
+        } else if (daysUntil === 1) {
+
+            dateText = "Tomorrow";
+
+        } else {
+
+            dateText =
+                `${daysUntil} days from now`;
+
+        }
+
+
+        const monthName =
+            birthdayDate.toLocaleString(
+                "en-US",
+                {
+                    month: "long"
+                }
+            );
+
+
+        const card =
+            document.createElement("div");
+
+
+        card.className =
+            "birthday-card";
+
+
+        if (daysUntil <= 7) {
+
+            card.classList.add(
+                "birthday-soon"
+            );
+
+        }
+
+
+        card.innerHTML = `
+
+            <div class="birthday-icon">
+                🎂
+            </div>
+
+            <div class="birthday-info">
+
+                <strong>
+                    ${escapeHtml(
+                        birthday.name
+                    )}
+                </strong>
+
+                <span>
+                    ${monthName} ${day}
+                </span>
+
+                <small>
+                    ${dateText}
+                </small>
+
+            </div>
+
+            <button
+                class="birthday-delete"
+                aria-label="Delete birthday"
+            >
+                🗑️
+            </button>
+
+        `;
+
+
+        card
+            .querySelector(
+                ".birthday-delete"
+            )
+            .addEventListener(
+                "click",
+                () => deleteBirthday(
+                    birthday.id
+                )
+            );
+
+
+        birthdayList.appendChild(card);
+
+    });
+
+}
 
 
     birthdayList.innerHTML = "";
