@@ -611,4 +611,540 @@ function displayBirthdays() {
                     </span>
 
                     <small>
-                        ${
+                        ${escapeHtml(
+                            countdownText
+                        )}
+                    </small>
+
+                </div>
+
+                <div class="birthday-actions">
+
+                    <button
+                        class="birthday-edit"
+                        type="button"
+                        data-id="${escapeHtml(
+                            birthday.id
+                        )}"
+                        aria-label="Edit birthday"
+                    >
+                        ✏️
+                    </button>
+
+                    <button
+                        class="birthday-delete"
+                        type="button"
+                        data-id="${escapeHtml(
+                            birthday.id
+                        )}"
+                        aria-label="Delete birthday"
+                    >
+                        🗑️
+                    </button>
+
+                </div>
+
+            `;
+
+
+            birthdayList.appendChild(
+                card
+            );
+
+        }
+    );
+
+
+    // -----------------------------------------------------
+    // EDIT BUTTONS
+    // -----------------------------------------------------
+
+    birthdayList
+        .querySelectorAll(
+            ".birthday-edit"
+        )
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    const id =
+                        this.dataset.id;
+
+                    const birthday =
+                        birthdays.find(
+                            item =>
+                                item.id === id
+                        );
+
+                    if (birthday) {
+
+                        showBirthdayForm(
+                            birthday
+                        );
+
+                    }
+
+                }
+            );
+
+        });
+
+
+    // -----------------------------------------------------
+    // DELETE BUTTONS
+    // -----------------------------------------------------
+
+    birthdayList
+        .querySelectorAll(
+            ".birthday-delete"
+        )
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    const id =
+                        this.dataset.id;
+
+                    deleteBirthday(id);
+
+                }
+            );
+
+        });
+
+}
+
+
+// ---------------------------------------------------------
+// DELETE BIRTHDAY
+// ---------------------------------------------------------
+
+function deleteBirthday(id) {
+
+    const birthday =
+        birthdays.find(
+            item =>
+                item.id === id
+        );
+
+    if (!birthday) {
+        return;
+    }
+
+
+    const confirmed =
+        confirm(
+            `Delete ${birthday.name}'s birthday?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    birthdays =
+        birthdays.filter(
+            item =>
+                item.id !== id
+        );
+
+
+    saveBirthdays();
+
+    displayBirthdays();
+
+}
+
+
+// ---------------------------------------------------------
+// SAVE BIRTHDAY
+// ---------------------------------------------------------
+
+function saveBirthday() {
+
+    const name =
+        birthdayName
+            ?.value
+            .trim();
+
+    const date =
+        birthdayDate
+            ?.value
+            .trim();
+
+
+    // -----------------------------------------------------
+    // NAME VALIDATION
+    // -----------------------------------------------------
+
+    if (!name) {
+
+        alert(
+            "Please enter a name."
+        );
+
+        birthdayName?.focus();
+
+        return;
+
+    }
+
+
+    // -----------------------------------------------------
+    // DATE VALIDATION
+    // -----------------------------------------------------
+
+    if (!isValidBirthday(date)) {
+
+        alert(
+            "Please enter a valid birthday using MM-DD.\n\nExample: 05-24"
+        );
+
+        birthdayDate?.focus();
+
+        return;
+
+    }
+
+
+    // -----------------------------------------------------
+    // EDIT EXISTING
+    // -----------------------------------------------------
+
+    if (editingBirthdayId) {
+
+        const index =
+            birthdays.findIndex(
+                item =>
+                    item.id ===
+                    editingBirthdayId
+            );
+
+
+        if (index !== -1) {
+
+            birthdays[index].name =
+                name;
+
+            birthdays[index].date =
+                date;
+
+        }
+
+    }
+
+
+    // -----------------------------------------------------
+    // ADD NEW
+    // -----------------------------------------------------
+
+    else {
+
+        birthdays.push({
+
+            id:
+                Date.now().toString(),
+
+            name:
+                name,
+
+            date:
+                date
+
+        });
+
+    }
+
+
+    // -----------------------------------------------------
+    // SAVE
+    // -----------------------------------------------------
+
+    saveBirthdays();
+
+
+    // -----------------------------------------------------
+    // RESET
+    // -----------------------------------------------------
+
+    hideBirthdayForm();
+
+    displayBirthdays();
+
+}
+
+
+// ---------------------------------------------------------
+// FORMAT DATE INPUT
+// ---------------------------------------------------------
+
+if (birthdayDate) {
+
+    birthdayDate.addEventListener(
+        "input",
+        function () {
+
+            let value =
+                this.value.replace(
+                    /\D/g,
+                    ""
+                );
+
+
+            if (value.length > 4) {
+
+                value =
+                    value.substring(
+                        0,
+                        4
+                    );
+
+            }
+
+
+            if (value.length >= 3) {
+
+                value =
+                    value.substring(
+                        0,
+                        2
+                    ) +
+                    "-" +
+                    value.substring(2);
+
+            }
+
+
+            this.value =
+                value;
+
+        }
+    );
+
+}
+
+
+// ---------------------------------------------------------
+// BIRTHDAY TILE
+// ---------------------------------------------------------
+
+document
+    .querySelectorAll(
+        '[data-feature="birthdays"]'
+    )
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                showBirthdays();
+
+            }
+        );
+
+    });
+
+
+// ---------------------------------------------------------
+// BACK BUTTON
+// ---------------------------------------------------------
+
+if (birthdayBackButton) {
+
+    birthdayBackButton.addEventListener(
+        "click",
+        function () {
+
+            showDashboard();
+
+        }
+    );
+
+}
+
+
+// ---------------------------------------------------------
+// ADD BIRTHDAY
+// ---------------------------------------------------------
+
+if (addBirthdayButton) {
+
+    addBirthdayButton.addEventListener(
+        "click",
+        function () {
+
+            showBirthdayForm();
+
+        }
+    );
+
+}
+
+
+// ---------------------------------------------------------
+// SAVE BUTTON
+// ---------------------------------------------------------
+
+if (saveBirthdayButton) {
+
+    saveBirthdayButton.addEventListener(
+        "click",
+        function () {
+
+            saveBirthday();
+
+        }
+    );
+
+}
+
+
+// ---------------------------------------------------------
+// CANCEL BUTTON
+// ---------------------------------------------------------
+
+if (cancelBirthdayButton) {
+
+    cancelBirthdayButton.addEventListener(
+        "click",
+        function () {
+
+            hideBirthdayForm();
+
+        }
+    );
+
+}
+
+
+// ---------------------------------------------------------
+// OTHER HOME FEATURES
+// ---------------------------------------------------------
+
+document
+    .querySelectorAll(
+        "[data-feature]"
+    )
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                const feature =
+                    this.dataset.feature;
+
+
+                // Birthday is handled above.
+                if (
+                    feature ===
+                    "birthdays"
+                ) {
+                    return;
+                }
+
+
+                // Other modules are not
+                // implemented yet.
+                alert(
+                    `${feature.charAt(0).toUpperCase() + feature.slice(1)} module coming soon.`
+                );
+
+            }
+        );
+
+    });
+
+
+// ---------------------------------------------------------
+// SEARCH BUTTON
+// ---------------------------------------------------------
+
+const searchButton =
+    document.getElementById(
+        "searchButton"
+    );
+
+if (searchButton) {
+
+    searchButton.addEventListener(
+        "click",
+        function () {
+
+            alert(
+                "Search module coming soon."
+            );
+
+        }
+    );
+
+}
+
+
+// ---------------------------------------------------------
+// ADD CONTENT
+// ---------------------------------------------------------
+
+const addContentButton =
+    document.getElementById(
+        "addContentButton"
+    );
+
+if (addContentButton) {
+
+    addContentButton.addEventListener(
+        "click",
+        function () {
+
+            alert(
+                "Add Content module coming soon."
+            );
+
+        }
+    );
+
+}
+
+
+// ---------------------------------------------------------
+// GAME
+// ---------------------------------------------------------
+
+const gameButton =
+    document.getElementById(
+        "gameButton"
+    );
+
+if (gameButton) {
+
+    gameButton.addEventListener(
+        "click",
+        function () {
+
+            alert(
+                "Word Scramble coming soon."
+            );
+
+        }
+    );
+
+}
+
+
+// ---------------------------------------------------------
+// INITIALIZE
+// ---------------------------------------------------------
+
+loadBirthdays();
+
+showDashboard();
+
+console.log(
+    "Kuya B Personal Hub loaded successfully."
+);
