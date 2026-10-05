@@ -1,52 +1,419 @@
+:root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --border: rgba(255, 255, 255, 0.07);
+    --radius: 18px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: #111827;
-    color: #ffffff;
+
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(59, 130, 246, 0.12),
+            transparent 35%
+        ),
+        var(--bg);
+
+    color: var(--text);
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+    -webkit-font-smoothing: antialiased;
+}
+
+button {
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .app {
-    min-height: 100vh;
+    width: 100%;
+    max-width: 520px;
+
+    margin: 0 auto;
+
+    padding:
+        calc(24px + env(safe-area-inset-top))
+        18px
+        calc(24px + env(safe-area-inset-bottom));
+}
+
+
+/* HEADER */
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 22px;
+}
+
+.greeting {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.header h1 {
+    margin: 0;
+
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.header p {
+    margin: 4px 0 0;
+
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.avatar {
+    width: 52px;
+    height: 52px;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+
+    border-radius: 16px;
+
+    background: linear-gradient(
+        135deg,
+        #3b82f6,
+        #8b5cf6
+    );
+
+    font-size: 27px;
+
+    box-shadow:
+        0 8px 25px rgba(59, 130, 246, 0.25);
 }
 
-.card {
+
+/* SEARCH */
+
+.search-bar {
     width: 100%;
-    max-width: 420px;
-    background: #1f2937;
-    border-radius: 18px;
-    padding: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    text-align: center;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    border: 1px solid var(--border);
+    border-radius: 15px;
+
+    padding: 14px 16px;
+
+    background: rgba(30, 41, 59, 0.85);
+
+    color: var(--muted);
+
+    font-size: 15px;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease;
 }
 
-h1 {
-    margin: 0 0 8px;
-    font-size: 30px;
+.search-bar:active {
+    transform: scale(0.98);
 }
 
-.subtitle {
-    margin: 0 0 24px;
-    color: #cbd5e1;
+.search-text {
+    flex: 1;
 }
 
-.feature-button {
+
+/* SECTIONS */
+
+.section {
+    margin-top: 26px;
+}
+
+.section h2 {
+    margin: 0 0 12px 3px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+
+/* GRID */
+
+.grid {
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 12px;
+}
+
+
+/* TILES */
+
+.tile {
+    min-height: 125px;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    padding: 17px;
+
+    color: white;
+
+    text-align: left;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        filter 0.15s ease;
+}
+
+.tile:active {
+    transform: scale(0.96);
+    filter: brightness(0.9);
+}
+
+.tile .icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+}
+
+.tile strong {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.tile small {
+    margin-top: 4px;
+
+    color: rgba(255, 255, 255, 0.65);
+
+    font-size: 12px;
+}
+
+
+/* TILE COLORS */
+
+.tile-blue {
+    background: linear-gradient(
+        145deg,
+        #2563eb,
+        #1d4ed8
+    );
+}
+
+.tile-green {
+    background: linear-gradient(
+        145deg,
+        #16a34a,
+        #15803d
+    );
+}
+
+.tile-orange {
+    background: linear-gradient(
+        145deg,
+        #ea580c,
+        #c2410c
+    );
+}
+
+.tile-pink {
+    background: linear-gradient(
+        145deg,
+        #db2777,
+        #be185d
+    );
+}
+
+.tile-purple {
+    background: linear-gradient(
+        145deg,
+        #7c3aed,
+        #6d28d9
+    );
+}
+
+.tile-cyan {
+    background: linear-gradient(
+        145deg,
+        #0891b2,
+        #0e7490
+    );
+}
+
+.tile-gray {
+    background: linear-gradient(
+        145deg,
+        #475569,
+        #334155
+    );
+}
+
+.tile-dark {
+    background: linear-gradient(
+        145deg,
+        #374151,
+        #1f2937
+    );
+}
+
+
+/* ADD CONTENT */
+
+.add-button {
     width: 100%;
+
+    margin-top: 26px;
+
     border: none;
-    border-radius: 12px;
-    padding: 16px;
-    font-size: 18px;
-    font-weight: bold;
-    background: #22c55e;
-    color: #052e16;
+    border-radius: 16px;
+
+    padding: 17px;
+
+    background: #f8fafc;
+    color: #0f172a;
+
+    font-size: 16px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+}
+
+.add-button:active {
+    transform: scale(0.98);
+    opacity: 0.85;
+}
+
+
+/* WORD GAME */
+
+.game-button {
+    width: 100%;
+
+    margin-top: 12px;
+
+    padding: 15px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 16px;
+
+    background: var(--card);
+
+    color: var(--text);
+
+    text-align: left;
+
     cursor: pointer;
 }
 
-.note {
-    margin-top: 18px;
-    color: #94a3b8;
-    font-size: 14px;
+.game-button > span:first-child {
+    font-size: 26px;
+}
+
+.game-button div {
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.game-button strong {
+    font-size: 15px;
+}
+
+.game-button small {
+    margin-top: 3px;
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+.arrow {
+    color: var(--muted);
+    font-size: 25px;
+}
+
+
+/* FOOTER */
+
+footer {
+    display: flex;
+    justify-content: space-between;
+
+    margin-top: 30px;
+    padding: 0 4px;
+
+    color: #64748b;
+
+    font-size: 11px;
+}
+
+
+/* SMALL SCREENS */
+
+@media (max-width: 360px) {
+
+    .app {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .tile {
+        min-height: 115px;
+        padding: 14px;
+    }
+
+    .tile .icon {
+        font-size: 25px;
+    }
+
+    .header h1 {
+        font-size: 28px;
+    }
 }
