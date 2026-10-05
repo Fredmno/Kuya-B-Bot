@@ -688,3 +688,124 @@ document
 
         }
     );
+
+
+// ==========================
+// EDIT BIRTHDAY
+// ==========================
+
+async function editBirthday(birthday) {
+
+    const newName = prompt(
+        "Birthday name:",
+        birthday.name
+    );
+
+    if (newName === null) {
+        return;
+    }
+
+    const name =
+        newName.trim();
+
+    if (!name) {
+        tg.showAlert(
+            "Name cannot be empty."
+        );
+        return;
+    }
+
+
+    const newDate = prompt(
+        "Birthday (MM-DD):",
+        birthday.birthday_mmdd
+    );
+
+    if (newDate === null) {
+        return;
+    }
+
+    const birthday_mmdd =
+        newDate.trim();
+
+
+    if (
+        !/^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/
+            .test(birthday_mmdd)
+    ) {
+
+        tg.showAlert(
+            "Birthday must use MM-DD format.\nExample: 06-28"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/birthdays/edit",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            chat_id:
+                                "mini_app_default",
+
+                            id:
+                                birthday.id,
+
+                            name:
+                                name,
+
+                            birthday_mmdd:
+                                birthday_mmdd
+
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error ||
+                "Could not update birthday."
+            );
+
+        }
+
+
+        await loadBirthdays();
+
+
+        tg.showAlert(
+            "🎂 Birthday updated!"
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        tg.showAlert(
+            error.message ||
+            "Could not update birthday."
+        );
+
+    }
+
+}
