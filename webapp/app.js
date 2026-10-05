@@ -42,8 +42,10 @@ import {
     showVaultForm,
     hideVaultForm,
     saveVaultItem,
+    displayFolderBar,
     displayVaultItems
 } from "./modules/vault.js";
+
 
 // ---------------------------------------------------------
 // NAVIGATION & PAGE ROUTING
@@ -146,7 +148,10 @@ function initApp() {
             triggerHaptic("light");
             const type = vaultTrigger.dataset.feature;
             setVaultType(type);
-            showPage("vaultPage", displayVaultItems);
+            showPage("vaultPage", () => {
+                displayFolderBar();
+                displayVaultItems();
+            });
             return;
         }
 
