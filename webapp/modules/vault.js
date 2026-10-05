@@ -1,8 +1,8 @@
 /* =========================================================
-   KUYA B — MODULE: CONTENT VAULT (VIDEOS, PICTURES, OTHER)
+   KUYA B — MODULE: CONTENT VAULT (IN-APP MEDIA VIEWER)
    ========================================================= */
 
-import { escapeHtml, triggerHaptic, tg } from "./helpers.js";
+import { escapeHtml, triggerHaptic } from "./helpers.js";
 
 let vaultItems = [];
 let currentVaultType = "videos"; // 'videos' | 'pictures' | 'other'
@@ -11,14 +11,14 @@ let editingVaultItemId = null;
 const TYPE_CONFIG = {
     videos: {
         title: "🎥 Videos",
-        subtitle: "Your video vault",
+        subtitle: "Your video player & vault",
         icon: "🎥",
         addText: "＋ Add Video",
         emptyText: "No videos saved yet"
     },
     pictures: {
         title: "🖼️ Pictures",
-        subtitle: "Your photo gallery",
+        subtitle: "Your personal photo gallery",
         icon: "🖼️",
         addText: "＋ Add Picture",
         emptyText: "No pictures saved yet"
@@ -166,6 +166,14 @@ export function deleteVaultItem(id) {
     displayVaultItems();
 }
 
+function isImageURL(url) {
+    return /\.(jpg|jpeg|png|webp|gif|svg)($|\?)/i.test(url);
+}
+
+function isVideoURL(url) {
+    return /\.(mp4|webm|mov|ogg)($|\?)/i.test(url);
+}
+
 export function displayVaultItems() {
     const list = document.getElementById("vaultList");
     if (!list) return;
@@ -173,7 +181,6 @@ export function displayVaultItems() {
     list.innerHTML = "";
     const config = TYPE_CONFIG[currentVaultType];
 
-    // Filter items matching the active section (videos, pictures, or other)
     const filtered = vaultItems.filter(item => item.type === currentVaultType);
 
     if (!filtered.length) {
@@ -181,7 +188,7 @@ export function displayVaultItems() {
             <div class="empty-state" style="text-align:center; padding:30px 10px; color:#94a3b8;">
                 <div style="font-size:3rem; margin-bottom:8px;">${config.icon}</div>
                 <strong style="display:block; font-size:1.1rem; color:#f8fafc; margin-bottom:4px;">${config.emptyText}</strong>
-                <small>Keep track of your channel posts and media links here.</small>
+                <small>Keep track of your media and view it directly in the app.</small>
             </div>
         `;
         return;
@@ -189,17 +196,37 @@ export function displayVaultItems() {
 
     filtered.forEach(item => {
         const card = document.createElement("div");
-        card.style.cssText = "display:flex; flex-direction:column; padding:12px; margin-bottom:10px; background:rgba(255,255,255,0.06); border-radius:14px;";
+        card.style.cssText = "display:flex; flex-direction:column; padding:12px; margin-bottom:12px; background:rgba(255,255,255,0.06); border-radius:14px; overflow:hidden;";
 
-        let linkSection = "";
-        if (item.url) {
-            linkSection = `
-                <div style="margin-top:8px;">
-                    <button class="open-link-btn" data-url="${escapeHtml(item.url)}" type="button" style="background:rgba(56, 189, 248, 0.15); color:#38bdf8; border:none; border-radius:8px; padding:6px 12px; font-size:0.85rem; font-weight:600; cursor:pointer;">
-                        ↗ Open in Telegram
-                    </button>
-                </div>
-            `;
+        let mediaEmbed = "";
+        const url = item.url ? item.url.trim() : "";
+
+        // Embedded In-App Viewers
+        if (url) {
+            if (item.type === "videos" || isVideoURL(url)) {
+                mediaEmbed = `
+                    <div style="margin-top:10px; border-radius:10px; overflow:hidden; background:#000; max-height:260px;">
+                        <video controls playsinline preload="metadata" style="width:100%; height:auto; display:block; max-height:260px;">
+                            <source src="${escapeHtml(url)}">
+                            Your browser does not support embedded video playback.
+                        </video>
+                    </div>
+                `;
+            } else if (item.type === "pictures" || isImageURL(url)) {
+                mediaEmbed = `
+                    <div style="margin-top:10px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,0.2); max-height:240px; text-align:center;">
+                        <img src="${escapeHtml(url)}" alt="${escapeHtml(item.title)}" loading="lazy" style="width:100%; height:auto; max-height:240px; object-fit:cover; display:block;" onerror="this.parentElement.style.display='none';">
+                    </div>
+                `;
+            } else {
+                mediaEmbed = `
+                    <div style="margin-top:8px;">
+                        <a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="display:inline-block; background:rgba(56, 189, 248, 0.15); color:#38bdf8; text-decoration:none; border-radius:8px; padding:6px 12px; font-size:0.85rem; font-weight:600;">
+                            ↗ Open External File / Link
+                        </a>
+                    </div>
+                `;
+            }
         }
 
         card.innerHTML = `
@@ -217,7 +244,7 @@ export function displayVaultItems() {
                     <button class="vault-delete" type="button" data-id="${escapeHtml(item.id)}" style="background:none; border:none; font-size:1.1rem; padding:4px; cursor:pointer;">🗑️</button>
                 </div>
             </div>
-            ${linkSection}
+            ${mediaEmbed}
         `;
 
         list.appendChild(card);
@@ -232,20 +259,5 @@ export function displayVaultItems() {
 
     list.querySelectorAll(".vault-delete").forEach(btn => {
         btn.addEventListener("click", () => deleteVaultItem(btn.dataset.id));
-    });
-
-    list.querySelectorAll(".open-link-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const url = btn.dataset.url;
-            if (url) {
-                if (tg?.openTelegramLink && url.includes("t.me")) {
-                    tg.openTelegramLink(url);
-                } else if (tg?.openLink) {
-                    tg.openLink(url);
-                } else {
-                    window.open(url, "_blank");
-                }
-            }
-        });
     });
 }
