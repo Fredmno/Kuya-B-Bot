@@ -919,3 +919,245 @@ body {
     }
 
 }
+/* =========================
+   BIRTHDAY CARDS
+   ========================= */
+
+.birthday-card {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    width: 100%;
+
+    padding: 16px;
+
+    margin-bottom: 12px;
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #172033,
+            #111827
+        );
+
+    border: 1px solid
+        rgba(255, 255, 255, 0.07);
+
+    box-shadow:
+        0 10px 28px
+        rgba(0, 0, 0, 0.22);
+
+    transition:
+        transform 0.15s ease,
+        border-color 0.15s ease;
+}
+
+
+.birthday-card:active {
+    transform: scale(0.98);
+}
+
+
+.birthday-icon {
+    width: 48px;
+
+    height: 48px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 15px;
+
+    font-size: 24px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(244, 114, 182, 0.20),
+            rgba(167, 139, 250, 0.20)
+        );
+
+    border: 1px solid
+        rgba(255, 255, 255, 0.06);
+}
+
+
+.birthday-info {
+    flex: 1;
+
+    min-width: 0;
+}
+
+
+.birthday-info strong {
+    display: block;
+
+    color: #f8fafc;
+
+    font-size: 16px;
+
+    font-weight: 750;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+.birthday-info span {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #cbd5e1;
+
+    font-size: 13px;
+}
+
+
+.birthday-info small {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #64748b;
+
+    font-size: 11px;
+
+    font-weight: 600;
+}
+
+
+.birthday-delete {
+    width: 38px;
+
+    height: 38px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background:
+        rgba(239, 68, 68, 0.10);
+
+    color: #fca5a5;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease;
+}
+
+
+.birthday-delete:active {
+    transform: scale(0.9);
+
+    background:
+        rgba(239, 68, 68, 0.20);
+}
+
+
+/* =========================
+   UPCOMING BIRTHDAY
+   ========================= */
+
+.birthday-soon {
+    border-color:
+        rgba(251, 146, 60, 0.30);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(154, 52, 18, 0.20),
+            #111827
+        );
+}
+
+
+.birthday-soon .birthday-icon {
+    background:
+        linear-gradient(
+            135deg,
+            rgba(251, 146, 60, 0.25),
+            rgba(244, 114, 182, 0.18)
+        );
+}
+
+
+/* =========================
+   EMPTY BIRTHDAY STATE
+   ========================= */
+
+.empty-state {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    min-height: 190px;
+
+    padding: 25px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(17, 24, 39, 0.65);
+
+    border: 1px dashed
+        rgba(255, 255, 255, 0.10);
+}
+
+
+.empty-icon {
+    font-size: 42px;
+
+    margin-bottom: 12px;
+}
+
+
+.empty-state strong {
+    color: #f8fafc;
+
+    font-size: 16px;
+}
+
+
+.empty-state small {
+    max-width: 260px;
+
+    margin-top: 7px;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
