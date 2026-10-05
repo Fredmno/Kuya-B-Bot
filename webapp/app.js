@@ -277,14 +277,37 @@ function displayBirthdays(birthdays) {
 
             </div>
 
-            <button
-                class="birthday-delete"
-                aria-label="Delete birthday"
-            >
-                🗑️
-            </button>
+            <div class="birthday-actions">
+
+                <button
+                    class="birthday-edit"
+                    aria-label="Edit birthday"
+                >
+                    ✏️
+                </button>
+
+                <button
+                    class="birthday-delete"
+                    aria-label="Delete birthday"
+                >
+                    🗑️
+                </button>
+
+            </div>
 
         `;
+
+
+        card
+            .querySelector(
+                ".birthday-edit"
+            )
+            .addEventListener(
+                "click",
+                () => editBirthday(
+                    birthday
+                )
+            );
 
 
         card
