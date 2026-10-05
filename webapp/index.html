@@ -430,6 +430,7 @@
 
     </section>
 
+
     <!-- CONTENT VAULT PAGE -->
     <section class="card" id="vaultPage" style="display:none;">
 
@@ -447,31 +448,42 @@
             <span class="search-text">Back to Kuya B</span>
         </button>
 
-        <button class="add-button" id="addVaultItemButton" style="margin-top: 14px;">
+        <!-- FOLDER FILTER BAR -->
+        <div id="vaultFoldersBar" style="display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 6px 0; scrollbar-width: none;">
+            <!-- Rendered dynamically: 'All', 'Travel', 'Work', etc. -->
+        </div>
+
+        <button class="add-button" id="addVaultItemButton" style="margin-top: 10px;">
             <span>＋</span>
             Add to Vault
         </button>
 
         <!-- ADD / EDIT VAULT ITEM FORM -->
-        <div id="vaultForm" style="display:none; margin-top:16px; background:#1e293b; border-radius:18px; padding:20px;">
+        <div id="vaultForm" style="display:none; margin-top:16px;">
             <h2 id="vaultFormHeading">Save Content</h2>
 
             <label for="vaultItemTitle">Title / Description</label>
-            <input id="vaultItemTitle" type="text" placeholder="Example: Japan Trip 2025 Video" autocomplete="off">
+            <input id="vaultItemTitle" type="text" placeholder="Example: Japan Trip 2025" autocomplete="off">
 
-            <label for="vaultItemCategory">Category / Tag</label>
-            <input id="vaultItemCategory" type="text" placeholder="Example: Travel, Work, Notes" autocomplete="off">
+            <label for="vaultFolderSelect">Folder / Category</label>
+            <select id="vaultFolderSelect">
+                <!-- Dynamically populated -->
+            </select>
 
-            <label for="vaultItemUrl">Media URL / Direct Link</label>
-            <input id="vaultItemUrl" type="text" placeholder="https://... (image, video, or link)" autocomplete="off">
+            <div id="newFolderContainer" style="display: none; margin-top: 8px;">
+                <label for="vaultNewFolderInput">New Folder Name</label>
+                <input id="vaultNewFolderInput" type="text" placeholder="e.g. Vacation, Receipts, Tutorials" autocomplete="off">
+            </div>
 
+            <label for="vaultItemUrl">Channel Post Link or Message ID</label>
+            <input id="vaultItemUrl" type="text" placeholder="e.g. https://t.me/c/.../42 or 42" autocomplete="off">
 
             <button class="add-button" id="saveVaultItemButton">Save Item</button>
-            <button type="button" id="cancelVaultItemButton" style="width: 100%; background: none; border: none; color: #94a3b8; padding: 10px; margin-top: 8px; cursor: pointer;">Cancel</button>
+            <button type="button" id="cancelVaultItemButton">Cancel</button>
         </div>
 
         <!-- VAULT ITEMS LIST CONTAINER -->
-        <div id="vaultList" style="margin-top:20px;">
+        <div id="vaultList" style="margin-top:16px;">
             <div style="text-align:center; color:#94a3b8; padding:30px;">
                 Loading vault...
             </div>
@@ -482,7 +494,7 @@
 
 </main>
 
-<script type="module" src="/app/app.js?v=12"></script>
+<script type="module" src="/app/app.js?v=13"></script>
 
 </body>
 </html>
