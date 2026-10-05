@@ -123,3 +123,89 @@ async def api_delete_birthday(request: Request):
             "deleted_count": deleted_count,
         }
     )
+
+async def api_edit_birthday(request: Request):
+    try:
+        payload = await request.json()
+    except Exception:
+        return JSONResponse(
+            {
+                "success": False,
+                "error": "Invalid JSON payload.",
+            },
+            status_code=400,
+        )
+
+    chat_id = payload.get(
+        "chat_id",
+        DEFAULT_CHAT_ID
+    )
+
+    birthday_id = payload.get("id")
+
+    name = payload.get(
+        "name",
+        ""
+    ).strip()
+
+    birthday_mmdd = payload.get(
+        "birthday_mmdd",
+        ""
+    ).strip()
+
+    if not birthday_id:
+        return JSONResponse(
+            {
+                "success": False,
+                "error": "Birthday ID is required.",
+            },
+            status_code=400,
+        )
+
+    if not name:
+        return JSONResponse(
+            {
+                "success": False,
+                "error": "Name is required.",
+            },
+            status_code=400,
+        )
+
+    if not is_valid_mmdd(
+        birthday_mmdd
+    ):
+        return JSONResponse(
+            {
+                "success": False,
+                "error":
+                    "Birthday must use MM-DD format. Example: 06-28",
+            },
+            status_code=400,
+        )
+
+    from features.BirthDay.bday_database import (
+        update_birthday
+    )
+
+    birthday = update_birthday(
+        chat_id=chat_id,
+        birthday_id=birthday_id,
+        name=name,
+        birthday_mmdd=birthday_mmdd,
+    )
+
+    if birthday is None:
+        return JSONResponse(
+            {
+                "success": False,
+                "error": "Birthday not found.",
+            },
+            status_code=404,
+        )
+
+    return JSONResponse(
+        {
+            "success": True,
+            "birthday": birthday,
+        }
+    )
