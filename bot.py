@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import PlainTextResponse
+from starlette.responses import PlainTextResponse, JSONResponse
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 
@@ -88,6 +88,34 @@ register_word_game_handlers(application)
 # Error handler should be registered after feature handlers
 application.add_error_handler(error_handler)
 
+VAULT_CHANNEL_ID = os.getenv("VAULT_CHANNEL_ID")
+
+async def api_forward_vault_item(request: Request):
+    try:
+        data = await request.json()
+        message_id = int(data.get("messageId"))
+        user_id = data.get("userId")
+
+        if not user_id:
+            return JSONResponse({"error": "User ID is required"}, status_code=400)
+
+        # Use the configured vault channel, or fallback to an ID sent in the request
+        channel_id = data.get("channelId") or VAULT_CHANNEL_ID
+        if not channel_id:
+            return JSONResponse({"error": "No VAULT_CHANNEL_ID configured"}, status_code=500)
+
+        # Uses Telegram copyMessage: works on any video, photo, audio, or document
+        await application.bot.copy_message(
+            chat_id=int(user_id),
+            from_chat_id=channel_id,
+            message_id=message_id,
+        )
+
+        return JSONResponse({"success": True})
+    except Exception as e:
+        logging.error(f"Error copying message from vault: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
 
 starlette_app = Starlette(
     routes=[
@@ -98,6 +126,9 @@ starlette_app = Starlette(
 Route("/api/birthdays", api_add_birthday, methods=["POST"]),
 Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
 Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
+
+        Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
+
 
         Mount("/app", StaticFiles(directory="webapp", html=True), name="app"),
     ],
