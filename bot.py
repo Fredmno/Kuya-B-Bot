@@ -21,6 +21,7 @@ from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
     api_delete_birthday,
+    api_edit_birthday,
 )
 
 
@@ -94,8 +95,9 @@ starlette_app = Starlette(
         Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
 
         Route("/api/birthdays", api_get_birthdays, methods=["GET"]),
-        Route("/api/birthdays", api_add_birthday, methods=["POST"]),
-        Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
+Route("/api/birthdays", api_add_birthday, methods=["POST"]),
+Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
+Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
 
         Mount("/app", StaticFiles(directory="webapp", html=True), name="app"),
     ],
