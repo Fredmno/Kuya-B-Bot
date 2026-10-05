@@ -1,811 +1,438 @@
-const tg = window.Telegram.WebApp;
+// app.js
+// Telegram Personal Hub - Birthday Module
 
-tg.ready();
-tg.expand();
+const tg = window.Telegram?.WebApp;
 
-const dashboard = document.getElementById("dashboardPage");
-const birthdaysPage = document.getElementById("birthdaysPage");
+if (tg) {
+    tg.ready();
+    tg.expand();
+}
+
+// --------------------------------------------------
+// DATA
+// --------------------------------------------------
+
+let birthdays = JSON.parse(localStorage.getItem("birthdays") || "[]");
+
+// --------------------------------------------------
+// ELEMENTS
+// --------------------------------------------------
+
+const homePage = document.getElementById("homePage");
+const birthdayPage = document.getElementById("birthdayPage");
+const birthdayFormPage = document.getElementById("birthdayFormPage");
 
 const birthdayList = document.getElementById("birthdayList");
+
+const addBirthdayBtn = document.getElementById("addBirthdayBtn");
+const backBirthdayBtn = document.getElementById("backBirthdayBtn");
+const cancelBirthdayBtn = document.getElementById("cancelBirthdayBtn");
+
 const birthdayForm = document.getElementById("birthdayForm");
 
 const birthdayName = document.getElementById("birthdayName");
 const birthdayDate = document.getElementById("birthdayDate");
+const birthdayNotes = document.getElementById("birthdayNotes");
 
-const birthdayButton =
-    document.querySelector('[data-feature="birthdays"]');
+let editingBirthdayId = null;
 
+// --------------------------------------------------
+// PAGE NAVIGATION
+// --------------------------------------------------
 
-// ==========================
-// OPEN BIRTHDAYS
-// ==========================
+function showPage(page) {
+    if (homePage) homePage.classList.add("hidden");
+    if (birthdayPage) birthdayPage.classList.add("hidden");
+    if (birthdayFormPage) birthdayFormPage.classList.add("hidden");
 
-birthdayButton.addEventListener("click", () => {
-
-    dashboard.style.display = "none";
-    birthdaysPage.style.display = "block";
-
-    loadBirthdays();
-
-});
-
-
-// ==========================
-// BACK TO DASHBOARD
-// ==========================
-
-document
-    .getElementById("birthdayBackButton")
-    .addEventListener("click", () => {
-
-        birthdaysPage.style.display = "none";
-        dashboard.style.display = "block";
-
-    });
-
-
-// ==========================
-// SHOW ADD FORM
-// ==========================
-
-document
-    .getElementById("addBirthdayButton")
-    .addEventListener("click", () => {
-
-        birthdayForm.style.display = "block";
-
-        birthdayName.focus();
-
-    });
-
-
-// ==========================
-// CANCEL
-// ==========================
-
-document
-    .getElementById("cancelBirthdayButton")
-    .addEventListener("click", () => {
-
-        birthdayForm.style.display = "none";
-
-        birthdayName.value = "";
-        birthdayDate.value = "";
-
-    });
-// ==========================
-// LOAD BIRTHDAYS
-// ==========================
-
-async function loadBirthdays() {
-
-    birthdayList.innerHTML = `
-        <div style="
-            text-align:center;
-            color:#94a3b8;
-            padding:30px;
-        ">
-            Loading birthdays...
-        </div>
-    `;
-
-    try {
-
-        const response =
-            await fetch("/api/birthdays");
-
-        const data =
-            await response.json();
-
-        if (!data.success) {
-            throw new Error(data.error || "Failed to load birthdays.");
-        }
-
-        displayBirthdays(data.birthdays);
-
-    } catch (error) {
-
-        console.error(error);
-
-        birthdayList.innerHTML = `
-            <div style="
-                text-align:center;
-                color:#f87171;
-                padding:30px;
-            ">
-                Unable to load birthdays.
-            </div>
-        `;
-
-        tg.showAlert(
-            "Could not load birthdays."
-        );
+    if (page) {
+        page.classList.remove("hidden");
     }
 }
 
+function showHome() {
+    showPage(homePage);
+}
 
-// ==========================
+function showBirthdays() {
+    showPage(birthdayPage);
+    displayBirthdays();
+}
+
+function showBirthdayForm(id = null) {
+    showPage(birthdayFormPage);
+
+    editingBirthdayId = id;
+
+    if (id) {
+        const birthday = birthdays.find(item => item.id === id);
+
+        if (!birthday) {
+            editingBirthdayId = null;
+            resetBirthdayForm();
+            return;
+        }
+
+        birthdayName.value = birthday.name || "";
+        birthdayDate.value = birthday.date || "";
+        birthdayNotes.value = birthday.notes || "";
+
+        const title = document.getElementById("birthdayFormTitle");
+
+        if (title) {
+            title.textContent = "Edit Birthday";
+        }
+    } else {
+        resetBirthdayForm();
+
+        const title = document.getElementById("birthdayFormTitle");
+
+        if (title) {
+            title.textContent = "Add Birthday";
+        }
+    }
+}
+
+// --------------------------------------------------
+// STORAGE
+// --------------------------------------------------
+
+function saveBirthdays() {
+    localStorage.setItem("birthdays", JSON.stringify(birthdays));
+}
+
+// --------------------------------------------------
+// ESCAPE HTML
+// --------------------------------------------------
+
+function escapeHtml(value) {
+    if (value === null || value === undefined) {
+        return "";
+    }
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// --------------------------------------------------
+// DATE HELPERS
+// --------------------------------------------------
+
+function getBirthdayThisYear(dateString) {
+    const originalDate = new Date(dateString + "T00:00:00");
+
+    if (Number.isNaN(originalDate.getTime())) {
+        return null;
+    }
+
+    const today = new Date();
+
+    let birthday = new Date(
+        today.getFullYear(),
+        originalDate.getMonth(),
+        originalDate.getDate()
+    );
+
+    // If the birthday has already passed this year,
+    // use next year.
+    const todayStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+    );
+
+    if (birthday < todayStart) {
+        birthday = new Date(
+            today.getFullYear() + 1,
+            originalDate.getMonth(),
+            originalDate.getDate()
+        );
+    }
+
+    return birthday;
+}
+
+function daysUntilBirthday(dateString) {
+    const birthday = getBirthdayThisYear(dateString);
+
+    if (!birthday) {
+        return Infinity;
+    }
+
+    const today = new Date();
+
+    const todayStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+    );
+
+    const birthdayStart = new Date(
+        birthday.getFullYear(),
+        birthday.getMonth(),
+        birthday.getDate()
+    );
+
+    return Math.ceil(
+        (birthdayStart - todayStart) / (1000 * 60 * 60 * 24)
+    );
+}
+
+function formatBirthdayDate(dateString) {
+    const date = new Date(dateString + "T00:00:00");
+
+    if (Number.isNaN(date.getTime())) {
+        return dateString;
+    }
+
+    return date.toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric"
+    });
+}
+
+function formatBirthdayFullDate(dateString) {
+    const date = new Date(dateString + "T00:00:00");
+
+    if (Number.isNaN(date.getTime())) {
+        return dateString;
+    }
+
+    return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    });
+}
+
+// --------------------------------------------------
 // DISPLAY BIRTHDAYS
-// ==========================
+// --------------------------------------------------
 
-function displayBirthdays(birthdays) {
+function displayBirthdays() {
+    if (!birthdayList) {
+        console.error("birthdayList element not found.");
+        return;
+    }
 
-    if (!birthdays || birthdays.length === 0) {
+    birthdayList.innerHTML = "";
 
+    if (!birthdays.length) {
         birthdayList.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">🎂</div>
-
-                <strong>No birthdays yet</strong>
-
-                <small>
-                    Add someone's birthday and
-                    Kuya B will keep it safe.
-                </small>
+                <h3>No birthdays yet</h3>
+                <p>Add your first birthday to your personal hub.</p>
             </div>
         `;
 
         return;
     }
 
+    // Sort by upcoming birthday
+    const sortedBirthdays = [...birthdays].sort((a, b) => {
+        return daysUntilBirthday(a.date) - daysUntilBirthday(b.date);
+    });
 
-    birthdayList.innerHTML = "";
+    sortedBirthdays.forEach(birthday => {
+        const days = daysUntilBirthday(birthday.date);
 
+        let countdownText = "";
 
-    const today = new Date();
-
-    const currentMonth =
-        today.getMonth() + 1;
-
-    const currentDay =
-        today.getDate();
-
-
-    birthdays.forEach(birthday => {
-
-        const parts =
-            birthday.birthday_mmdd.split("-");
-
-        const month =
-            Number(parts[0]);
-
-        const day =
-            Number(parts[1]);
-
-
-        const birthdayDate =
-            new Date(
-                today.getFullYear(),
-                month - 1,
-                day
-            );
-
-
-        const todayDate =
-            new Date(
-                today.getFullYear(),
-                currentMonth - 1,
-                currentDay
-            );
-
-
-        if (birthdayDate < todayDate) {
-
-            birthdayDate.setFullYear(
-                today.getFullYear() + 1
-            );
-
+        if (days === 0) {
+            countdownText = "🎉 Today!";
+        } else if (days === 1) {
+            countdownText = "Tomorrow";
+        } else if (days !== Infinity) {
+            countdownText = `In ${days} days`;
         }
 
+        const card = document.createElement("div");
 
-        const difference =
-            birthdayDate - todayDate;
+        card.className = "birthday-card";
 
-
-        const daysUntil =
-            Math.ceil(
-                difference /
-                (1000 * 60 * 60 * 24)
-            );
-
-
-        let dateText;
-
-        if (daysUntil === 0) {
-
-            dateText = "🎉 Today!";
-
-        } else if (daysUntil === 1) {
-
-            dateText = "Tomorrow";
-
-        } else {
-
-            dateText =
-                `${daysUntil} days from now`;
-
+        if (days === 0) {
+            card.classList.add("birthday-today");
+        } else if (days <= 7) {
+            card.classList.add("birthday-soon");
         }
-
-
-        const monthName =
-            birthdayDate.toLocaleString(
-                "en-US",
-                {
-                    month: "long"
-                }
-            );
-
-
-        const card =
-            document.createElement("div");
-
-
-        card.className =
-            "birthday-card";
-
-
-        if (daysUntil <= 7) {
-
-            card.classList.add(
-                "birthday-soon"
-            );
-
-        }
-
 
         card.innerHTML = `
+            <div class="birthday-card-main">
+                <div class="birthday-icon">
+                    🎂
+                </div>
 
-            <div class="birthday-icon">
-                🎂
-            </div>
+                <div class="birthday-info">
+                    <h3>${escapeHtml(birthday.name)}</h3>
 
-            <div class="birthday-info">
+                    <div class="birthday-date">
+                        ${escapeHtml(formatBirthdayDate(birthday.date))}
+                    </div>
 
-                <strong>
-                    ${escapeHtml(
-                        birthday.name
-                    )}
-                </strong>
+                    ${
+                        birthday.notes
+                            ? `
+                                <div class="birthday-notes">
+                                    ${escapeHtml(birthday.notes)}
+                                </div>
+                              `
+                            : ""
+                    }
 
-                <span>
-                    ${monthName} ${day}
-                </span>
-
-                <small>
-                    ${dateText}
-                </small>
-
+                    ${
+                        countdownText
+                            ? `
+                                <div class="birthday-countdown">
+                                    ${escapeHtml(countdownText)}
+                                </div>
+                              `
+                            : ""
+                    }
+                </div>
             </div>
 
             <div class="birthday-actions">
-
                 <button
-                    class="birthday-edit"
-                    aria-label="Edit birthday"
+                    class="edit-birthday-btn"
+                    data-id="${escapeHtml(birthday.id)}"
+                    type="button"
                 >
                     ✏️
                 </button>
 
                 <button
-                    class="birthday-delete"
-                    aria-label="Delete birthday"
+                    class="delete-birthday-btn"
+                    data-id="${escapeHtml(birthday.id)}"
+                    type="button"
                 >
                     🗑️
                 </button>
-
             </div>
-
         `;
-
-
-        card
-            .querySelector(
-                ".birthday-edit"
-            )
-            .addEventListener(
-                "click",
-                () => editBirthday(
-                    birthday
-                )
-            );
-
-
-        card
-            .querySelector(
-                ".birthday-delete"
-            )
-            .addEventListener(
-                "click",
-                () => deleteBirthday(
-                    birthday.id
-                )
-            );
-
 
         birthdayList.appendChild(card);
-
     });
 
+    attachBirthdayActions();
 }
 
+// --------------------------------------------------
+// BIRTHDAY ACTIONS
+// --------------------------------------------------
 
-    birthdayList.innerHTML = "";
+function attachBirthdayActions() {
+    const editButtons = document.querySelectorAll(".edit-birthday-btn");
 
+    editButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            const id = this.dataset.id;
 
-    birthdays.forEach(birthday => {
+            showBirthdayForm(id);
+        });
+    });
 
-        const card =
-            document.createElement("div");
+    const deleteButtons = document.querySelectorAll(".delete-birthday-btn");
 
-        card.style.cssText = `
-            background:#1e293b;
-            border-radius:16px;
-            padding:16px;
-            margin-bottom:12px;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:12px;
-        `;
+    deleteButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            const id = this.dataset.id;
 
+            deleteBirthday(id);
+        });
+    });
+}
 
-        const info =
-            document.createElement("div");
+// --------------------------------------------------
+// ADD / EDIT BIRTHDAY
+// --------------------------------------------------
 
-        info.innerHTML = `
-            <strong style="
-                font-size:17px;
-                display:block;
-            ">
-                🎂 ${escapeHtml(birthday.name)}
-            </strong>
+function saveBirthday(event) {
+    event.preventDefault();
 
-            <small style="
-                color:#94a3b8;
-                display:block;
-                margin-top:5px;
-            ">
-                ${escapeHtml(birthday.birthday_mmdd)}
-            </small>
-        `;
+    const name = birthdayName?.value.trim();
+    const date = birthdayDate?.value;
+    const notes = birthdayNotes?.value.trim();
 
+    if (!name) {
+        alert("Please enter a name.");
+        return;
+    }
 
-        const deleteButton =
-            document.createElement("button");
+    if (!date) {
+        alert("Please select a birthday.");
+        return;
+    }
 
-        deleteButton.textContent = "🗑️";
-
-        deleteButton.style.cssText = `
-            border:none;
-            border-radius:10px;
-            padding:10px;
-            background:#450a0a;
-            color:white;
-            font-size:16px;
-        `;
-
-
-        deleteButton.addEventListener(
-            "click",
-            () => deleteBirthday(birthday.id)
+    if (editingBirthdayId) {
+        const index = birthdays.findIndex(
+            item => item.id === editingBirthdayId
         );
 
-
-        card.appendChild(info);
-        card.appendChild(deleteButton);
-
-        birthdayList.appendChild(card);
-
-    });
-}
-// ==========================
-// SAVE BIRTHDAY
-// ==========================
-
-document
-    .getElementById("saveBirthdayButton")
-    .addEventListener("click", async () => {
-
-        const name =
-            birthdayName.value.trim();
-
-        const birthday_mmdd =
-            birthdayDate.value.trim();
-
-
-        if (!name) {
-
-            tg.showAlert(
-                "Please enter a name."
-            );
-
-            return;
+        if (index !== -1) {
+            birthdays[index] = {
+                ...birthdays[index],
+                name,
+                date,
+                notes
+            };
         }
+    } else {
+        const newBirthday = {
+            id:
+                Date.now().toString() +
+                Math.random().toString(36).substring(2, 9),
 
-
-        if (!/^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/.test(birthday_mmdd)) {
-
-            tg.showAlert(
-                "Birthday must use MM-DD format.\nExample: 06-28"
-            );
-
-            return;
-        }
-
-
-        const user =
-            tg.initDataUnsafe?.user;
-
-
-        const payload = {
-
-            chat_id: "mini_app_default",
-
-            name: name,
-
-            birthday_mmdd: birthday_mmdd,
-
-            added_by_user_id:
-                user?.id
-                ? String(user.id)
-                : "",
-
-            added_by_name:
-                user?.first_name || "Mini App User"
-
+            name,
+            date,
+            notes
         };
 
+        birthdays.push(newBirthday);
+    }
 
-        try {
+    saveBirthdays();
 
-            const response =
-                await fetch(
-                    "/api/birthdays",
-                    {
-                        method: "POST",
+    editingBirthdayId = null;
 
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
+    resetBirthdayForm();
 
-                        body:
-                            JSON.stringify(payload)
-                    }
-                );
+    showBirthdays();
+}
 
-
-            const data =
-                await response.json();
-
-
-            if (!data.success) {
-
-                throw new Error(
-                    data.error ||
-                    "Failed to save birthday."
-                );
-
-            }
-
-
-            birthdayName.value = "";
-            birthdayDate.value = "";
-
-            birthdayForm.style.display =
-                "none";
-
-
-            await loadBirthdays();
-
-
-            tg.showAlert(
-                "🎂 Birthday saved!"
-            );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            tg.showAlert(
-                error.message ||
-                "Could not save birthday."
-            );
-
-        }
-
-    });
-
-
-// ==========================
+// --------------------------------------------------
 // DELETE BIRTHDAY
-// ==========================
+// --------------------------------------------------
 
-async function deleteBirthday(id) {
+function deleteBirthday(id) {
+    const birthday = birthdays.find(item => item.id === id);
 
-    const confirmed =
-        confirm(
-            "Delete this birthday?"
-        );
+    if (!birthday) {
+        return;
+    }
 
+    const confirmed = confirm(
+        `Delete ${birthday.name}'s birthday?`
+    );
 
     if (!confirmed) {
         return;
     }
 
+    birthdays = birthdays.filter(item => item.id !== id);
 
-    try {
+    saveBirthdays();
 
-        const response =
-            await fetch(
-                "/api/birthdays/delete",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-                            chat_id:
-                                "mini_app_default",
-
-                            id: id
-                        })
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (!data.success) {
-
-            throw new Error(
-                data.error ||
-                "Failed to delete birthday."
-            );
-
-        }
-
-
-        await loadBirthdays();
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        tg.showAlert(
-            "Could not delete birthday."
-        );
-
-    }
-
+    displayBirthdays();
 }
 
-
-// ==========================
-// HTML SAFETY
-// ==========================
-
-function escapeHtml(value) {
-
-    return String(value)
-
-        .replace(/&/g, "&amp;")
-
-        .replace(/</g, "&lt;")
-
-        .replace(/>/g, "&gt;")
-
-        .replace(/"/g, "&quot;")
-
-        .replace(/'/g, "&#039;");
-
-}
-
-
-// ==========================
-// OTHER BUTTONS
-// ==========================
-
-document
-    .querySelectorAll("[data-feature]")
-    .forEach(button => {
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                const feature =
-                    button.dataset.feature;
-
-
-                if (feature === "birthdays") {
-                    return;
-                }
-
-
-                tg.showAlert(
-                    `${button.innerText.trim()} is coming next.`
-                );
-
-            }
-        );
-
-    });
-
-
-// Word game
-
-document
-    .getElementById("gameButton")
-    ?.addEventListener(
-        "click",
-        () => {
-
-            tg.close();
-
-            // The existing /game command
-            // remains available in Telegram.
-
-        }
-    );
-
-
-// Search
-
-document
-    .getElementById("searchButton")
-    ?.addEventListener(
-        "click",
-        () => {
-
-            tg.showAlert(
-                "Vault search is coming next."
-            );
-
-        }
-    );
-
-
-// Add content
-
-document
-    .getElementById("addContentButton")
-    ?.addEventListener(
-        "click",
-        () => {
-
-            tg.showAlert(
-                "Content upload is coming next."
-            );
-
-        }
-    );
-
-
-// ==========================
-// EDIT BIRTHDAY
-// ==========================
-
-async function editBirthday(birthday) {
-
-    const newName = prompt(
-        "Birthday name:",
-        birthday.name
-    );
-
-    if (newName === null) {
-        return;
-    }
-
-    const name =
-        newName.trim();
-
-    if (!name) {
-        tg.showAlert(
-            "Name cannot be empty."
-        );
-        return;
-    }
-
-
-    const newDate = prompt(
-        "Birthday (MM-DD):",
-        birthday.birthday_mmdd
-    );
-
-    if (newDate === null) {
-        return;
-    }
-
-    const birthday_mmdd =
-        newDate.trim();
-
-
-    if (
-        !/^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/
-            .test(birthday_mmdd)
-    ) {
-
-        tg.showAlert(
-            "Birthday must use MM-DD format.\nExample: 06-28"
-        );
-
-        return;
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/birthdays/edit",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            chat_id:
-                                "mini_app_default",
-
-                            id:
-                                birthday.id,
-
-                            name:
-                                name,
-
-                            birthday_mmdd:
-                                birthday_mmdd
-
-                        })
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (!data.success) {
-
-            throw new Error(
-                data.error ||
-                "Could not update birthday."
-            );
-
-        }
-
-
-        await loadBirthdays();
-
-
-        tg.showAlert(
-            "🎂 Birthday updated!"
-        );
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        tg.showAlert(
-            error.message ||
-            "Could not update birthday."
-        );
-
-    }
-
-}
+// --------------------------------------------------
+// FORM RESET
+// --------------------------------------------------
+
+function resetBirthdayForm() {
+    if (birthdayForm)
