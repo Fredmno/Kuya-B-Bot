@@ -28,24 +28,39 @@ import {
     displayTasks
 } from "./modules/tasks.js";
 
+import {
+    loadReminders,
+    showReminderForm,
+    hideReminderForm,
+    saveReminder,
+    displayReminders
+} from "./modules/reminders.js";
+
 // ---------------------------------------------------------
 // NAVIGATION & PAGE ROUTING
 // ---------------------------------------------------------
+
+function hideAllForms() {
+    hideBirthdayForm();
+    hideLogForm();
+    hideTaskForm();
+    hideReminderForm();
+}
 
 function showDashboard() {
     const dashboard = document.getElementById("dashboardPage");
     const birthdays = document.getElementById("birthdaysPage");
     const dailyLogs = document.getElementById("dailyLogsPage");
     const tasksPage = document.getElementById("tasksPage");
+    const remindersPage = document.getElementById("remindersPage");
 
     if (dashboard) dashboard.style.display = "block";
     if (birthdays) birthdays.style.display = "none";
     if (dailyLogs) dailyLogs.style.display = "none";
     if (tasksPage) tasksPage.style.display = "none";
+    if (remindersPage) remindersPage.style.display = "none";
 
-    hideBirthdayForm();
-    hideLogForm();
-    hideTaskForm();
+    hideAllForms();
 
     if (tg?.BackButton) {
         tg.BackButton.hide();
@@ -53,17 +68,11 @@ function showDashboard() {
 }
 
 function showBirthdays() {
-    const dashboard = document.getElementById("dashboardPage");
-    const birthdays = document.getElementById("birthdaysPage");
-    const dailyLogs = document.getElementById("dailyLogsPage");
-    const tasksPage = document.getElementById("tasksPage");
+    showDashboard();
+    document.getElementById("dashboardPage").style.display = "none";
+    const page = document.getElementById("birthdaysPage");
+    if (page) page.style.display = "block";
 
-    if (dashboard) dashboard.style.display = "none";
-    if (birthdays) birthdays.style.display = "block";
-    if (dailyLogs) dailyLogs.style.display = "none";
-    if (tasksPage) tasksPage.style.display = "none";
-
-    hideBirthdayForm();
     displayBirthdays();
 
     if (tg?.BackButton) {
@@ -73,17 +82,11 @@ function showBirthdays() {
 }
 
 function showDailyLogs() {
-    const dashboard = document.getElementById("dashboardPage");
-    const birthdays = document.getElementById("birthdaysPage");
-    const dailyLogs = document.getElementById("dailyLogsPage");
-    const tasksPage = document.getElementById("tasksPage");
+    showDashboard();
+    document.getElementById("dashboardPage").style.display = "none";
+    const page = document.getElementById("dailyLogsPage");
+    if (page) page.style.display = "block";
 
-    if (dashboard) dashboard.style.display = "none";
-    if (birthdays) birthdays.style.display = "none";
-    if (dailyLogs) dailyLogs.style.display = "block";
-    if (tasksPage) tasksPage.style.display = "none";
-
-    hideLogForm();
     displayDailyLogs();
 
     if (tg?.BackButton) {
@@ -93,18 +96,26 @@ function showDailyLogs() {
 }
 
 function showTasks() {
-    const dashboard = document.getElementById("dashboardPage");
-    const birthdays = document.getElementById("birthdaysPage");
-    const dailyLogs = document.getElementById("dailyLogsPage");
-    const tasksPage = document.getElementById("tasksPage");
+    showDashboard();
+    document.getElementById("dashboardPage").style.display = "none";
+    const page = document.getElementById("tasksPage");
+    if (page) page.style.display = "block";
 
-    if (dashboard) dashboard.style.display = "none";
-    if (birthdays) birthdays.style.display = "none";
-    if (dailyLogs) dailyLogs.style.display = "none";
-    if (tasksPage) tasksPage.style.display = "block";
-
-    hideTaskForm();
     displayTasks();
+
+    if (tg?.BackButton) {
+        tg.BackButton.show();
+        tg.BackButton.onClick(showDashboard);
+    }
+}
+
+function showReminders() {
+    showDashboard();
+    document.getElementById("dashboardPage").style.display = "none";
+    const page = document.getElementById("remindersPage");
+    if (page) page.style.display = "block";
+
+    displayReminders();
 
     if (tg?.BackButton) {
         tg.BackButton.show();
@@ -120,6 +131,7 @@ function initApp() {
     loadBirthdays();
     loadDailyLogs();
     loadTasks();
+    loadReminders();
     showDashboard();
 
     document.addEventListener("click", function (e) {
@@ -145,7 +157,14 @@ function initApp() {
             return;
         }
 
-        if (e.target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton")) {
+        if (e.target.closest('[data-feature="reminders"]')) {
+            e.preventDefault();
+            triggerHaptic("light");
+            showReminders();
+            return;
+        }
+
+        if (e.target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton")) {
             e.preventDefault();
             triggerHaptic("light");
             showDashboard();
@@ -159,13 +178,11 @@ function initApp() {
             showBirthdayForm();
             return;
         }
-
         if (e.target.closest("#cancelBirthdayButton")) {
             e.preventDefault();
             hideBirthdayForm();
             return;
         }
-
         if (e.target.closest("#saveBirthdayButton")) {
             e.preventDefault();
             saveBirthday();
@@ -179,19 +196,16 @@ function initApp() {
             showLogForm();
             return;
         }
-
         if (e.target.closest("#cancelLogButton")) {
             e.preventDefault();
             hideLogForm();
             return;
         }
-
         if (e.target.closest("#saveLogButton")) {
             e.preventDefault();
             saveLog();
             return;
         }
-
         const moodBtn = e.target.closest(".mood-btn");
         if (moodBtn) {
             e.preventDefault();
@@ -207,16 +221,32 @@ function initApp() {
             showTaskForm();
             return;
         }
-
         if (e.target.closest("#cancelTaskButton")) {
             e.preventDefault();
             hideTaskForm();
             return;
         }
-
         if (e.target.closest("#saveTaskButton")) {
             e.preventDefault();
             saveTask();
+            return;
+        }
+
+        // --- Reminders Actions ---
+        if (e.target.closest("#addReminderButton")) {
+            e.preventDefault();
+            triggerHaptic("light");
+            showReminderForm();
+            return;
+        }
+        if (e.target.closest("#cancelReminderButton")) {
+            e.preventDefault();
+            hideReminderForm();
+            return;
+        }
+        if (e.target.closest("#saveReminderButton")) {
+            e.preventDefault();
+            saveReminder();
             return;
         }
 
@@ -226,13 +256,11 @@ function initApp() {
             alert("Add Content modal coming soon!");
             return;
         }
-
         if (e.target.closest("#gameButton")) {
             e.preventDefault();
             alert("Word Scramble launcher ready!");
             return;
         }
-
         if (e.target.closest("#searchButton")) {
             e.preventDefault();
             alert("Universal Search coming in Phase 5!");
@@ -242,23 +270,26 @@ function initApp() {
         const featureTile = e.target.closest("[data-feature]");
         if (featureTile) {
             const name = featureTile.dataset.feature;
-            if (name !== "birthdays" && name !== "daily" && name !== "tasks") {
+            if (!["birthdays", "daily", "tasks", "reminders"].includes(name)) {
                 e.preventDefault();
                 alert(`${name.charAt(0).toUpperCase() + name.slice(1)} module coming soon.`);
             }
         }
     });
 
-    // Enter key submission on Task title field
-    const taskTitleInput = document.getElementById("taskTitle");
-    if (taskTitleInput) {
-        taskTitleInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                saveTask();
-            }
-        });
-    }
+    // Enter key submission on Task & Reminder title inputs
+    ["taskTitle", "reminderTitle"].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener("keydown", function (e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (id === "taskTitle") saveTask();
+                    if (id === "reminderTitle") saveReminder();
+                }
+            });
+        }
+    });
 
     // Auto-dash format for birthday date
     const bdayDateInput = document.getElementById("birthdayDate");
