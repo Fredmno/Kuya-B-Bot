@@ -1610,3 +1610,28 @@ textarea:focus {
 #cancelVaultItemButton:active {
     color: #f8fafc;
 }
+
+/* =========================================================
+   FOLDER FILTER PILLS
+   ========================================================= */
+
+.folder-pill {
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #94a3b8;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.folder-pill.active {
+    background: #22c55e !important; /* Matches save green */
+    color: #0f172a !important;
+    border-color: #22c55e !important;
+    font-weight: 700;
+}
+
