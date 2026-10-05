@@ -2,27 +2,263 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kuya B Mini App</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <title>Kuya B</title>
+
     <link rel="stylesheet" href="/app/style.css" />
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
+
 <body>
+
     <main class="app">
-        <section class="card">
-            <h1>🤖 Kuya B</h1>
-            <p class="subtitle">Mini App Dashboard</p>
 
-            <button class="feature-button" id="birthdayButton">
-                🎂 Birthday Manager
-            </button>
+        <!-- Header -->
+        <header class="header">
 
-            <p class="note">
-                Birthday feature setup is next.
-            </p>
+            <div>
+                <div class="greeting">
+                    Welcome back 👋
+                </div>
+
+                <h1>Kuya B</h1>
+
+                <p>
+                    Your personal hub
+                </p>
+            </div>
+
+            <div class="avatar">
+                🤖
+            </div>
+
+        </header>
+
+
+        <!-- Search -->
+        <button
+            class="search-bar"
+            id="searchButton"
+        >
+            <span>🔍</span>
+
+            <span class="search-text">
+                Search your vault...
+            </span>
+        </button>
+
+
+        <!-- Personal -->
+        <section class="section">
+
+            <h2>Personal</h2>
+
+            <div class="grid">
+
+                <button
+                    class="tile tile-blue"
+                    data-feature="daily"
+                >
+                    <span class="icon">📅</span>
+
+                    <strong>
+                        Daily Logs
+                    </strong>
+
+                    <small>
+                        Your days
+                    </small>
+                </button>
+
+
+                <button
+                    class="tile tile-green"
+                    data-feature="tasks"
+                >
+                    <span class="icon">✅</span>
+
+                    <strong>
+                        Tasks
+                    </strong>
+
+                    <small>
+                        Get things done
+                    </small>
+                </button>
+
+
+                <button
+                    class="tile tile-orange"
+                    data-feature="reminders"
+                >
+                    <span class="icon">⏰</span>
+
+                    <strong>
+                        Reminders
+                    </strong>
+
+                    <small>
+                        Don't forget
+                    </small>
+                </button>
+
+
+                <button
+                    class="tile tile-pink"
+                    data-feature="birthdays"
+                >
+                    <span class="icon">🎂</span>
+
+                    <strong>
+                        Birthdays
+                    </strong>
+
+                    <small>
+                        Important dates
+                    </small>
+                </button>
+
+            </div>
+
         </section>
+
+
+        <!-- Media & Content -->
+        <section class="section">
+
+            <h2>Media &amp; Content</h2>
+
+            <div class="grid">
+
+                <button
+                    class="tile tile-purple"
+                    data-feature="videos"
+                >
+                    <span class="icon">🎥</span>
+
+                    <strong>
+                        Videos
+                    </strong>
+
+                    <small>
+                        Your video vault
+                    </small>
+                </button>
+
+
+                <button
+                    class="tile tile-cyan"
+                    data-feature="pictures"
+                >
+                    <span class="icon">🖼️</span>
+
+                    <strong>
+                        Pictures
+                    </strong>
+
+                    <small>
+                        Your photo vault
+                    </small>
+                </button>
+
+
+                <button
+                    class="tile tile-gray"
+                    data-feature="other"
+                >
+                    <span class="icon">📚</span>
+
+                    <strong>
+                        Other
+                    </strong>
+
+                    <small>
+                        Everything else
+                    </small>
+                </button>
+
+
+                <button
+                    class="tile tile-dark"
+                    data-feature="search"
+                >
+                    <span class="icon">🔎</span>
+
+                    <strong>
+                        Search
+                    </strong>
+
+                    <small>
+                        Find anything
+                    </small>
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- Add Content -->
+        <button
+            class="add-button"
+            id="addContentButton"
+        >
+            <span>＋</span>
+
+            Add Content
+        </button>
+
+
+        <!-- Word Game -->
+        <button
+            class="game-button"
+            id="gameButton"
+        >
+
+            <span>🎮</span>
+
+            <div>
+
+                <strong>
+                    Word Scramble
+                </strong>
+
+                <small>
+                    Take a quick break
+                </small>
+
+            </div>
+
+            <span class="arrow">
+                ›
+            </span>
+
+        </button>
+
+
+        <!-- Footer -->
+        <footer>
+
+            <span>
+                🤖 Kuya B
+            </span>
+
+            <span>
+                Personal Hub
+            </span>
+
+        </footer>
+
     </main>
 
+
     <script src="/app/app.js"></script>
+
 </body>
 </html>
