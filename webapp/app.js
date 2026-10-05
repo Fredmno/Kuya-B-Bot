@@ -1,112 +1,136 @@
-// app.js
-// Telegram Personal Hub - Birthday Module
+/* =========================================================
+   KUYA B — PERSONAL HUB
+   Telegram Mini App
+   Birthday Module
+   ========================================================= */
 
 const tg = window.Telegram?.WebApp;
+
+// ---------------------------------------------------------
+// TELEGRAM INITIALIZATION
+// ---------------------------------------------------------
 
 if (tg) {
     tg.ready();
     tg.expand();
 }
 
-// --------------------------------------------------
-// DATA
-// --------------------------------------------------
 
-let birthdays = JSON.parse(localStorage.getItem("birthdays") || "[]");
-
-// --------------------------------------------------
+// ---------------------------------------------------------
 // ELEMENTS
-// --------------------------------------------------
+// ---------------------------------------------------------
 
-const homePage = document.getElementById("homePage");
-const birthdayPage = document.getElementById("birthdayPage");
-const birthdayFormPage = document.getElementById("birthdayFormPage");
+const dashboardPage =
+    document.getElementById("dashboardPage");
 
-const birthdayList = document.getElementById("birthdayList");
+const birthdaysPage =
+    document.getElementById("birthdaysPage");
 
-const addBirthdayBtn = document.getElementById("addBirthdayBtn");
-const backBirthdayBtn = document.getElementById("backBirthdayBtn");
-const cancelBirthdayBtn = document.getElementById("cancelBirthdayBtn");
+const birthdayList =
+    document.getElementById("birthdayList");
 
-const birthdayForm = document.getElementById("birthdayForm");
+const birthdayForm =
+    document.getElementById("birthdayForm");
 
-const birthdayName = document.getElementById("birthdayName");
-const birthdayDate = document.getElementById("birthdayDate");
-const birthdayNotes = document.getElementById("birthdayNotes");
+const birthdayName =
+    document.getElementById("birthdayName");
+
+const birthdayDate =
+    document.getElementById("birthdayDate");
+
+const birthdayBackButton =
+    document.getElementById("birthdayBackButton");
+
+const addBirthdayButton =
+    document.getElementById("addBirthdayButton");
+
+const saveBirthdayButton =
+    document.getElementById("saveBirthdayButton");
+
+const cancelBirthdayButton =
+    document.getElementById("cancelBirthdayButton");
+
+
+// ---------------------------------------------------------
+// DATA
+// ---------------------------------------------------------
+
+let birthdays = [];
 
 let editingBirthdayId = null;
 
-// --------------------------------------------------
-// PAGE NAVIGATION
-// --------------------------------------------------
 
-function showPage(page) {
-    if (homePage) homePage.classList.add("hidden");
-    if (birthdayPage) birthdayPage.classList.add("hidden");
-    if (birthdayFormPage) birthdayFormPage.classList.add("hidden");
+// ---------------------------------------------------------
+// LOAD BIRTHDAYS
+// ---------------------------------------------------------
 
-    if (page) {
-        page.classList.remove("hidden");
+function loadBirthdays() {
+
+    try {
+
+        const saved =
+            localStorage.getItem("kuyaB_birthdays");
+
+        if (saved) {
+
+            birthdays =
+                JSON.parse(saved);
+
+        } else {
+
+            birthdays = [];
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Unable to load birthdays:",
+            error
+        );
+
+        birthdays = [];
+
     }
+
 }
 
-function showHome() {
-    showPage(homePage);
-}
 
-function showBirthdays() {
-    showPage(birthdayPage);
-    displayBirthdays();
-}
-
-function showBirthdayForm(id = null) {
-    showPage(birthdayFormPage);
-
-    editingBirthdayId = id;
-
-    if (id) {
-        const birthday = birthdays.find(item => item.id === id);
-
-        if (!birthday) {
-            editingBirthdayId = null;
-            resetBirthdayForm();
-            return;
-        }
-
-        birthdayName.value = birthday.name || "";
-        birthdayDate.value = birthday.date || "";
-        birthdayNotes.value = birthday.notes || "";
-
-        const title = document.getElementById("birthdayFormTitle");
-
-        if (title) {
-            title.textContent = "Edit Birthday";
-        }
-    } else {
-        resetBirthdayForm();
-
-        const title = document.getElementById("birthdayFormTitle");
-
-        if (title) {
-            title.textContent = "Add Birthday";
-        }
-    }
-}
-
-// --------------------------------------------------
-// STORAGE
-// --------------------------------------------------
+// ---------------------------------------------------------
+// SAVE BIRTHDAYS
+// ---------------------------------------------------------
 
 function saveBirthdays() {
-    localStorage.setItem("birthdays", JSON.stringify(birthdays));
+
+    try {
+
+        localStorage.setItem(
+            "kuyaB_birthdays",
+            JSON.stringify(birthdays)
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Unable to save birthdays:",
+            error
+        );
+
+    }
+
 }
 
-// --------------------------------------------------
+
+// ---------------------------------------------------------
 // ESCAPE HTML
-// --------------------------------------------------
+// ---------------------------------------------------------
 
 function escapeHtml(value) {
-    if (value === null || value === undefined) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
         return "";
     }
 
@@ -116,323 +140,475 @@ function escapeHtml(value) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+
 }
 
-// --------------------------------------------------
-// DATE HELPERS
-// --------------------------------------------------
 
-function getBirthdayThisYear(dateString) {
-    const originalDate = new Date(dateString + "T00:00:00");
+// ---------------------------------------------------------
+// DATE VALIDATION
+// ---------------------------------------------------------
 
-    if (Number.isNaN(originalDate.getTime())) {
+function isValidBirthday(value) {
+
+    if (!/^\d{2}-\d{2}$/.test(value)) {
+        return false;
+    }
+
+    const parts =
+        value.split("-");
+
+    const month =
+        Number(parts[0]);
+
+    const day =
+        Number(parts[1]);
+
+    if (
+        month < 1 ||
+        month > 12 ||
+        day < 1 ||
+        day > 31
+    ) {
+        return false;
+    }
+
+    // Check actual number of days in month.
+    const testDate =
+        new Date(
+            2024,
+            month,
+            0
+        );
+
+    const daysInMonth =
+        testDate.getDate();
+
+    return day <= daysInMonth;
+
+}
+
+
+// ---------------------------------------------------------
+// GET NEXT BIRTHDAY
+// ---------------------------------------------------------
+
+function getNextBirthday(dateString) {
+
+    if (!isValidBirthday(dateString)) {
         return null;
     }
 
-    const today = new Date();
+    const parts =
+        dateString.split("-");
 
-    let birthday = new Date(
-        today.getFullYear(),
-        originalDate.getMonth(),
-        originalDate.getDate()
-    );
+    const month =
+        Number(parts[0]);
 
-    // If the birthday has already passed this year,
-    // use next year.
-    const todayStart = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate()
-    );
+    const day =
+        Number(parts[1]);
+
+    const today =
+        new Date();
+
+    const todayStart =
+        new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate()
+        );
+
+    let birthday =
+        new Date(
+            today.getFullYear(),
+            month - 1,
+            day
+        );
 
     if (birthday < todayStart) {
-        birthday = new Date(
-            today.getFullYear() + 1,
-            originalDate.getMonth(),
-            originalDate.getDate()
-        );
+
+        birthday =
+            new Date(
+                today.getFullYear() + 1,
+                month - 1,
+                day
+            );
+
     }
 
     return birthday;
+
 }
 
+
+// ---------------------------------------------------------
+// DAYS UNTIL BIRTHDAY
+// ---------------------------------------------------------
+
 function daysUntilBirthday(dateString) {
-    const birthday = getBirthdayThisYear(dateString);
+
+    const birthday =
+        getNextBirthday(dateString);
 
     if (!birthday) {
         return Infinity;
     }
 
-    const today = new Date();
+    const today =
+        new Date();
 
-    const todayStart = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate()
+    const todayStart =
+        new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate()
+        );
+
+    return Math.round(
+        (
+            birthday.getTime() -
+            todayStart.getTime()
+        ) /
+        (1000 * 60 * 60 * 24)
     );
 
-    const birthdayStart = new Date(
-        birthday.getFullYear(),
-        birthday.getMonth(),
-        birthday.getDate()
-    );
-
-    return Math.ceil(
-        (birthdayStart - todayStart) / (1000 * 60 * 60 * 24)
-    );
 }
 
-function formatBirthdayDate(dateString) {
-    const date = new Date(dateString + "T00:00:00");
 
-    if (Number.isNaN(date.getTime())) {
+// ---------------------------------------------------------
+// FORMAT BIRTHDAY
+// ---------------------------------------------------------
+
+function formatBirthday(dateString) {
+
+    if (!isValidBirthday(dateString)) {
         return dateString;
     }
 
-    return date.toLocaleDateString(undefined, {
-        month: "long",
-        day: "numeric"
-    });
+    const parts =
+        dateString.split("-");
+
+    const month =
+        Number(parts[0]);
+
+    const day =
+        Number(parts[1]);
+
+    const date =
+        new Date(
+            2024,
+            month - 1,
+            day
+        );
+
+    return date.toLocaleDateString(
+        undefined,
+        {
+            month: "long",
+            day: "numeric"
+        }
+    );
+
 }
 
-function formatBirthdayFullDate(dateString) {
-    const date = new Date(dateString + "T00:00:00");
 
-    if (Number.isNaN(date.getTime())) {
-        return dateString;
+// ---------------------------------------------------------
+// SHOW DASHBOARD
+// ---------------------------------------------------------
+
+function showDashboard() {
+
+    if (dashboardPage) {
+
+        dashboardPage.style.display =
+            "";
+
     }
 
-    return date.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-    });
+    if (birthdaysPage) {
+
+        birthdaysPage.style.display =
+            "none";
+
+    }
+
+    hideBirthdayForm();
+
 }
 
-// --------------------------------------------------
-// DISPLAY BIRTHDAYS
-// --------------------------------------------------
 
-function displayBirthdays() {
-    if (!birthdayList) {
-        console.error("birthdayList element not found.");
+// ---------------------------------------------------------
+// SHOW BIRTHDAYS
+// ---------------------------------------------------------
+
+function showBirthdays() {
+
+    if (dashboardPage) {
+
+        dashboardPage.style.display =
+            "none";
+
+    }
+
+    if (birthdaysPage) {
+
+        birthdaysPage.style.display =
+            "";
+
+    }
+
+    hideBirthdayForm();
+
+    displayBirthdays();
+
+}
+
+
+// ---------------------------------------------------------
+// SHOW BIRTHDAY FORM
+// ---------------------------------------------------------
+
+function showBirthdayForm(
+    birthday = null
+) {
+
+    if (!birthdayForm) {
         return;
     }
 
-    birthdayList.innerHTML = "";
+    birthdayForm.style.display =
+        "block";
+
+    if (birthday) {
+
+        editingBirthdayId =
+            birthday.id;
+
+        birthdayName.value =
+            birthday.name;
+
+        birthdayDate.value =
+            birthday.date;
+
+        const heading =
+            birthdayForm.querySelector("h2");
+
+        if (heading) {
+
+            heading.textContent =
+                "Edit Birthday";
+
+        }
+
+        if (saveBirthdayButton) {
+
+            saveBirthdayButton.textContent =
+                "Save Changes";
+
+        }
+
+    } else {
+
+        editingBirthdayId =
+            null;
+
+        birthdayName.value =
+            "";
+
+        birthdayDate.value =
+            "";
+
+        const heading =
+            birthdayForm.querySelector("h2");
+
+        if (heading) {
+
+            heading.textContent =
+                "Add Birthday";
+
+        }
+
+        if (saveBirthdayButton) {
+
+            saveBirthdayButton.textContent =
+                "Save Birthday";
+
+        }
+
+    }
+
+    setTimeout(() => {
+
+        if (birthdayName) {
+            birthdayName.focus();
+        }
+
+    }, 100);
+
+}
+
+
+// ---------------------------------------------------------
+// HIDE BIRTHDAY FORM
+// ---------------------------------------------------------
+
+function hideBirthdayForm() {
+
+    if (!birthdayForm) {
+        return;
+    }
+
+    birthdayForm.style.display =
+        "none";
+
+    editingBirthdayId =
+        null;
+
+}
+
+
+// ---------------------------------------------------------
+// DISPLAY BIRTHDAYS
+// ---------------------------------------------------------
+
+function displayBirthdays() {
+
+    if (!birthdayList) {
+        return;
+    }
+
+    birthdayList.innerHTML =
+        "";
+
+    // -----------------------------------------------------
+    // EMPTY STATE
+    // -----------------------------------------------------
 
     if (!birthdays.length) {
+
         birthdayList.innerHTML = `
+
             <div class="empty-state">
-                <div class="empty-icon">🎂</div>
-                <h3>No birthdays yet</h3>
-                <p>Add your first birthday to your personal hub.</p>
+
+                <div class="empty-icon">
+                    🎂
+                </div>
+
+                <strong>
+                    No birthdays yet
+                </strong>
+
+                <small>
+                    Add birthdays for family,
+                    friends, and important people.
+                </small>
+
             </div>
+
         `;
 
         return;
+
     }
 
-    // Sort by upcoming birthday
-    const sortedBirthdays = [...birthdays].sort((a, b) => {
-        return daysUntilBirthday(a.date) - daysUntilBirthday(b.date);
-    });
 
-    sortedBirthdays.forEach(birthday => {
-        const days = daysUntilBirthday(birthday.date);
+    // -----------------------------------------------------
+    // SORT BY UPCOMING
+    // -----------------------------------------------------
 
-        let countdownText = "";
+    const sorted =
+        [...birthdays].sort(
+            (a, b) => {
 
-        if (days === 0) {
-            countdownText = "🎉 Today!";
-        } else if (days === 1) {
-            countdownText = "Tomorrow";
-        } else if (days !== Infinity) {
-            countdownText = `In ${days} days`;
-        }
+                return (
+                    daysUntilBirthday(a.date) -
+                    daysUntilBirthday(b.date)
+                );
 
-        const card = document.createElement("div");
+            }
+        );
 
-        card.className = "birthday-card";
 
-        if (days === 0) {
-            card.classList.add("birthday-today");
-        } else if (days <= 7) {
-            card.classList.add("birthday-soon");
-        }
+    // -----------------------------------------------------
+    // CREATE CARDS
+    // -----------------------------------------------------
 
-        card.innerHTML = `
-            <div class="birthday-card-main">
+    sorted.forEach(
+        birthday => {
+
+            const days =
+                daysUntilBirthday(
+                    birthday.date
+                );
+
+            let countdownText =
+                "";
+
+            if (days === 0) {
+
+                countdownText =
+                    "🎉 Today!";
+
+            } else if (days === 1) {
+
+                countdownText =
+                    "Tomorrow";
+
+            } else if (
+                days !== Infinity
+            ) {
+
+                countdownText =
+                    `In ${days} days`;
+
+            }
+
+
+            let cardClass =
+                "birthday-card";
+
+            if (days === 0) {
+
+                cardClass +=
+                    " birthday-soon";
+
+            } else if (days <= 7) {
+
+                cardClass +=
+                    " birthday-soon";
+
+            }
+
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+            card.className =
+                cardClass;
+
+
+            card.innerHTML = `
+
                 <div class="birthday-icon">
                     🎂
                 </div>
 
                 <div class="birthday-info">
-                    <h3>${escapeHtml(birthday.name)}</h3>
 
-                    <div class="birthday-date">
-                        ${escapeHtml(formatBirthdayDate(birthday.date))}
-                    </div>
+                    <strong>
+                        ${escapeHtml(
+                            birthday.name
+                        )}
+                    </strong>
 
-                    ${
-                        birthday.notes
-                            ? `
-                                <div class="birthday-notes">
-                                    ${escapeHtml(birthday.notes)}
-                                </div>
-                              `
-                            : ""
-                    }
+                    <span>
+                        ${escapeHtml(
+                            formatBirthday(
+                                birthday.date
+                            )
+                        )}
+                    </span>
 
-                    ${
-                        countdownText
-                            ? `
-                                <div class="birthday-countdown">
-                                    ${escapeHtml(countdownText)}
-                                </div>
-                              `
-                            : ""
-                    }
-                </div>
-            </div>
-
-            <div class="birthday-actions">
-                <button
-                    class="edit-birthday-btn"
-                    data-id="${escapeHtml(birthday.id)}"
-                    type="button"
-                >
-                    ✏️
-                </button>
-
-                <button
-                    class="delete-birthday-btn"
-                    data-id="${escapeHtml(birthday.id)}"
-                    type="button"
-                >
-                    🗑️
-                </button>
-            </div>
-        `;
-
-        birthdayList.appendChild(card);
-    });
-
-    attachBirthdayActions();
-}
-
-// --------------------------------------------------
-// BIRTHDAY ACTIONS
-// --------------------------------------------------
-
-function attachBirthdayActions() {
-    const editButtons = document.querySelectorAll(".edit-birthday-btn");
-
-    editButtons.forEach(button => {
-        button.addEventListener("click", function () {
-            const id = this.dataset.id;
-
-            showBirthdayForm(id);
-        });
-    });
-
-    const deleteButtons = document.querySelectorAll(".delete-birthday-btn");
-
-    deleteButtons.forEach(button => {
-        button.addEventListener("click", function () {
-            const id = this.dataset.id;
-
-            deleteBirthday(id);
-        });
-    });
-}
-
-// --------------------------------------------------
-// ADD / EDIT BIRTHDAY
-// --------------------------------------------------
-
-function saveBirthday(event) {
-    event.preventDefault();
-
-    const name = birthdayName?.value.trim();
-    const date = birthdayDate?.value;
-    const notes = birthdayNotes?.value.trim();
-
-    if (!name) {
-        alert("Please enter a name.");
-        return;
-    }
-
-    if (!date) {
-        alert("Please select a birthday.");
-        return;
-    }
-
-    if (editingBirthdayId) {
-        const index = birthdays.findIndex(
-            item => item.id === editingBirthdayId
-        );
-
-        if (index !== -1) {
-            birthdays[index] = {
-                ...birthdays[index],
-                name,
-                date,
-                notes
-            };
-        }
-    } else {
-        const newBirthday = {
-            id:
-                Date.now().toString() +
-                Math.random().toString(36).substring(2, 9),
-
-            name,
-            date,
-            notes
-        };
-
-        birthdays.push(newBirthday);
-    }
-
-    saveBirthdays();
-
-    editingBirthdayId = null;
-
-    resetBirthdayForm();
-
-    showBirthdays();
-}
-
-// --------------------------------------------------
-// DELETE BIRTHDAY
-// --------------------------------------------------
-
-function deleteBirthday(id) {
-    const birthday = birthdays.find(item => item.id === id);
-
-    if (!birthday) {
-        return;
-    }
-
-    const confirmed = confirm(
-        `Delete ${birthday.name}'s birthday?`
-    );
-
-    if (!confirmed) {
-        return;
-    }
-
-    birthdays = birthdays.filter(item => item.id !== id);
-
-    saveBirthdays();
-
-    displayBirthdays();
-}
-
-// --------------------------------------------------
-// FORM RESET
-// --------------------------------------------------
-
-function resetBirthdayForm() {
-    if (birthdayForm)
+                    <small>
+                        ${
