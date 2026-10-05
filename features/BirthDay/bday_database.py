@@ -104,3 +104,48 @@ def delete_birthday(chat_id, birthday_id):
     conn.close()
 
     return deleted_count
+
+
+def update_birthday(
+    chat_id,
+    birthday_id,
+    name,
+    birthday_mmdd
+):
+    conn = get_connection()
+
+    cursor = conn.cursor(
+        cursor_factory=RealDictCursor
+    )
+
+    cursor.execute(
+        """
+        UPDATE birthdays
+        SET
+            name = %s,
+            birthday_mmdd = %s
+        WHERE
+            chat_id = %s
+            AND id = %s
+        RETURNING
+            id,
+            chat_id,
+            name,
+            birthday_mmdd
+        """,
+        (
+            name,
+            birthday_mmdd,
+            chat_id,
+            birthday_id,
+        ),
+    )
+
+    birthday = cursor.fetchone()
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return birthday
