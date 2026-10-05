@@ -1,197 +1,509 @@
 const tg = window.Telegram.WebApp;
 
-
-// =========================
-// Initialize Telegram Mini App
-// =========================
-
 tg.ready();
 tg.expand();
 
+const dashboard = document.getElementById("dashboardPage");
+const birthdaysPage = document.getElementById("birthdaysPage");
 
-// =========================
-// Feature buttons
-// =========================
+const birthdayList = document.getElementById("birthdayList");
+const birthdayForm = document.getElementById("birthdayForm");
 
-const featureButtons =
-    document.querySelectorAll("[data-feature]");
+const birthdayName = document.getElementById("birthdayName");
+const birthdayDate = document.getElementById("birthdayDate");
+
+const birthdayButton =
+    document.querySelector('[data-feature="birthdays"]');
 
 
-featureButtons.forEach((button) => {
+// ==========================
+// OPEN BIRTHDAYS
+// ==========================
 
-    button.addEventListener("click", () => {
+birthdayButton.addEventListener("click", () => {
 
-        const feature =
-            button.dataset.feature;
+    dashboard.style.display = "none";
+    birthdaysPage.style.display = "block";
 
-        openFeature(feature);
-
-    });
+    loadBirthdays();
 
 });
 
 
-// =========================
-// Open features
-// =========================
+// ==========================
+// BACK TO DASHBOARD
+// ==========================
 
-function openFeature(feature) {
+document
+    .getElementById("birthdayBackButton")
+    .addEventListener("click", () => {
 
-    switch (feature) {
+        birthdaysPage.style.display = "none";
+        dashboard.style.display = "block";
 
-        case "daily":
+    });
+
+
+// ==========================
+// SHOW ADD FORM
+// ==========================
+
+document
+    .getElementById("addBirthdayButton")
+    .addEventListener("click", () => {
+
+        birthdayForm.style.display = "block";
+
+        birthdayName.focus();
+
+    });
+
+
+// ==========================
+// CANCEL
+// ==========================
+
+document
+    .getElementById("cancelBirthdayButton")
+    .addEventListener("click", () => {
+
+        birthdayForm.style.display = "none";
+
+        birthdayName.value = "";
+        birthdayDate.value = "";
+
+    });
+// ==========================
+// LOAD BIRTHDAYS
+// ==========================
+
+async function loadBirthdays() {
+
+    birthdayList.innerHTML = `
+        <div style="
+            text-align:center;
+            color:#94a3b8;
+            padding:30px;
+        ">
+            Loading birthdays...
+        </div>
+    `;
+
+    try {
+
+        const response =
+            await fetch("/api/birthdays");
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || "Failed to load birthdays.");
+        }
+
+        displayBirthdays(data.birthdays);
+
+    } catch (error) {
+
+        console.error(error);
+
+        birthdayList.innerHTML = `
+            <div style="
+                text-align:center;
+                color:#f87171;
+                padding:30px;
+            ">
+                Unable to load birthdays.
+            </div>
+        `;
+
+        tg.showAlert(
+            "Could not load birthdays."
+        );
+    }
+}
+
+
+// ==========================
+// DISPLAY BIRTHDAYS
+// ==========================
+
+function displayBirthdays(birthdays) {
+
+    if (!birthdays || birthdays.length === 0) {
+
+        birthdayList.innerHTML = `
+            <div style="
+                text-align:center;
+                color:#94a3b8;
+                padding:30px;
+            ">
+                🎂 No birthdays yet.
+                <br><br>
+                Tap "Add Birthday" to add one.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    birthdayList.innerHTML = "";
+
+
+    birthdays.forEach(birthday => {
+
+        const card =
+            document.createElement("div");
+
+        card.style.cssText = `
+            background:#1e293b;
+            border-radius:16px;
+            padding:16px;
+            margin-bottom:12px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+        `;
+
+
+        const info =
+            document.createElement("div");
+
+        info.innerHTML = `
+            <strong style="
+                font-size:17px;
+                display:block;
+            ">
+                🎂 ${escapeHtml(birthday.name)}
+            </strong>
+
+            <small style="
+                color:#94a3b8;
+                display:block;
+                margin-top:5px;
+            ">
+                ${escapeHtml(birthday.birthday_mmdd)}
+            </small>
+        `;
+
+
+        const deleteButton =
+            document.createElement("button");
+
+        deleteButton.textContent = "🗑️";
+
+        deleteButton.style.cssText = `
+            border:none;
+            border-radius:10px;
+            padding:10px;
+            background:#450a0a;
+            color:white;
+            font-size:16px;
+        `;
+
+
+        deleteButton.addEventListener(
+            "click",
+            () => deleteBirthday(birthday.id)
+        );
+
+
+        card.appendChild(info);
+        card.appendChild(deleteButton);
+
+        birthdayList.appendChild(card);
+
+    });
+}
+// ==========================
+// SAVE BIRTHDAY
+// ==========================
+
+document
+    .getElementById("saveBirthdayButton")
+    .addEventListener("click", async () => {
+
+        const name =
+            birthdayName.value.trim();
+
+        const birthday_mmdd =
+            birthdayDate.value.trim();
+
+
+        if (!name) {
 
             tg.showAlert(
-                "📅 Daily Logs\n\n"
-                + "This section is coming next."
+                "Please enter a name."
             );
 
-            break;
+            return;
+        }
 
 
-        case "tasks":
+        if (!/^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/.test(birthday_mmdd)) {
 
             tg.showAlert(
-                "✅ Tasks\n\n"
-                + "Task management is coming next."
+                "Birthday must use MM-DD format.\nExample: 06-28"
             );
 
-            break;
+            return;
+        }
 
 
-        case "reminders":
+        const user =
+            tg.initDataUnsafe?.user;
+
+
+        const payload = {
+
+            chat_id: "mini_app_default",
+
+            name: name,
+
+            birthday_mmdd: birthday_mmdd,
+
+            added_by_user_id:
+                user?.id
+                ? String(user.id)
+                : "",
+
+            added_by_name:
+                user?.first_name || "Mini App User"
+
+        };
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/birthdays",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(payload)
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!data.success) {
+
+                throw new Error(
+                    data.error ||
+                    "Failed to save birthday."
+                );
+
+            }
+
+
+            birthdayName.value = "";
+            birthdayDate.value = "";
+
+            birthdayForm.style.display =
+                "none";
+
+
+            await loadBirthdays();
+
 
             tg.showAlert(
-                "⏰ Reminders\n\n"
-                + "Reminder management is coming next."
+                "🎂 Birthday saved!"
             );
 
-            break;
 
+        } catch (error) {
 
-        case "birthdays":
-
-            openBirthdays();
-
-            break;
-
-
-        case "videos":
+            console.error(error);
 
             tg.showAlert(
-                "🎥 Videos\n\n"
-                + "Your Telegram video vault is coming next."
+                error.message ||
+                "Could not save birthday."
             );
 
-            break;
+        }
+
+    });
 
 
-        case "pictures":
+// ==========================
+// DELETE BIRTHDAY
+// ==========================
 
-            tg.showAlert(
-                "🖼️ Pictures\n\n"
-                + "Your Telegram picture vault is coming next."
+async function deleteBirthday(id) {
+
+    const confirmed =
+        confirm(
+            "Delete this birthday?"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/birthdays/delete",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            chat_id:
+                                "mini_app_default",
+
+                            id: id
+                        })
+                }
             );
 
-            break;
+
+        const data =
+            await response.json();
 
 
-        case "other":
+        if (!data.success) {
 
-            tg.showAlert(
-                "📚 Other Content\n\n"
-                + "Your other content vault is coming next."
+            throw new Error(
+                data.error ||
+                "Failed to delete birthday."
             );
 
-            break;
+        }
 
 
-        case "search":
-
-            tg.showAlert(
-                "🔍 Search\n\n"
-                + "Vault search is coming next."
-            );
-
-            break;
+        await loadBirthdays();
 
 
-        default:
+    } catch (error) {
 
-            tg.showAlert(
-                "This feature is not available yet."
-            );
+        console.error(error);
+
+        tg.showAlert(
+            "Could not delete birthday."
+        );
 
     }
 
 }
 
 
-// =========================
-// Birthday Manager
-// =========================
+// ==========================
+// HTML SAFETY
+// ==========================
 
-function openBirthdays() {
+function escapeHtml(value) {
 
-    tg.showAlert(
-        "🎂 Birthday Manager\n\n"
-        + "Your existing birthday system "
-        + "will be connected here next."
-    );
+    return String(value)
+
+        .replace(/&/g, "&amp;")
+
+        .replace(/</g, "&lt;")
+
+        .replace(/>/g, "&gt;")
+
+        .replace(/"/g, "&quot;")
+
+        .replace(/'/g, "&#039;");
 
 }
 
 
-// =========================
-// Search
-// =========================
+// ==========================
+// OTHER BUTTONS
+// ==========================
 
 document
-    .getElementById("searchButton")
-    .addEventListener("click", () => {
+    .querySelectorAll("[data-feature]")
+    .forEach(button => {
 
-        tg.showAlert(
-            "🔍 Search\n\n"
-            + "Search across your personal vault "
-            + "is coming next."
+        button.addEventListener(
+            "click",
+            () => {
+
+                const feature =
+                    button.dataset.feature;
+
+
+                if (feature === "birthdays") {
+                    return;
+                }
+
+
+                tg.showAlert(
+                    `${button.innerText.trim()} is coming next.`
+                );
+
+            }
         );
 
     });
 
 
-// =========================
-// Add Content
-// =========================
-
-document
-    .getElementById("addContentButton")
-    .addEventListener("click", () => {
-
-        tg.showAlert(
-            "➕ Add Content\n\n"
-            + "Soon you will be able to send content "
-            + "to Kuya B and choose where to store it."
-        );
-
-    });
-
-
-// =========================
-// Word Game
-// =========================
+// Word game
 
 document
     .getElementById("gameButton")
-    .addEventListener("click", () => {
+    ?.addEventListener(
+        "click",
+        () => {
 
-        /*
-         * The existing Word Scramble game
-         * is still handled by the Telegram bot.
-         *
-         * Close the Mini App so you can
-         * continue using the bot.
-         */
+            tg.close();
 
-        tg.close();
+            // The existing /game command
+            // remains available in Telegram.
 
-    });
+        }
+    );
+
+
+// Search
+
+document
+    .getElementById("searchButton")
+    ?.addEventListener(
+        "click",
+        () => {
+
+            tg.showAlert(
+                "Vault search is coming next."
+            );
+
+        }
+    );
+
+
+// Add content
+
+document
+    .getElementById("addContentButton")
+    ?.addEventListener(
+        "click",
+        () => {
+
+            tg.showAlert(
+                "Content upload is coming next."
+            );
+
+        }
+    );
