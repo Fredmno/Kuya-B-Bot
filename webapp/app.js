@@ -16,31 +16,14 @@ if (tg) {
 }
 
 // ---------------------------------------------------------
-// ELEMENTS
-// ---------------------------------------------------------
-
-const dashboardPage = document.getElementById("dashboardPage");
-const birthdaysPage = document.getElementById("birthdaysPage");
-const birthdayList = document.getElementById("birthdayList");
-const birthdayForm = document.getElementById("birthdayForm");
-const birthdayName = document.getElementById("birthdayName");
-const birthdayDate = document.getElementById("birthdayDate");
-
-const birthdayBackButton = document.getElementById("birthdayBackButton");
-const addBirthdayButton = document.getElementById("addBirthdayButton");
-const saveBirthdayButton = document.getElementById("saveBirthdayButton");
-const cancelBirthdayButton = document.getElementById("cancelBirthdayButton");
-const searchButton = document.getElementById("searchButton");
-
-// ---------------------------------------------------------
-// DATA
+// DATA & STATE
 // ---------------------------------------------------------
 
 let birthdays = [];
 let editingBirthdayId = null;
 
 // ---------------------------------------------------------
-// LOAD BIRTHDAYS
+// LOCAL STORAGE MANAGEMENT
 // ---------------------------------------------------------
 
 function loadBirthdays() {
@@ -56,10 +39,6 @@ function loadBirthdays() {
         birthdays = [];
     }
 }
-
-// ---------------------------------------------------------
-// SAVE BIRTHDAYS
-// ---------------------------------------------------------
 
 function saveBirthdays() {
     try {
@@ -86,7 +65,7 @@ function escapeHtml(value) {
 }
 
 // ---------------------------------------------------------
-// DATE VALIDATION
+// DATE VALIDATION & CALCULATIONS
 // ---------------------------------------------------------
 
 function isValidBirthday(value) {
@@ -102,16 +81,12 @@ function isValidBirthday(value) {
         return false;
     }
 
-    // Use leap year 2024 to allow Feb 29
+    // Use leap year 2024 to support February 29
     const testDate = new Date(2024, month, 0);
     const daysInMonth = testDate.getDate();
 
     return day <= daysInMonth;
 }
-
-// ---------------------------------------------------------
-// GET NEXT BIRTHDAY
-// ---------------------------------------------------------
 
 function getNextBirthday(dateString) {
     if (!isValidBirthday(dateString)) {
@@ -123,20 +98,28 @@ function getNextBirthday(dateString) {
     const day = Number(parts[1]);
 
     const today = new Date();
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+    );
 
-    let birthday = new Date(today.getFullYear(), month - 1, day);
+    let birthday = new Date(
+        today.getFullYear(),
+        month - 1,
+        day
+    );
 
     if (birthday < todayStart) {
-        birthday = new Date(today.getFullYear() + 1, month - 1, day);
+        birthday = new Date(
+            today.getFullYear() + 1,
+            month - 1,
+            day
+        );
     }
 
     return birthday;
 }
-
-// ---------------------------------------------------------
-// DAYS UNTIL BIRTHDAY
-// ---------------------------------------------------------
 
 function daysUntilBirthday(dateString) {
     const birthday = getNextBirthday(dateString);
@@ -145,14 +128,16 @@ function daysUntilBirthday(dateString) {
     }
 
     const today = new Date();
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+    );
 
-    return Math.round((birthday.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.round(
+        (birthday.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24)
+    );
 }
-
-// ---------------------------------------------------------
-// FORMAT BIRTHDAY
-// ---------------------------------------------------------
 
 function formatBirthday(dateString) {
     if (!isValidBirthday(dateString)) {
@@ -172,12 +157,21 @@ function formatBirthday(dateString) {
 }
 
 // ---------------------------------------------------------
-// SHOW DASHBOARD
+// NAVIGATION & VIEW SWITCHING
 // ---------------------------------------------------------
 
 function showDashboard() {
-    if (dashboardPage) dashboardPage.style.display = "";
-    if (birthdaysPage) birthdaysPage.style.display = "none";
+    const dashboardPage = document.getElementById("dashboardPage");
+    const birthdaysPage = document.getElementById("birthdaysPage");
+
+    if (dashboardPage) {
+        dashboardPage.style.display = "";
+    }
+
+    if (birthdaysPage) {
+        birthdaysPage.style.display = "none";
+    }
+
     hideBirthdayForm();
 
     if (tg?.BackButton) {
@@ -185,13 +179,18 @@ function showDashboard() {
     }
 }
 
-// ---------------------------------------------------------
-// SHOW BIRTHDAYS
-// ---------------------------------------------------------
-
 function showBirthdays() {
-    if (dashboardPage) dashboardPage.style.display = "none";
-    if (birthdaysPage) birthdaysPage.style.display = "";
+    const dashboardPage = document.getElementById("dashboardPage");
+    const birthdaysPage = document.getElementById("birthdaysPage");
+
+    if (dashboardPage) {
+        dashboardPage.style.display = "none";
+    }
+
+    if (birthdaysPage) {
+        birthdaysPage.style.display = "";
+    }
+
     hideBirthdayForm();
     displayBirthdays();
 
@@ -202,27 +201,34 @@ function showBirthdays() {
 }
 
 // ---------------------------------------------------------
-// SHOW BIRTHDAY FORM
+// FORM CONTROLS
 // ---------------------------------------------------------
 
 function showBirthdayForm(birthday = null) {
-    if (!birthdayForm) return;
+    const birthdayForm = document.getElementById("birthdayForm");
+    const birthdayName = document.getElementById("birthdayName");
+    const birthdayDate = document.getElementById("birthdayDate");
+    const saveBirthdayButton = document.getElementById("saveBirthdayButton");
+
+    if (!birthdayForm) {
+        return;
+    }
 
     birthdayForm.style.display = "block";
 
-    const heading = birthdayForm.querySelector("h2, h3");
+    const heading = birthdayForm.querySelector("h2, h3, .form-title");
 
     if (birthday) {
         editingBirthdayId = birthday.id;
-        birthdayName.value = birthday.name;
-        birthdayDate.value = birthday.date;
+        if (birthdayName) birthdayName.value = birthday.name;
+        if (birthdayDate) birthdayDate.value = birthday.date;
 
         if (heading) heading.textContent = "Edit Birthday";
         if (saveBirthdayButton) saveBirthdayButton.textContent = "Save Changes";
     } else {
         editingBirthdayId = null;
-        birthdayName.value = "";
-        birthdayDate.value = "";
+        if (birthdayName) birthdayName.value = "";
+        if (birthdayDate) birthdayDate.value = "";
 
         if (heading) heading.textContent = "Add Birthday";
         if (saveBirthdayButton) saveBirthdayButton.textContent = "Save Birthday";
@@ -233,22 +239,104 @@ function showBirthdayForm(birthday = null) {
     }, 100);
 }
 
-// ---------------------------------------------------------
-// HIDE BIRTHDAY FORM
-// ---------------------------------------------------------
-
 function hideBirthdayForm() {
-    if (!birthdayForm) return;
+    const birthdayForm = document.getElementById("birthdayForm");
+    const birthdayName = document.getElementById("birthdayName");
+    const birthdayDate = document.getElementById("birthdayDate");
+
+    if (!birthdayForm) {
+        return;
+    }
+
     birthdayForm.style.display = "none";
     editingBirthdayId = null;
+
+    if (birthdayName) birthdayName.value = "";
+    if (birthdayDate) birthdayDate.value = "";
 }
 
 // ---------------------------------------------------------
-// DISPLAY BIRTHDAYS
+// CRUD OPERATIONS
+// ---------------------------------------------------------
+
+function saveBirthday() {
+    const birthdayName = document.getElementById("birthdayName");
+    const birthdayDate = document.getElementById("birthdayDate");
+
+    const name = birthdayName?.value.trim();
+    const date = birthdayDate?.value.trim();
+
+    // Name validation
+    if (!name) {
+        alert("Please enter a name.");
+        birthdayName?.focus();
+        return;
+    }
+
+    // Date validation
+    if (!isValidBirthday(date)) {
+        alert("Please enter a valid birthday using MM-DD.\n\nExample: 05-24");
+        birthdayDate?.focus();
+        return;
+    }
+
+    // Edit existing entry
+    if (editingBirthdayId) {
+        const index = birthdays.findIndex(item => item.id === editingBirthdayId);
+        if (index !== -1) {
+            birthdays[index].name = name;
+            birthdays[index].date = date;
+        }
+    } else {
+        // Add new entry
+        birthdays.push({
+            id: Date.now().toString(),
+            name: name,
+            date: date
+        });
+    }
+
+    saveBirthdays();
+
+    if (tg?.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred("success");
+    }
+
+    hideBirthdayForm();
+    displayBirthdays();
+}
+
+function deleteBirthday(id) {
+    const birthday = birthdays.find(item => item.id === id);
+    if (!birthday) {
+        return;
+    }
+
+    const confirmed = confirm(`Delete ${birthday.name}'s birthday?`);
+    if (!confirmed) {
+        return;
+    }
+
+    birthdays = birthdays.filter(item => item.id !== id);
+    saveBirthdays();
+
+    if (tg?.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred("warning");
+    }
+
+    displayBirthdays();
+}
+
+// ---------------------------------------------------------
+// RENDER BIRTHDAYS LIST
 // ---------------------------------------------------------
 
 function displayBirthdays() {
-    if (!birthdayList) return;
+    const birthdayList = document.getElementById("birthdayList");
+    if (!birthdayList) {
+        return;
+    }
+
     birthdayList.innerHTML = "";
 
     // Empty state
@@ -263,7 +351,7 @@ function displayBirthdays() {
         return;
     }
 
-    // Sort by upcoming
+    // Sort by nearest upcoming date
     const sorted = [...birthdays].sort((a, b) => {
         return daysUntilBirthday(a.date) - daysUntilBirthday(b.date);
     });
@@ -315,7 +403,7 @@ function displayBirthdays() {
         birthdayList.appendChild(card);
     });
 
-    // Edit buttons
+    // Attach edit button listeners
     birthdayList.querySelectorAll(".birthday-edit").forEach(button => {
         button.addEventListener("click", function () {
             const id = this.dataset.id;
@@ -326,7 +414,7 @@ function displayBirthdays() {
         });
     });
 
-    // Delete buttons
+    // Attach delete button listeners
     birthdayList.querySelectorAll(".birthday-delete").forEach(button => {
         button.addEventListener("click", function () {
             const id = this.dataset.id;
@@ -336,167 +424,116 @@ function displayBirthdays() {
 }
 
 // ---------------------------------------------------------
-// DELETE BIRTHDAY
+// DOM READY & GLOBAL EVENT DELEGATION
 // ---------------------------------------------------------
 
-function deleteBirthday(id) {
-    const birthday = birthdays.find(item => item.id === id);
-    if (!birthday) return;
+document.addEventListener("DOMContentLoaded", function () {
+    loadBirthdays();
+    showDashboard();
 
-    const confirmed = confirm(`Delete ${birthday.name}'s birthday?`);
-    if (!confirmed) return;
-
-    birthdays = birthdays.filter(item => item.id !== id);
-    saveBirthdays();
-
-    if (tg?.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred("warning");
-    }
-
-    displayBirthdays();
-}
-
-// ---------------------------------------------------------
-// SAVE BIRTHDAY
-// ---------------------------------------------------------
-
-function saveBirthday() {
-    const name = birthdayName?.value.trim();
-    const date = birthdayDate?.value.trim();
-
-    // Name validation
-    if (!name) {
-        alert("Please enter a name.");
-        birthdayName?.focus();
-        return;
-    }
-
-    // Date validation
-    if (!isValidBirthday(date)) {
-        alert("Please enter a valid birthday using MM-DD.\n\nExample: 05-24");
-        birthdayDate?.focus();
-        return;
-    }
-
-    // Edit existing
-    if (editingBirthdayId) {
-        const index = birthdays.findIndex(item => item.id === editingBirthdayId);
-        if (index !== -1) {
-            birthdays[index].name = name;
-            birthdays[index].date = date;
+    // Global click listener to avoid timing issues or nested element misses
+    document.body.addEventListener("click", function (event) {
+        // 1. Birthday tile click (supports data attribute, class, or id)
+        const birthdayTrigger = event.target.closest(
+            '[data-feature="birthdays"], #birthdaysTile, #openBirthdaysBtn, .tile-birthdays'
+        );
+        if (birthdayTrigger) {
+            event.preventDefault();
+            showBirthdays();
+            return;
         }
-    } else {
-        // Add new
-        birthdays.push({
-            id: Date.now().toString(),
-            name: name,
-            date: date
+
+        // 2. Generic unbuilt modules
+        const genericFeature = event.target.closest("[data-feature]");
+        if (genericFeature) {
+            const feature = genericFeature.dataset.feature;
+            if (feature !== "birthdays") {
+                event.preventDefault();
+                alert(`${feature.charAt(0).toUpperCase() + feature.slice(1)} module coming soon.`);
+                return;
+            }
+        }
+
+        // 3. Back button
+        if (event.target.closest("#birthdayBackButton")) {
+            event.preventDefault();
+            showDashboard();
+            return;
+        }
+
+        // 4. Add birthday button
+        if (event.target.closest("#addBirthdayButton")) {
+            event.preventDefault();
+            showBirthdayForm();
+            return;
+        }
+
+        // 5. Cancel birthday form
+        if (event.target.closest("#cancelBirthdayButton")) {
+            event.preventDefault();
+            hideBirthdayForm();
+            return;
+        }
+
+        // 6. Search placeholder
+        if (event.target.closest("#searchButton")) {
+            event.preventDefault();
+            alert("Universal Search coming soon in Phase 5!");
+            return;
+        }
+    });
+
+    // Save button click
+    const saveBtn = document.getElementById("saveBirthdayButton");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            saveBirthday();
         });
     }
 
-    saveBirthdays();
-
-    if (tg?.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred("success");
+    // Form submit event (e.g. if submitted via keyboard)
+    const form = document.getElementById("birthdayForm");
+    if (form) {
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            saveBirthday();
+        });
     }
 
-    hideBirthdayForm();
-    displayBirthdays();
-}
+    // Date formatting (MM-DD)
+    const dateInput = document.getElementById("birthdayDate");
+    if (dateInput) {
+        dateInput.addEventListener("input", function () {
+            let value = this.value.replace(/\D/g, "");
 
-// ---------------------------------------------------------
-// FORMAT DATE INPUT (AUTO-INSERTS DASH)
-// ---------------------------------------------------------
+            if (value.length > 4) {
+                value = value.substring(0, 4);
+            }
 
-if (birthdayDate) {
-    birthdayDate.addEventListener("input", function () {
-        let value = this.value.replace(/\D/g, "");
+            if (value.length >= 3) {
+                value = value.substring(0, 2) + "-" + value.substring(2);
+            }
 
-        if (value.length > 4) {
-            value = value.substring(0, 4);
-        }
+            this.value = value;
+        });
 
-        if (value.length >= 3) {
-            value = value.substring(0, 2) + "-" + value.substring(2);
-        }
-
-        this.value = value;
-    });
-}
-
-// Allow Enter key to submit within form inputs
-[birthdayName, birthdayDate].forEach(input => {
-    if (input) {
-        input.addEventListener("keydown", function (e) {
+        dateInput.addEventListener("keydown", function (e) {
             if (e.key === "Enter") {
                 e.preventDefault();
                 saveBirthday();
             }
         });
     }
-});
 
-// ---------------------------------------------------------
-// EVENT ATTACHMENTS
-// ---------------------------------------------------------
-
-// Birthday tile navigation
-document.querySelectorAll('[data-feature="birthdays"]').forEach(button => {
-    button.addEventListener("click", function () {
-        showBirthdays();
-    });
-});
-
-// Back button
-if (birthdayBackButton) {
-    birthdayBackButton.addEventListener("click", function () {
-        showDashboard();
-    });
-}
-
-// Add button
-if (addBirthdayButton) {
-    addBirthdayButton.addEventListener("click", function () {
-        showBirthdayForm();
-    });
-}
-
-// Save button
-if (saveBirthdayButton) {
-    saveBirthdayButton.addEventListener("click", function () {
-        saveBirthday();
-    });
-}
-
-// Cancel button
-if (cancelBirthdayButton) {
-    cancelBirthdayButton.addEventListener("click", function () {
-        hideBirthdayForm();
-    });
-}
-
-// Search button stub
-if (searchButton) {
-    searchButton.addEventListener("click", function () {
-        alert("Universal Search coming soon in Phase 5!");
-    });
-}
-
-// Placeholder alerts for upcoming modules
-document.querySelectorAll("[data-feature]").forEach(button => {
-    button.addEventListener("click", function () {
-        const feature = this.dataset.feature;
-        if (feature === "birthdays") return;
-
-        alert(`${feature.charAt(0).toUpperCase() + feature.slice(1)} module coming soon.`);
-    });
-});
-
-// ---------------------------------------------------------
-// APP BOOTSTRAP
-// ---------------------------------------------------------
-
-document.addEventListener("DOMContentLoaded", function () {
-    loadBirthdays();
-    showDashboard();
+    // Enter key submission on name field
+    const nameInput = document.getElementById("birthdayName");
+    if (nameInput) {
+        nameInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                saveBirthday();
+            }
+        });
+    }
 });
