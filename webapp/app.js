@@ -20,6 +20,14 @@ import {
     displayDailyLogs
 } from "./modules/dailyLogs.js";
 
+import {
+    loadTasks,
+    showTaskForm,
+    hideTaskForm,
+    saveTask,
+    displayTasks
+} from "./modules/tasks.js";
+
 // ---------------------------------------------------------
 // NAVIGATION & PAGE ROUTING
 // ---------------------------------------------------------
@@ -28,13 +36,16 @@ function showDashboard() {
     const dashboard = document.getElementById("dashboardPage");
     const birthdays = document.getElementById("birthdaysPage");
     const dailyLogs = document.getElementById("dailyLogsPage");
+    const tasksPage = document.getElementById("tasksPage");
 
     if (dashboard) dashboard.style.display = "block";
     if (birthdays) birthdays.style.display = "none";
     if (dailyLogs) dailyLogs.style.display = "none";
+    if (tasksPage) tasksPage.style.display = "none";
 
     hideBirthdayForm();
     hideLogForm();
+    hideTaskForm();
 
     if (tg?.BackButton) {
         tg.BackButton.hide();
@@ -45,10 +56,12 @@ function showBirthdays() {
     const dashboard = document.getElementById("dashboardPage");
     const birthdays = document.getElementById("birthdaysPage");
     const dailyLogs = document.getElementById("dailyLogsPage");
+    const tasksPage = document.getElementById("tasksPage");
 
     if (dashboard) dashboard.style.display = "none";
     if (birthdays) birthdays.style.display = "block";
     if (dailyLogs) dailyLogs.style.display = "none";
+    if (tasksPage) tasksPage.style.display = "none";
 
     hideBirthdayForm();
     displayBirthdays();
@@ -63,13 +76,35 @@ function showDailyLogs() {
     const dashboard = document.getElementById("dashboardPage");
     const birthdays = document.getElementById("birthdaysPage");
     const dailyLogs = document.getElementById("dailyLogsPage");
+    const tasksPage = document.getElementById("tasksPage");
 
     if (dashboard) dashboard.style.display = "none";
     if (birthdays) birthdays.style.display = "none";
     if (dailyLogs) dailyLogs.style.display = "block";
+    if (tasksPage) tasksPage.style.display = "none";
 
     hideLogForm();
     displayDailyLogs();
+
+    if (tg?.BackButton) {
+        tg.BackButton.show();
+        tg.BackButton.onClick(showDashboard);
+    }
+}
+
+function showTasks() {
+    const dashboard = document.getElementById("dashboardPage");
+    const birthdays = document.getElementById("birthdaysPage");
+    const dailyLogs = document.getElementById("dailyLogsPage");
+    const tasksPage = document.getElementById("tasksPage");
+
+    if (dashboard) dashboard.style.display = "none";
+    if (birthdays) birthdays.style.display = "none";
+    if (dailyLogs) dailyLogs.style.display = "none";
+    if (tasksPage) tasksPage.style.display = "block";
+
+    hideTaskForm();
+    displayTasks();
 
     if (tg?.BackButton) {
         tg.BackButton.show();
@@ -84,6 +119,7 @@ function showDailyLogs() {
 function initApp() {
     loadBirthdays();
     loadDailyLogs();
+    loadTasks();
     showDashboard();
 
     document.addEventListener("click", function (e) {
@@ -102,7 +138,14 @@ function initApp() {
             return;
         }
 
-        if (e.target.closest("#birthdayBackButton, #dailyLogsBackButton")) {
+        if (e.target.closest('[data-feature="tasks"]')) {
+            e.preventDefault();
+            triggerHaptic("light");
+            showTasks();
+            return;
+        }
+
+        if (e.target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton")) {
             e.preventDefault();
             triggerHaptic("light");
             showDashboard();
@@ -157,6 +200,26 @@ function initApp() {
             return;
         }
 
+        // --- Tasks Actions ---
+        if (e.target.closest("#addTaskButton")) {
+            e.preventDefault();
+            triggerHaptic("light");
+            showTaskForm();
+            return;
+        }
+
+        if (e.target.closest("#cancelTaskButton")) {
+            e.preventDefault();
+            hideTaskForm();
+            return;
+        }
+
+        if (e.target.closest("#saveTaskButton")) {
+            e.preventDefault();
+            saveTask();
+            return;
+        }
+
         // --- Future Placeholders ---
         if (e.target.closest("#addContentButton")) {
             e.preventDefault();
@@ -179,12 +242,23 @@ function initApp() {
         const featureTile = e.target.closest("[data-feature]");
         if (featureTile) {
             const name = featureTile.dataset.feature;
-            if (name !== "birthdays" && name !== "daily") {
+            if (name !== "birthdays" && name !== "daily" && name !== "tasks") {
                 e.preventDefault();
                 alert(`${name.charAt(0).toUpperCase() + name.slice(1)} module coming soon.`);
             }
         }
     });
+
+    // Enter key submission on Task title field
+    const taskTitleInput = document.getElementById("taskTitle");
+    if (taskTitleInput) {
+        taskTitleInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                saveTask();
+            }
+        });
+    }
 
     // Auto-dash format for birthday date
     const bdayDateInput = document.getElementById("birthdayDate");
