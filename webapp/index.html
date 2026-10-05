@@ -318,6 +318,58 @@
 
     </section>
 
+    <!-- TASKS PAGE -->
+    <section class="card" id="tasksPage" style="display:none;">
+
+        <header class="header">
+            <div>
+                <div class="greeting">Personal</div>
+                <h1>✅ Tasks</h1>
+                <p>Get things done</p>
+            </div>
+            <div class="avatar">✅</div>
+        </header>
+
+        <button class="search-bar" id="tasksBackButton">
+            <span>←</span>
+            <span class="search-text">Back to Kuya B</span>
+        </button>
+
+        <button class="add-button" id="addTaskButton" style="margin-top: 14px;">
+            <span>＋</span>
+            New Task
+        </button>
+
+        <!-- ADD / EDIT TASK FORM -->
+        <div id="taskForm" style="display:none; margin-top:16px; background:#1e293b; border-radius:18px; padding:20px;">
+            <h2 id="taskFormHeading">Add Task</h2>
+
+            <label for="taskTitle">Task Name</label>
+            <input id="taskTitle" type="text" placeholder="Example: Pay electric bill" autocomplete="off">
+
+            <label for="taskDueDate">Due Date (Optional)</label>
+            <input id="taskDueDate" type="date">
+
+            <label for="taskPriority" style="display:block; margin-top:10px;">Priority</label>
+            <select id="taskPriority" style="width:100%; border-radius:12px; padding:12px; background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.1); margin-top:6px; margin-bottom:14px; font-family:inherit; font-size:0.95rem; box-sizing:border-box;">
+                <option value="normal">Normal</option>
+                <option value="high">🔥 High</option>
+                <option value="low">🌱 Low</option>
+            </select>
+
+            <button class="add-button" id="saveTaskButton">Save Task</button>
+            <button type="button" id="cancelTaskButton" style="width: 100%; background: none; border: none; color: #94a3b8; padding: 10px; margin-top: 8px; cursor: pointer;">Cancel</button>
+        </div>
+
+        <!-- TASKS LIST CONTAINER -->
+        <div id="tasksList" style="margin-top:20px;">
+            <div style="text-align:center; color:#94a3b8; padding:30px;">
+                Loading tasks...
+            </div>
+        </div>
+
+    </section>
+
 
 </main>
 
