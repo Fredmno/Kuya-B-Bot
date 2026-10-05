@@ -264,9 +264,64 @@
 
     </section>
 
+    <!-- DAILY LOGS PAGE -->
+    <section class="card" id="dailyLogsPage" style="display:none;">
+
+        <header class="header">
+            <div>
+                <div class="greeting">Personal</div>
+                <h1>📅 Daily Logs</h1>
+                <p>Record your days</p>
+            </div>
+            <div class="avatar">📅</div>
+        </header>
+
+        <button class="search-bar" id="dailyLogsBackButton">
+            <span>←</span>
+            <span class="search-text">Back to Kuya B</span>
+        </button>
+
+        <button class="add-button" id="addLogButton" style="margin-top: 14px;">
+            <span>＋</span>
+            New Log Entry
+        </button>
+
+        <!-- ADD / EDIT LOG FORM -->
+        <div id="logForm" style="display:none; margin-top:16px; background:#1e293b; border-radius:18px; padding:20px;">
+            <h2 id="logFormHeading">New Entry</h2>
+
+            <label for="logDate">Date</label>
+            <input id="logDate" type="date">
+
+            <label>Mood</label>
+            <div id="moodSelector" style="display: flex; gap: 8px; margin-bottom: 14px; margin-top: 6px;">
+                <button type="button" class="mood-btn" data-mood="😊" style="font-size: 1.5rem; background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px; padding: 6px 12px; cursor: pointer;">😊</button>
+                <button type="button" class="mood-btn" data-mood="⚡" style="font-size: 1.5rem; background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px; padding: 6px 12px; cursor: pointer;">⚡</button>
+                <button type="button" class="mood-btn" data-mood="😌" style="font-size: 1.5rem; background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px; padding: 6px 12px; cursor: pointer;">😌</button>
+                <button type="button" class="mood-btn" data-mood="😴" style="font-size: 1.5rem; background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px; padding: 6px 12px; cursor: pointer;">😴</button>
+                <button type="button" class="mood-btn" data-mood="🌧️" style="font-size: 1.5rem; background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px; padding: 6px 12px; cursor: pointer;">🌧️</button>
+            </div>
+
+            <label for="logText">What's on your mind?</label>
+            <textarea id="logText" rows="4" placeholder="Write about your day, progress, thoughts..." style="width: 100%; border-radius: 12px; padding: 12px; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.1); margin-top: 6px; margin-bottom: 14px; font-family: inherit; font-size: 0.95rem; resize: vertical; box-sizing: border-box;"></textarea>
+
+            <button class="add-button" id="saveLogButton">Save Entry</button>
+            <button type="button" id="cancelLogButton" style="width: 100%; background: none; border: none; color: #94a3b8; padding: 10px; margin-top: 8px; cursor: pointer;">Cancel</button>
+        </div>
+
+        <!-- LOGS LIST CONTAINER -->
+        <div id="logsList" style="margin-top:20px;">
+            <div style="text-align:center; color:#94a3b8; padding:30px;">
+                Loading logs...
+            </div>
+        </div>
+
+    </section>
+
+
 </main>
 
-<script src="/app/app.js?v=1.0.3"></script>
+<script src="/app/app.js?v=1.0.4"></script>
 
 </body>
 </html>
