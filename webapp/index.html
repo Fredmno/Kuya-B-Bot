@@ -1,25 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
+    <meta name="viewport"
+          content="width=device-width,
+                   initial-scale=1.0,
+                   viewport-fit=cover">
 
     <title>Kuya B</title>
 
-    <link rel="stylesheet" href="/app/style.css" />
+    <link rel="stylesheet" href="/app/style.css">
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 
 <body>
 
-    <main class="app">
+<main class="app">
 
-        <!-- Header -->
+    <section id="dashboardPage">
+
         <header class="header">
 
             <div>
@@ -29,174 +30,89 @@
 
                 <h1>Kuya B</h1>
 
-                <p>
-                    Your personal hub
-                </p>
+                <p>Your personal hub</p>
             </div>
 
-            <div class="avatar">
-                🤖
-            </div>
-
+            <div class="avatar">🤖</div>
         </header>
 
 
-        <!-- Search -->
-        <button
-            class="search-bar"
-            id="searchButton"
-        >
+        <button class="search-bar" id="searchButton">
             <span>🔍</span>
-
             <span class="search-text">
                 Search your vault...
             </span>
         </button>
 
 
-        <!-- Personal -->
         <section class="section">
 
             <h2>Personal</h2>
 
             <div class="grid">
 
-                <button
-                    class="tile tile-blue"
-                    data-feature="daily"
-                >
+                <button class="tile tile-blue"
+                        data-feature="daily">
                     <span class="icon">📅</span>
-
-                    <strong>
-                        Daily Logs
-                    </strong>
-
-                    <small>
-                        Your days
-                    </small>
+                    <strong>Daily Logs</strong>
+                    <small>Your days</small>
                 </button>
 
-
-                <button
-                    class="tile tile-green"
-                    data-feature="tasks"
-                >
+                <button class="tile tile-green"
+                        data-feature="tasks">
                     <span class="icon">✅</span>
-
-                    <strong>
-                        Tasks
-                    </strong>
-
-                    <small>
-                        Get things done
-                    </small>
+                    <strong>Tasks</strong>
+                    <small>Get things done</small>
                 </button>
 
-
-                <button
-                    class="tile tile-orange"
-                    data-feature="reminders"
-                >
+                <button class="tile tile-orange"
+                        data-feature="reminders">
                     <span class="icon">⏰</span>
-
-                    <strong>
-                        Reminders
-                    </strong>
-
-                    <small>
-                        Don't forget
-                    </small>
+                    <strong>Reminders</strong>
+                    <small>Don't forget</small>
                 </button>
 
-
-                <button
-                    class="tile tile-pink"
-                    data-feature="birthdays"
-                >
+                <button class="tile tile-pink"
+                        data-feature="birthdays">
                     <span class="icon">🎂</span>
-
-                    <strong>
-                        Birthdays
-                    </strong>
-
-                    <small>
-                        Important dates
-                    </small>
+                    <strong>Birthdays</strong>
+                    <small>Important dates</small>
                 </button>
 
             </div>
-
         </section>
-
-
-        <!-- Media & Content -->
         <section class="section">
 
             <h2>Media &amp; Content</h2>
 
             <div class="grid">
 
-                <button
-                    class="tile tile-purple"
-                    data-feature="videos"
-                >
+                <button class="tile tile-purple"
+                        data-feature="videos">
                     <span class="icon">🎥</span>
-
-                    <strong>
-                        Videos
-                    </strong>
-
-                    <small>
-                        Your video vault
-                    </small>
+                    <strong>Videos</strong>
+                    <small>Your video vault</small>
                 </button>
 
-
-                <button
-                    class="tile tile-cyan"
-                    data-feature="pictures"
-                >
+                <button class="tile tile-cyan"
+                        data-feature="pictures">
                     <span class="icon">🖼️</span>
-
-                    <strong>
-                        Pictures
-                    </strong>
-
-                    <small>
-                        Your photo vault
-                    </small>
+                    <strong>Pictures</strong>
+                    <small>Your photo vault</small>
                 </button>
 
-
-                <button
-                    class="tile tile-gray"
-                    data-feature="other"
-                >
+                <button class="tile tile-gray"
+                        data-feature="other">
                     <span class="icon">📚</span>
-
-                    <strong>
-                        Other
-                    </strong>
-
-                    <small>
-                        Everything else
-                    </small>
+                    <strong>Other</strong>
+                    <small>Everything else</small>
                 </button>
 
-
-                <button
-                    class="tile tile-dark"
-                    data-feature="search"
-                >
+                <button class="tile tile-dark"
+                        data-feature="search">
                     <span class="icon">🔎</span>
-
-                    <strong>
-                        Search
-                    </strong>
-
-                    <small>
-                        Find anything
-                    </small>
+                    <strong>Search</strong>
+                    <small>Find anything</small>
                 </button>
 
             </div>
@@ -204,61 +120,154 @@
         </section>
 
 
-        <!-- Add Content -->
-        <button
-            class="add-button"
-            id="addContentButton"
-        >
-            <span>＋</span>
+        <button class="add-button"
+                id="addContentButton">
 
+            <span>＋</span>
             Add Content
+
         </button>
 
 
-        <!-- Word Game -->
-        <button
-            class="game-button"
-            id="gameButton"
-        >
+        <button class="game-button"
+                id="gameButton">
 
             <span>🎮</span>
 
             <div>
-
-                <strong>
-                    Word Scramble
-                </strong>
-
-                <small>
-                    Take a quick break
-                </small>
-
+                <strong>Word Scramble</strong>
+                <small>Take a quick break</small>
             </div>
 
-            <span class="arrow">
-                ›
+            <span class="arrow">›</span>
+
+        </button>
+
+
+        <footer>
+            <span>🤖 Kuya B</span>
+            <span>Personal Hub</span>
+        </footer>
+
+    </section>
+
+
+    <!-- BIRTHDAYS PAGE -->
+
+    <section id="birthdaysPage"
+             style="display:none;">
+
+        <header class="header">
+
+            <div>
+                <div class="greeting">
+                    Personal
+                </div>
+
+                <h1>🎂 Birthdays</h1>
+
+                <p>Important dates</p>
+            </div>
+
+            <div class="avatar">🎂</div>
+
+        </header>
+
+
+        <button class="search-bar"
+                id="birthdayBackButton">
+
+            <span>←</span>
+
+            <span class="search-text">
+                Back to Kuya B
             </span>
 
         </button>
 
 
-        <!-- Footer -->
-        <footer>
+        <div id="birthdayList"
+             style="margin-top:20px;">
 
-            <span>
-                🤖 Kuya B
-            </span>
+            <div style="
+                text-align:center;
+                color:#94a3b8;
+                padding:30px;
+            ">
+                Loading birthdays...
+            </div>
 
-            <span>
-                Personal Hub
-            </span>
+        </div>
+        <button class="add-button"
+                id="addBirthdayButton">
 
-        </footer>
+            <span>＋</span>
+            Add Birthday
 
-    </main>
+        </button>
 
 
-    <script src="/app/app.js"></script>
+        <div id="birthdayForm"
+             style="
+                display:none;
+                margin-top:16px;
+                background:#1e293b;
+                border-radius:18px;
+                padding:20px;
+             ">
+
+            <h2>Add Birthday</h2>
+
+
+            <label for="birthdayName">
+                Name
+            </label>
+
+            <input
+                id="birthdayName"
+                type="text"
+                placeholder="Example: Mom"
+                autocomplete="off"
+            >
+
+
+            <label for="birthdayDate">
+                Birthday
+            </label>
+
+            <input
+                id="birthdayDate"
+                type="text"
+                placeholder="MM-DD"
+                maxlength="5"
+                autocomplete="off"
+            >
+
+
+            <button
+                class="add-button"
+                id="saveBirthdayButton">
+
+                Save Birthday
+
+            </button>
+
+
+            <button
+                id="cancelBirthdayButton">
+
+                Cancel
+
+            </button>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="/app/app.js"></script>
 
 </body>
 </html>
