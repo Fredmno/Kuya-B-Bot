@@ -430,6 +430,54 @@
 
     </section>
 
+    <!-- CONTENT VAULT PAGE -->
+    <section class="card" id="vaultPage" style="display:none;">
+
+        <header class="header">
+            <div>
+                <div class="greeting">Content Vault</div>
+                <h1 id="vaultHeaderTitle">📚 Vault</h1>
+                <p id="vaultHeaderSubtitle">Organized Telegram media</p>
+            </div>
+            <div class="avatar" id="vaultHeaderIcon">📚</div>
+        </header>
+
+        <button class="search-bar" id="vaultBackButton">
+            <span>←</span>
+            <span class="search-text">Back to Kuya B</span>
+        </button>
+
+        <button class="add-button" id="addVaultItemButton" style="margin-top: 14px;">
+            <span>＋</span>
+            Add to Vault
+        </button>
+
+        <!-- ADD / EDIT VAULT ITEM FORM -->
+        <div id="vaultForm" style="display:none; margin-top:16px; background:#1e293b; border-radius:18px; padding:20px;">
+            <h2 id="vaultFormHeading">Save Content</h2>
+
+            <label for="vaultItemTitle">Title / Description</label>
+            <input id="vaultItemTitle" type="text" placeholder="Example: Japan Trip 2025 Video" autocomplete="off">
+
+            <label for="vaultItemCategory">Category / Tag</label>
+            <input id="vaultItemCategory" type="text" placeholder="Example: Travel, Work, Notes" autocomplete="off">
+
+            <label for="vaultItemUrl">Telegram Link or Note</label>
+            <input id="vaultItemUrl" type="text" placeholder="https://t.me/... or message link" autocomplete="off">
+
+            <button class="add-button" id="saveVaultItemButton">Save Item</button>
+            <button type="button" id="cancelVaultItemButton" style="width: 100%; background: none; border: none; color: #94a3b8; padding: 10px; margin-top: 8px; cursor: pointer;">Cancel</button>
+        </div>
+
+        <!-- VAULT ITEMS LIST CONTAINER -->
+        <div id="vaultList" style="margin-top:20px;">
+            <div style="text-align:center; color:#94a3b8; padding:30px;">
+                Loading vault...
+            </div>
+        </div>
+
+    </section>
+
 
 </main>
 
