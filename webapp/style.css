@@ -1404,3 +1404,76 @@ body {
 
     line-height: 1.5;
 }
+
+
+/* =========================
+   BIRTHDAY ACTION BUTTONS
+   ========================= */
+
+.birthday-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    flex-shrink: 0;
+}
+
+
+.birthday-edit,
+.birthday-delete {
+    width: 36px;
+
+    height: 36px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 11px;
+
+    cursor: pointer;
+
+    font-size: 15px;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease;
+}
+
+
+.birthday-edit {
+    background:
+        rgba(56, 189, 248, 0.10);
+
+    color: #7dd3fc;
+}
+
+
+.birthday-edit:active {
+    transform: scale(0.9);
+
+    background:
+        rgba(56, 189, 248, 0.20);
+}
+
+
+.birthday-delete {
+    background:
+        rgba(239, 68, 68, 0.10);
+
+    color: #fca5a5;
+}
+
+
+.birthday-delete:active {
+    transform: scale(0.9);
+
+    background:
+        rgba(239, 68, 68, 0.20);
+}
