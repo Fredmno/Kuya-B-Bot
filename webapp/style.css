@@ -1,28 +1,44 @@
+/* =========================
+   KUYA B — PREMIUM THEME
+   PART 1
+   ========================= */
+
 :root {
-    --bg: #0f172a;
-    --card: #1e293b;
+    --bg: #070b16;
+    --card: #111827;
+    --card2: #172033;
+
     --text: #f8fafc;
     --muted: #94a3b8;
-    --border: rgba(255, 255, 255, 0.07);
-    --radius: 18px;
+
+    --blue: #38bdf8;
+    --green: #4ade80;
+    --orange: #fb923c;
+    --pink: #f472b6;
+    --purple: #a78bfa;
+    --cyan: #22d3ee;
+
+    --border: rgba(255, 255, 255, 0.08);
+
+    --shadow:
+        0 15px 40px rgba(0, 0, 0, 0.35);
 }
+
 
 * {
     box-sizing: border-box;
 }
 
+
+html {
+    background: var(--bg);
+}
+
+
 body {
     margin: 0;
 
-    background:
-        radial-gradient(
-            circle at top right,
-            rgba(59, 130, 246, 0.12),
-            transparent 35%
-        ),
-        var(--bg);
-
-    color: var(--text);
+    min-height: 100vh;
 
     font-family:
         -apple-system,
@@ -33,102 +49,451 @@ body {
         Arial,
         sans-serif;
 
+    background:
+        radial-gradient(
+            circle at top left,
+            rgba(56, 189, 248, 0.10),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at bottom right,
+            rgba(167, 139, 250, 0.10),
+            transparent 35%
+        ),
+        var(--bg);
+
+    color: var(--text);
+
     -webkit-font-smoothing: antialiased;
 }
 
+
+button,
+input {
+    font: inherit;
+}
+
+
 button {
-    font-family: inherit;
     -webkit-tap-highlight-color: transparent;
 }
+
 
 .app {
     width: 100%;
     max-width: 520px;
 
+    min-height: 100vh;
+
     margin: 0 auto;
 
     padding:
-        calc(24px + env(safe-area-inset-top))
+        calc(18px + env(safe-area-inset-top))
         18px
-        calc(24px + env(safe-area-inset-bottom));
+        calc(28px + env(safe-area-inset-bottom));
 }
 
 
-/* HEADER */
+/* =========================
+   HEADER
+   ========================= */
 
 .header {
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
     margin-bottom: 22px;
 }
 
+
 .greeting {
     color: var(--muted);
-    font-size: 14px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.5px;
+
+    text-transform: uppercase;
+
     margin-bottom: 4px;
 }
+
 
 .header h1 {
     margin: 0;
 
     font-size: 32px;
+
+    line-height: 1.1;
+
     font-weight: 800;
-    letter-spacing: -0.5px;
+
+    letter-spacing: -1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #ffffff,
+            #a5f3fc
+        );
+
+    -webkit-background-clip: text;
+
+    background-clip: text;
+
+    color: transparent;
 }
 
+
 .header p {
-    margin: 4px 0 0;
+    margin: 6px 0 0;
 
     color: var(--muted);
+
     font-size: 14px;
 }
 
+
 .avatar {
     width: 52px;
+
     height: 52px;
 
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 
-    border-radius: 16px;
-
-    background: linear-gradient(
-        135deg,
-        #3b82f6,
-        #8b5cf6
-    );
+    border-radius: 18px;
 
     font-size: 27px;
 
+    background:
+        linear-gradient(
+            135deg,
+            rgba(56, 189, 248, 0.22),
+            rgba(167, 139, 250, 0.22)
+        );
+
+    border: 1px solid var(--border);
+
     box-shadow:
-        0 8px 25px rgba(59, 130, 246, 0.25);
+        0 8px 25px rgba(0, 0, 0, 0.25);
 }
 
 
-/* SEARCH */
+/* =========================
+   SEARCH
+   ========================= */
 
 .search-bar {
     width: 100%;
 
     display: flex;
+
     align-items: center;
-    gap: 10px;
+
+    gap: 12px;
 
     border: 1px solid var(--border);
-    border-radius: 15px;
 
-    padding: 14px 16px;
+    border-radius: 17px;
 
-    background: rgba(30, 41, 59, 0.85);
+    padding: 15px 17px;
+
+    margin-bottom: 28px;
+
+    background:
+        rgba(17, 24, 39, 0.88);
 
     color: var(--muted);
 
-    font-size: 15px;
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.18);
+
+    cursor: pointer;
 
     text-align: left;
+
+    transition:
+        transform 0.15s ease,
+        border-color 0.15s ease;
+}
+
+
+.search-bar:active {
+    transform: scale(0.98);
+
+    border-color:
+        rgba(56, 189, 248, 0.4);
+}
+
+
+.search-bar > span:first-child {
+    font-size: 19px;
+}
+
+
+.search-text {
+    font-size: 15px;
+
+    font-weight: 500;
+}
+
+
+/* =========================
+   SECTIONS
+   ========================= */
+
+.section {
+    margin-bottom: 27px;
+}
+
+
+.section h2 {
+    margin: 0 0 13px;
+
+    font-size: 14px;
+
+    color: #cbd5e1;
+
+    font-weight: 700;
+
+    letter-spacing: 0.5px;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================
+   GRID
+   ========================= */
+
+.grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+}
+
+
+/* =========================
+   TILES
+   ========================= */
+
+.tile {
+    position: relative;
+
+    min-height: 125px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 20px;
+
+    padding: 17px;
+
+    color: white;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    overflow: hidden;
+
+    box-shadow: var(--shadow);
+
+    transition:
+        transform 0.15s ease,
+        border-color 0.15s ease;
+}
+
+
+.tile::after {
+    content: "";
+
+    position: absolute;
+
+    width: 90px;
+
+    height: 90px;
+
+    right: -30px;
+
+    bottom: -35px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.08);
+}
+
+
+.tile:active {
+    transform: scale(0.96);
+}
+
+
+.tile:hover {
+    border-color:
+        rgba(255, 255, 255, 0.16);
+}
+
+
+.tile .icon {
+    display: block;
+
+    font-size: 27px;
+
+    margin-bottom: 13px;
+}
+
+
+.tile strong {
+    display: block;
+
+    font-size: 16px;
+
+    font-weight: 750;
+
+    position: relative;
+
+    z-index: 1;
+}
+
+
+.tile small {
+    display: block;
+
+    margin-top: 4px;
+
+    color: rgba(255, 255, 255, 0.58);
+
+    font-size: 12px;
+
+    position: relative;
+
+    z-index: 1;
+}
+/* =========================
+   TILE COLORS
+   ========================= */
+
+.tile-blue {
+    background:
+        linear-gradient(
+            145deg,
+            #075985,
+            #0c4a6e
+        );
+}
+
+.tile-green {
+    background:
+        linear-gradient(
+            145deg,
+            #166534,
+            #14532d
+        );
+}
+
+.tile-orange {
+    background:
+        linear-gradient(
+            145deg,
+            #9a3412,
+            #7c2d12
+        );
+}
+
+.tile-pink {
+    background:
+        linear-gradient(
+            145deg,
+            #9d174d,
+            #831843
+        );
+}
+
+.tile-purple {
+    background:
+        linear-gradient(
+            145deg,
+            #6d28d9,
+            #4c1d95
+        );
+}
+
+.tile-cyan {
+    background:
+        linear-gradient(
+            145deg,
+            #155e75,
+            #164e63
+        );
+}
+
+.tile-gray {
+    background:
+        linear-gradient(
+            145deg,
+            #374151,
+            #1f2937
+        );
+}
+
+.tile-dark {
+    background:
+        linear-gradient(
+            145deg,
+            #1e293b,
+            #0f172a
+        );
+}
+
+
+/* =========================
+   ADD CONTENT BUTTON
+   ========================= */
+
+.add-button {
+    width: 100%;
+
+    border: 1px solid
+        rgba(74, 222, 128, 0.25);
+
+    border-radius: 17px;
+
+    padding: 16px;
+
+    margin: 3px 0 13px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(34, 197, 94, 0.18),
+            rgba(16, 185, 129, 0.10)
+        );
+
+    color: #86efac;
+
+    font-size: 16px;
+
+    font-weight: 750;
 
     cursor: pointer;
 
@@ -137,236 +502,102 @@ button {
         background 0.15s ease;
 }
 
-.search-bar:active {
-    transform: scale(0.98);
-}
 
-.search-text {
-    flex: 1;
-}
+.add-button span {
+    font-size: 22px;
 
-
-/* SECTIONS */
-
-.section {
-    margin-top: 26px;
-}
-
-.section h2 {
-    margin: 0 0 12px 3px;
-
-    color: var(--muted);
-
-    font-size: 13px;
-    font-weight: 700;
-
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
+    line-height: 1;
 }
 
 
-/* GRID */
+.add-button:active {
+    transform: scale(0.97);
 
-.grid {
-    display: grid;
-
-    grid-template-columns: repeat(2, 1fr);
-
-    gap: 12px;
+    background:
+        rgba(34, 197, 94, 0.25);
 }
 
 
-/* TILES */
+/* =========================
+   GAME BUTTON
+   ========================= */
 
-.tile {
-    min-height: 125px;
+.game-button {
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
 
     border: 1px solid var(--border);
 
-    border-radius: var(--radius);
+    border-radius: 17px;
 
-    padding: 17px;
+    padding: 15px 17px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #1e293b,
+            #111827
+        );
 
     color: white;
 
     text-align: left;
 
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-
     cursor: pointer;
+
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.2);
 
     transition:
-        transform 0.15s ease,
-        filter 0.15s ease;
-}
-
-.tile:active {
-    transform: scale(0.96);
-    filter: brightness(0.9);
-}
-
-.tile .icon {
-    font-size: 28px;
-    margin-bottom: 12px;
-}
-
-.tile strong {
-    font-size: 16px;
-    font-weight: 700;
-}
-
-.tile small {
-    margin-top: 4px;
-
-    color: rgba(255, 255, 255, 0.65);
-
-    font-size: 12px;
+        transform 0.15s ease;
 }
 
 
-/* TILE COLORS */
-
-.tile-blue {
-    background: linear-gradient(
-        145deg,
-        #2563eb,
-        #1d4ed8
-    );
+.game-button:active {
+    transform: scale(0.97);
 }
 
-.tile-green {
-    background: linear-gradient(
-        145deg,
-        #16a34a,
-        #15803d
-    );
-}
-
-.tile-orange {
-    background: linear-gradient(
-        145deg,
-        #ea580c,
-        #c2410c
-    );
-}
-
-.tile-pink {
-    background: linear-gradient(
-        145deg,
-        #db2777,
-        #be185d
-    );
-}
-
-.tile-purple {
-    background: linear-gradient(
-        145deg,
-        #7c3aed,
-        #6d28d9
-    );
-}
-
-.tile-cyan {
-    background: linear-gradient(
-        145deg,
-        #0891b2,
-        #0e7490
-    );
-}
-
-.tile-gray {
-    background: linear-gradient(
-        145deg,
-        #475569,
-        #334155
-    );
-}
-
-.tile-dark {
-    background: linear-gradient(
-        145deg,
-        #374151,
-        #1f2937
-    );
-}
-
-
-/* ADD CONTENT */
-
-.add-button {
-    width: 100%;
-
-    margin-top: 26px;
-
-    border: none;
-    border-radius: 16px;
-
-    padding: 17px;
-
-    background: #f8fafc;
-    color: #0f172a;
-
-    font-size: 16px;
-    font-weight: 800;
-
-    cursor: pointer;
-
-    transition:
-        transform 0.15s ease,
-        opacity 0.15s ease;
-}
-
-.add-button:active {
-    transform: scale(0.98);
-    opacity: 0.85;
-}
-
-
-/* WORD GAME */
-
-.game-button {
-    width: 100%;
-
-    margin-top: 12px;
-
-    padding: 15px;
-
-    display: flex;
-    align-items: center;
-
-    gap: 12px;
-
-    border: 1px solid var(--border);
-    border-radius: 16px;
-
-    background: var(--card);
-
-    color: var(--text);
-
-    text-align: left;
-
-    cursor: pointer;
-}
 
 .game-button > span:first-child {
-    font-size: 26px;
+    width: 42px;
+
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 13px;
+
+    background:
+        rgba(167, 139, 250, 0.16);
+
+    font-size: 22px;
 }
+
 
 .game-button div {
     flex: 1;
-
-    display: flex;
-    flex-direction: column;
 }
 
+
 .game-button strong {
+    display: block;
+
     font-size: 15px;
 }
 
+
 .game-button small {
+    display: block;
+
     margin-top: 3px;
 
     color: var(--muted);
@@ -374,20 +605,26 @@ button {
     font-size: 12px;
 }
 
-.arrow {
-    color: var(--muted);
+
+.game-button .arrow {
+    color: #64748b;
+
     font-size: 25px;
 }
 
 
-/* FOOTER */
+/* =========================
+   FOOTER
+   ========================= */
 
 footer {
     display: flex;
+
+    align-items: center;
+
     justify-content: space-between;
 
-    margin-top: 30px;
-    padding: 0 4px;
+    padding: 22px 4px 4px;
 
     color: #64748b;
 
@@ -395,25 +632,290 @@ footer {
 }
 
 
-/* SMALL SCREENS */
+footer span:first-child {
+    color: #94a3b8;
 
-@media (max-width: 360px) {
+    font-weight: 600;
+}
+
+
+/* =========================
+   BIRTHDAY PAGE
+   ========================= */
+
+#birthdaysPage {
+    animation:
+        pageIn 0.2s ease;
+}
+
+
+@keyframes pageIn {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+
+}
+
+
+/* Birthday list cards */
+
+#birthdayList > div {
+    border:
+        1px solid var(--border) !important;
+
+    box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, 0.18);
+
+    transition:
+        transform 0.15s ease,
+        border-color 0.15s ease;
+}
+
+
+#birthdayList > div:active {
+    transform: scale(0.98);
+}
+
+
+/* Birthday form */
+
+#birthdayForm {
+    border:
+        1px solid var(--border);
+
+    box-shadow: var(--shadow);
+}
+
+
+#birthdayForm h2 {
+    margin-top: 0;
+
+    margin-bottom: 18px;
+
+    font-size: 20px;
+}
+
+
+#birthdayForm label {
+    display: block;
+
+    margin:
+        14px 0 7px;
+
+    color: #cbd5e1;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+
+#birthdayForm input {
+    width: 100%;
+
+    border: 1px solid
+        rgba(255, 255, 255, 0.08);
+
+    border-radius: 12px;
+
+    padding: 13px;
+
+    outline: none;
+
+    background: #0f172a;
+
+    color: white;
+}
+
+
+#birthdayForm input:focus {
+    border-color:
+        rgba(56, 189, 248, 0.5);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(56, 189, 248, 0.08);
+}
+
+
+#cancelBirthdayButton {
+    width: 100%;
+
+    margin-top: 10px;
+
+    padding: 13px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #273449;
+
+    color: #cbd5e1;
+
+    font-weight: 650;
+}
+/* =========================
+   RESPONSIVE MOBILE TUNING
+   ========================= */
+
+@media (max-width: 380px) {
 
     .app {
         padding-left: 14px;
         padding-right: 14px;
     }
 
-    .tile {
-        min-height: 115px;
-        padding: 14px;
-    }
-
-    .tile .icon {
-        font-size: 25px;
-    }
-
     .header h1 {
         font-size: 28px;
     }
+
+    .tile {
+        min-height: 115px;
+        padding: 15px;
+    }
+
+}
+
+
+/* =========================
+   LARGE PHONES
+   ========================= */
+
+@media (min-width: 480px) {
+
+    .app {
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+}
+
+
+/* =========================
+   ACCESSIBILITY
+   ========================= */
+
+button:focus-visible {
+    outline: 2px solid var(--blue);
+
+    outline-offset: 3px;
+}
+
+
+/* =========================
+   REDUCE MOTION
+   ========================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+
+        animation-duration: 0.01ms !important;
+
+        animation-iteration-count: 1 !important;
+
+        transition-duration: 0.01ms !important;
+
+        scroll-behavior: auto !important;
+    }
+
+}
+
+
+/* =========================
+   SCROLLBAR
+   ========================= */
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+
+    border-radius: 10px;
+}
+
+
+/* =========================
+   SELECTION
+   ========================= */
+
+::selection {
+    background:
+        rgba(56, 189, 248, 0.25);
+
+    color: white;
+}
+
+
+/* =========================
+   SAFE AREA
+   ========================= */
+
+@supports (padding: max(0px)) {
+
+    .app {
+        padding-bottom:
+            max(
+                28px,
+                env(safe-area-inset-bottom)
+            );
+    }
+
+}
+
+
+/* =========================
+   SMOOTH PAGE FEEL
+   ========================= */
+
+body {
+    overflow-x: hidden;
+}
+
+
+.app {
+    animation:
+        appIn 0.35s ease;
+}
+
+
+@keyframes appIn {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+
 }
