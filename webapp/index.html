@@ -370,10 +370,70 @@
 
     </section>
 
+    <!-- REMINDERS PAGE -->
+    <section class="card" id="remindersPage" style="display:none;">
+
+        <header class="header">
+            <div>
+                <div class="greeting">Personal</div>
+                <h1>⏰ Reminders</h1>
+                <p>Never forget important things</p>
+            </div>
+            <div class="avatar">⏰</div>
+        </header>
+
+        <button class="search-bar" id="remindersBackButton">
+            <span>←</span>
+            <span class="search-text">Back to Kuya B</span>
+        </button>
+
+        <button class="add-button" id="addReminderButton" style="margin-top: 14px;">
+            <span>＋</span>
+            New Reminder
+        </button>
+
+        <!-- ADD / EDIT REMINDER FORM -->
+        <div id="reminderForm" style="display:none; margin-top:16px; background:#1e293b; border-radius:18px; padding:20px;">
+            <h2 id="reminderFormHeading">Add Reminder</h2>
+
+            <label for="reminderTitle">Reminder</label>
+            <input id="reminderTitle" type="text" placeholder="Example: Take medicine / Meeting" autocomplete="off">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <div>
+                    <label for="reminderDate">Date</label>
+                    <input id="reminderDate" type="date">
+                </div>
+                <div>
+                    <label for="reminderTime">Time</label>
+                    <input id="reminderTime" type="time">
+                </div>
+            </div>
+
+            <label for="reminderRepeat" style="display:block; margin-top:10px;">Repeat</label>
+            <select id="reminderRepeat" style="width:100%; border-radius:12px; padding:12px; background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.1); margin-top:6px; margin-bottom:14px; font-family:inherit; font-size:0.95rem; box-sizing:border-box;">
+                <option value="none">Once (No repeat)</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+            </select>
+
+            <button class="add-button" id="saveReminderButton">Save Reminder</button>
+            <button type="button" id="cancelReminderButton" style="width: 100%; background: none; border: none; color: #94a3b8; padding: 10px; margin-top: 8px; cursor: pointer;">Cancel</button>
+        </div>
+
+        <!-- REMINDERS LIST CONTAINER -->
+        <div id="remindersList" style="margin-top:20px;">
+            <div style="text-align:center; color:#94a3b8; padding:30px;">
+                Loading reminders...
+            </div>
+        </div>
+
+    </section>
+
 
 </main>
 
-<script type="module" src="/app/app.js?v=6"></script>
+<script type="module" src="/app/app.js?v=7"></script>
 
 </body>
 </html>
