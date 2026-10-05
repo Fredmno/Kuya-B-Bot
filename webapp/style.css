@@ -1477,3 +1477,136 @@ body {
     background:
         rgba(239, 68, 68, 0.20);
 }
+
+/* =========================================================
+   CLEAN UNDERLINE FORM INPUTS (GREEN ACCENT)
+   ========================================================= */
+
+/* Form container cleanup */
+#birthdayForm,
+#logForm,
+#taskForm,
+#reminderForm,
+#vaultForm {
+    background: rgba(30, 41, 59, 0.7) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 22px !important;
+    box-sizing: border-box;
+}
+
+/* Form Headings */
+#birthdayForm h2,
+#logFormHeading,
+#taskFormHeading,
+#reminderFormHeading,
+#vaultFormHeading {
+    margin: 0 0 16px 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+/* Clean, modern labels */
+#birthdayForm label,
+#logForm label,
+#taskForm label,
+#reminderForm label,
+#vaultForm label {
+    display: block;
+    margin-top: 14px;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+}
+
+/* Transform box inputs into single bottom lines */
+input[type="text"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+    width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 0 !important;
+    padding: 10px 4px !important;
+    color: #f8fafc !important;
+    font-size: 1rem !important;
+    font-family: inherit;
+    outline: none !important;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Placeholder styling */
+input::placeholder,
+textarea::placeholder {
+    color: #64748b;
+    font-weight: 400;
+}
+
+/* Active / Focused state: turns into a vibrant matching green line */
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+select:focus,
+textarea:focus {
+    border-bottom: 2px solid #22c55e !important; /* Green accent */
+    box-shadow: 0 1px 0 0 #22c55e;
+}
+
+/* Textarea subtle line styling */
+textarea {
+    resize: vertical;
+    min-height: 80px;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+}
+
+textarea:focus {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    border-bottom: 2px solid #22c55e !important;
+}
+
+/* Align buttons cleanly at the bottom */
+#saveBirthdayButton,
+#saveLogButton,
+#saveTaskButton,
+#saveReminderButton,
+#saveVaultItemButton {
+    margin-top: 22px !important;
+}
+
+#cancelBirthdayButton,
+#cancelLogButton,
+#cancelTaskButton,
+#cancelReminderButton,
+#cancelVaultItemButton {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    padding: 12px;
+    margin-top: 6px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+#cancelBirthdayButton:active,
+#cancelLogButton:active,
+#cancelTaskButton:active,
+#cancelReminderButton:active,
+#cancelVaultItemButton:active {
+    color: #f8fafc;
+}
