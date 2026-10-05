@@ -1,34 +1,35 @@
 /* =========================================================
-   KUYA B — MODULE: CONTENT VAULT (IN-APP MEDIA VIEWER)
+   KUYA B — MODULE: CONTENT VAULT (WITH FOLDERS)
    ========================================================= */
 
-import { escapeHtml, triggerHaptic } from "./helpers.js";
+import { escapeHtml, triggerHaptic, tg } from "./helpers.js";
 
 let vaultItems = [];
 let currentVaultType = "videos"; // 'videos' | 'pictures' | 'other'
+let selectedFolder = "All";
 let editingVaultItemId = null;
 
 const TYPE_CONFIG = {
     videos: {
         title: "🎥 Videos",
-        subtitle: "Your video player & vault",
+        subtitle: "Organized by folders",
         icon: "🎥",
         addText: "＋ Add Video",
-        emptyText: "No videos saved yet"
+        emptyText: "No videos in this folder"
     },
     pictures: {
-        title: "🖼️ Pictures",
-        subtitle: "Your personal photo gallery",
+        title: "🖼️️ Pictures",
+        subtitle: "Organized by folders",
         icon: "🖼️",
         addText: "＋ Add Picture",
-        emptyText: "No pictures saved yet"
+        emptyText: "No pictures in this folder"
     },
     other: {
         title: "📚 Other",
-        subtitle: "Documents, notes & files",
+        subtitle: "Documents & notes",
         icon: "📚",
-        addText: "＋ Add Content",
-        emptyText: "No files or notes saved yet"
+        addText: "＋ Add File",
+        emptyText: "No files in this folder"
     }
 };
 
@@ -53,6 +54,7 @@ function saveVaultToStorage() {
 export function setVaultType(type) {
     if (TYPE_CONFIG[type]) {
         currentVaultType = type;
+        selectedFolder = "All"; // Reset folder filter when switching sections
         updateVaultHeader();
     }
 }
@@ -70,11 +72,97 @@ function updateVaultHeader() {
     if (addBtn) addBtn.innerHTML = `<span>＋</span> ${config.addText}`;
 }
 
+// Extract distinct folders for current media type
+function getFoldersForCurrentType() {
+    const folders = new Set();
+    vaultItems
+        .filter(item => item.type === currentVaultType)
+        .forEach(item => {
+            if (item.folder) folders.add(item.folder);
+        });
+    return Array.from(folders).sort();
+}
+
+// ---------------------------------------------------------
+// RENDER FOLDER PILLS
+// ---------------------------------------------------------
+
+export function displayFolderBar() {
+    const bar = document.getElementById("vaultFoldersBar");
+    if (!bar) return;
+
+    bar.innerHTML = "";
+    const folders = ["All", ...getFoldersForCurrentType()];
+
+    folders.forEach(folder => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `folder-pill ${selectedFolder === folder ? "active" : ""}`;
+        btn.textContent = folder === "All" ? "📁 All" : `📁 ${folder}`;
+
+        btn.addEventListener("click", () => {
+            triggerHaptic("light");
+            selectedFolder = folder;
+            displayFolderBar();
+            displayVaultItems();
+        });
+
+        bar.appendChild(btn);
+    });
+}
+
+// Populate folder options in the form dropdown
+function populateFolderDropdown(activeFolder = "General") {
+    const select = document.getElementById("vaultFolderSelect");
+    const newFolderContainer = document.getElementById("newFolderContainer");
+    const newFolderInput = document.getElementById("vaultNewFolderInput");
+
+    if (!select) return;
+    select.innerHTML = "";
+
+    const existingFolders = getFoldersForCurrentType();
+    if (!existingFolders.includes("General")) {
+        existingFolders.unshift("General");
+    }
+
+    existingFolders.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f;
+        opt.textContent = f;
+        select.appendChild(opt);
+    });
+
+    // Special option to create a new folder
+    const createNewOpt = document.createElement("option");
+    createNewOpt.value = "__NEW__";
+    createNewOpt.textContent = "＋ Create New Folder...";
+    select.appendChild(createNewOpt);
+
+    select.value = existingFolders.includes(activeFolder) ? activeFolder : "General";
+
+    // Toggle custom text input if "__NEW__" is selected
+    select.onchange = () => {
+        if (select.value === "__NEW__") {
+            newFolderContainer.style.display = "block";
+            newFolderInput.focus();
+        } else {
+            newFolderContainer.style.display = "none";
+            newFolderInput.value = "";
+        }
+    };
+
+    if (newFolderContainer) newFolderContainer.style.display = "none";
+    if (newFolderInput) newFolderInput.value = "";
+}
+
+// ---------------------------------------------------------
+// FORM MANAGEMENT
+// ---------------------------------------------------------
+
 export function showVaultForm(item = null) {
     const form = document.getElementById("vaultForm");
     const heading = document.getElementById("vaultFormHeading");
     const titleInput = document.getElementById("vaultItemTitle");
-    const catInput = document.getElementById("vaultItemCategory");
     const urlInput = document.getElementById("vaultItemUrl");
     const saveBtn = document.getElementById("saveVaultItemButton");
 
@@ -85,16 +173,16 @@ export function showVaultForm(item = null) {
         editingVaultItemId = item.id;
         if (heading) heading.textContent = "Edit Item";
         if (titleInput) titleInput.value = item.title;
-        if (catInput) catInput.value = item.category || "";
-        if (urlInput) urlInput.value = item.url || "";
+        if (urlInput) urlInput.value = item.messageLink || "";
         if (saveBtn) saveBtn.textContent = "Save Changes";
+        populateFolderDropdown(item.folder || "General");
     } else {
         editingVaultItemId = null;
-        if (heading) heading.textContent = `Save ${TYPE_CONFIG[currentVaultType].title}`;
+        if (heading) heading.textContent = `Add to ${TYPE_CONFIG[currentVaultType].title}`;
         if (titleInput) titleInput.value = "";
-        if (catInput) catInput.value = "";
         if (urlInput) urlInput.value = "";
         if (saveBtn) saveBtn.textContent = "Save Item";
+        populateFolderDropdown(selectedFolder !== "All" ? selectedFolder : "General");
     }
 
     setTimeout(() => titleInput?.focus(), 100);
@@ -102,48 +190,52 @@ export function showVaultForm(item = null) {
 
 export function hideVaultForm() {
     const form = document.getElementById("vaultForm");
-    const titleInput = document.getElementById("vaultItemTitle");
-    const catInput = document.getElementById("vaultItemCategory");
-    const urlInput = document.getElementById("vaultItemUrl");
-
     if (!form) return;
     form.style.display = "none";
     editingVaultItemId = null;
-
-    if (titleInput) titleInput.value = "";
-    if (catInput) catInput.value = "";
-    if (urlInput) urlInput.value = "";
 }
 
 export function saveVaultItem() {
     const titleInput = document.getElementById("vaultItemTitle");
-    const catInput = document.getElementById("vaultItemCategory");
+    const select = document.getElementById("vaultFolderSelect");
+    const newFolderInput = document.getElementById("vaultNewFolderInput");
     const urlInput = document.getElementById("vaultItemUrl");
 
     const title = titleInput?.value.trim();
-    const category = catInput?.value.trim() || "General";
-    const url = urlInput?.value.trim() || "";
+    const rawLink = urlInput?.value.trim() || "";
+
+    // Determine final folder name
+    let folder = select?.value || "General";
+    if (folder === "__NEW__") {
+        folder = newFolderInput?.value.trim() || "General";
+    }
 
     if (!title) {
-        alert("Please enter a title or description.");
+        alert("Please enter a title.");
         titleInput?.focus();
         return;
     }
+
+    // Extract message ID number
+    const parts = rawLink.split('/');
+    const messageId = parts[parts.length - 1].replace(/\D/g, "");
 
     if (editingVaultItemId) {
         const idx = vaultItems.findIndex(v => v.id === editingVaultItemId);
         if (idx !== -1) {
             vaultItems[idx].title = title;
-            vaultItems[idx].category = category;
-            vaultItems[idx].url = url;
+            vaultItems[idx].folder = folder;
+            vaultItems[idx].messageLink = rawLink;
+            vaultItems[idx].messageId = messageId;
         }
     } else {
         vaultItems.unshift({
             id: Date.now().toString(),
             type: currentVaultType,
             title,
-            category,
-            url,
+            folder,
+            messageLink: rawLink,
+            messageId: messageId,
             createdAt: new Date().toISOString()
         });
     }
@@ -151,6 +243,7 @@ export function saveVaultItem() {
     saveVaultToStorage();
     triggerHaptic("notification");
     hideVaultForm();
+    displayFolderBar();
     displayVaultItems();
 }
 
@@ -158,21 +251,45 @@ export function deleteVaultItem(id) {
     const item = vaultItems.find(v => v.id === id);
     if (!item) return;
 
-    if (!confirm(`Delete "${item.title}" from your vault?`)) return;
+    if (!confirm(`Delete "${item.title}"?`)) return;
 
     vaultItems = vaultItems.filter(v => v.id !== id);
     saveVaultToStorage();
     triggerHaptic("warning");
+    displayFolderBar();
     displayVaultItems();
 }
 
-function isImageURL(url) {
-    return /\.(jpg|jpeg|png|webp|gif|svg)($|\?)/i.test(url);
+async function sendToChat(messageId) {
+    triggerHaptic("light");
+    const userId = tg?.initDataUnsafe?.user?.id;
+
+    try {
+        const res = await fetch('/api/vault/forward', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messageId, userId })
+        });
+
+        if (res.ok) {
+            triggerHaptic("notification");
+            if (tg?.showAlert) {
+                tg.showAlert("Sent to your chat with Kuya B! 📬");
+            } else {
+                alert("Sent to your chat with Kuya B! 📬");
+            }
+        } else {
+            alert("Could not forward file. Make sure the message ID exists in the channel.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Error connecting to bot server.");
+    }
 }
 
-function isVideoURL(url) {
-    return /\.(mp4|webm|mov|ogg)($|\?)/i.test(url);
-}
+// ---------------------------------------------------------
+// RENDER ITEMS LIST
+// ---------------------------------------------------------
 
 export function displayVaultItems() {
     const list = document.getElementById("vaultList");
@@ -181,14 +298,19 @@ export function displayVaultItems() {
     list.innerHTML = "";
     const config = TYPE_CONFIG[currentVaultType];
 
-    const filtered = vaultItems.filter(item => item.type === currentVaultType);
+    // Filter by type AND active folder
+    const filtered = vaultItems.filter(item => {
+        if (item.type !== currentVaultType) return false;
+        if (selectedFolder !== "All" && item.folder !== selectedFolder) return false;
+        return true;
+    });
 
     if (!filtered.length) {
         list.innerHTML = `
             <div class="empty-state" style="text-align:center; padding:30px 10px; color:#94a3b8;">
                 <div style="font-size:3rem; margin-bottom:8px;">${config.icon}</div>
                 <strong style="display:block; font-size:1.1rem; color:#f8fafc; margin-bottom:4px;">${config.emptyText}</strong>
-                <small>Keep track of your media and view it directly in the app.</small>
+                <small>Tap "＋ Add" to add files into this folder.</small>
             </div>
         `;
         return;
@@ -196,44 +318,13 @@ export function displayVaultItems() {
 
     filtered.forEach(item => {
         const card = document.createElement("div");
-        card.style.cssText = "display:flex; flex-direction:column; padding:12px; margin-bottom:12px; background:rgba(255,255,255,0.06); border-radius:14px; overflow:hidden;";
-
-        let mediaEmbed = "";
-        const url = item.url ? item.url.trim() : "";
-
-        // Embedded In-App Viewers
-        if (url) {
-            if (item.type === "videos" || isVideoURL(url)) {
-                mediaEmbed = `
-                    <div style="margin-top:10px; border-radius:10px; overflow:hidden; background:#000; max-height:260px;">
-                        <video controls playsinline preload="metadata" style="width:100%; height:auto; display:block; max-height:260px;">
-                            <source src="${escapeHtml(url)}">
-                            Your browser does not support embedded video playback.
-                        </video>
-                    </div>
-                `;
-            } else if (item.type === "pictures" || isImageURL(url)) {
-                mediaEmbed = `
-                    <div style="margin-top:10px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,0.2); max-height:240px; text-align:center;">
-                        <img src="${escapeHtml(url)}" alt="${escapeHtml(item.title)}" loading="lazy" style="width:100%; height:auto; max-height:240px; object-fit:cover; display:block;" onerror="this.parentElement.style.display='none';">
-                    </div>
-                `;
-            } else {
-                mediaEmbed = `
-                    <div style="margin-top:8px;">
-                        <a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="display:inline-block; background:rgba(56, 189, 248, 0.15); color:#38bdf8; text-decoration:none; border-radius:8px; padding:6px 12px; font-size:0.85rem; font-weight:600;">
-                            ↗ Open External File / Link
-                        </a>
-                    </div>
-                `;
-            }
-        }
+        card.style.cssText = "display:flex; flex-direction:column; padding:14px; margin-bottom:12px; background:rgba(255,255,255,0.06); border-radius:14px;";
 
         card.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
-                    <span style="font-size:0.75rem; background:rgba(255,255,255,0.1); color:#94a3b8; padding:2px 8px; border-radius:6px;">
-                        🏷️ ${escapeHtml(item.category)}
+                    <span style="font-size:0.75rem; background:rgba(255,255,255,0.1); color:#38bdf8; padding:3px 8px; border-radius:6px; font-weight:600;">
+                        📁 ${escapeHtml(item.folder || "General")}
                     </span>
                     <strong style="display:block; font-size:1rem; color:#f8fafc; margin-top:6px; word-break:break-word;">
                         ${escapeHtml(item.title)}
@@ -244,7 +335,12 @@ export function displayVaultItems() {
                     <button class="vault-delete" type="button" data-id="${escapeHtml(item.id)}" style="background:none; border:none; font-size:1.1rem; padding:4px; cursor:pointer;">🗑️</button>
                 </div>
             </div>
-            ${mediaEmbed}
+
+            <div style="margin-top:12px;">
+                <button class="btn-send-chat" data-msgid="${escapeHtml(item.messageId || '')}" type="button" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:rgba(56, 189, 248, 0.15); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.3); border-radius:10px; padding:10px; font-size:0.9rem; font-weight:600; cursor:pointer;">
+                    <span>📥</span> Send to Bot Chat
+                </button>
+            </div>
         `;
 
         list.appendChild(card);
@@ -259,5 +355,16 @@ export function displayVaultItems() {
 
     list.querySelectorAll(".vault-delete").forEach(btn => {
         btn.addEventListener("click", () => deleteVaultItem(btn.dataset.id));
+    });
+
+    list.querySelectorAll(".btn-send-chat").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const msgId = btn.dataset.msgid;
+            if (!msgId) {
+                alert("No channel message ID found for this item.");
+                return;
+            }
+            sendToChat(msgId);
+        });
     });
 }
