@@ -65,7 +65,7 @@ async def health_check(request: Request):
     return PlainTextResponse("Kuya B Bot is running.")
 
 
-async def serve_index_no_cache(request: Request):
+async def serve_index(request: Request):
     index_path = os.path.join("webapp", "index.html")
     if not os.path.exists(index_path):
         return PlainTextResponse("index.html not found", status_code=404)
@@ -73,9 +73,8 @@ async def serve_index_no_cache(request: Request):
     with open(index_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    # Dynamic timestamp cache-buster injected on every single launch
-    current_time_version = str(int(time.time()))
-    rendered = content.replace("{{ v }}", current_time_version)
+    # Injects live unix timestamp for auto cache-busting
+    rendered = content.replace("{{ v }}", str(int(time.time())))
 
     headers = {
         "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
@@ -92,34 +91,21 @@ async def api_forward_vault_item(request: Request):
         user_id = data.get("userId")
 
         if not user_id:
-            logging.error("Vault forward error: No user_id provided by Mini App")
             return JSONResponse({"error": "User ID is required"}, status_code=400)
-
         if not raw_msg_id:
-            logging.error("Vault forward error: No messageId provided")
             return JSONResponse({"error": "Message ID is required"}, status_code=400)
 
         vault_id = os.getenv("VAULT_CHANNEL_ID")
         if not vault_id:
-            logging.error("Vault forward error: VAULT_CHANNEL_ID environment variable is missing on Render")
             return JSONResponse({"error": "VAULT_CHANNEL_ID not set"}, status_code=500)
 
-        if vault_id.startswith("-") or vault_id.isdigit():
-            from_chat_id = int(vault_id)
-        else:
-            from_chat_id = vault_id
-
-        message_id = int(raw_msg_id)
-        target_user = int(user_id)
-
-        logging.info(f"Forwarding message {message_id} from {from_chat_id} to user {target_user}")
+        from_chat_id = int(vault_id) if (vault_id.startswith("-") or vault_id.isdigit()) else vault_id
 
         await application.bot.copy_message(
-            chat_id=target_user,
+            chat_id=int(user_id),
             from_chat_id=from_chat_id,
-            message_id=message_id,
+            message_id=int(raw_msg_id),
         )
-
         return JSONResponse({"success": True})
     except Exception as e:
         logging.error(f"Error copying message from vault: {e}", exc_info=True)
@@ -224,9 +210,9 @@ starlette_app = Starlette(
         Route("/api/birthdays/greet", api_send_birthday_greeting, methods=["POST"]),
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
-        Route("/app", serve_index_no_cache, methods=["GET"]),
-        Route("/app/", serve_index_no_cache, methods=["GET"]),
-        Mount("/app", StaticFiles(directory="webapp", html=False), name="app"),
+        Route("/app", serve_index, methods=["GET"]),
+        Route("/app/", serve_index, methods=["GET"]),
+        Mount("/app/static", StaticFiles(directory="webapp"), name="static"),
     ],
     lifespan=lifespan,
 )
