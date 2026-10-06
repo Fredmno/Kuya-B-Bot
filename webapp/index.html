@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Kuya B Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="/app/style.css?v=999">
+    <link rel="stylesheet" href="/app/style.css?v={{ v }}">
 </head>
 <body>
     <div id="app">
-        <!-- =========================================================
-             DASHBOARD PAGE
-             ========================================================= -->
+        <!-- DASHBOARD PAGE -->
         <div id="dashboardPage">
             <header class="dashboard-header">
                 <div class="greeting">Welcome back 👋</div>
@@ -112,9 +113,7 @@
             </footer>
         </div>
 
-        <!-- =========================================================
-             BIRTHDAYS PAGE
-             ========================================================= -->
+        <!-- BIRTHDAYS PAGE -->
         <div id="birthdaysPage" style="display: none;">
             <div class="top-bar">
                 <button class="btn-icon-back" id="birthdayBackButton">←</button>
@@ -134,9 +133,7 @@
             <div id="birthdaysList"></div>
         </div>
 
-        <!-- =========================================================
-             DAILY LOGS PAGE
-             ========================================================= -->
+        <!-- DAILY LOGS PAGE -->
         <div id="dailyLogsPage" style="display: none;">
             <div class="top-bar">
                 <button class="btn-icon-back" id="dailyLogsBackButton">←</button>
@@ -156,9 +153,7 @@
             <div id="dailyLogsList"></div>
         </div>
 
-        <!-- =========================================================
-             TASKS PAGE
-             ========================================================= -->
+        <!-- TASKS PAGE -->
         <div id="tasksPage" style="display: none;">
             <div class="top-bar">
                 <button class="btn-icon-back" id="tasksBackButton">←</button>
@@ -177,9 +172,7 @@
             <div id="tasksList"></div>
         </div>
 
-        <!-- =========================================================
-             REMINDERS PAGE
-             ========================================================= -->
+        <!-- REMINDERS PAGE -->
         <div id="remindersPage" style="display: none;">
             <div class="top-bar">
                 <button class="btn-icon-back" id="remindersBackButton">←</button>
@@ -198,9 +191,7 @@
             <div id="remindersList"></div>
         </div>
 
-        <!-- =========================================================
-             VAULT PAGE
-             ========================================================= -->
+        <!-- VAULT PAGE -->
         <div id="vaultPage" style="display: none;">
             <div class="top-bar">
                 <button class="btn-icon-back" id="vaultBackButton">←</button>
@@ -224,6 +215,6 @@
         </div>
     </div>
 
-    <script type="module" src="/app/app.js?v=999"></script>
+    <script type="module" src="/app/app.js?v={{ v }}"></script>
 </body>
 </html>
