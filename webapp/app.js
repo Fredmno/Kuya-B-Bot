@@ -1,55 +1,81 @@
 /* =========================================================
-   KUYA B — PERSONAL HUB (MAIN APP)
+   KUYA B — PERSONAL HUB (COMPLETE ENGINE)
    ========================================================= */
 
-import { tg, triggerHaptic } from "./modules/helpers.js";
-import {
-    loadBirthdays,
-    showBirthdayForm,
-    hideBirthdayForm,
-    saveBirthday,
-    displayBirthdays
-} from "./modules/birthdays.js";
+// ---------------------------------------------------------
+// TELEGRAM HELPERS & HAPTICS
+// ---------------------------------------------------------
+const tg = window.Telegram?.WebApp;
+if (tg) {
+    tg.ready();
+    tg.expand();
+}
 
-import {
-    loadDailyLogs,
-    showLogForm,
-    hideLogForm,
-    saveLog,
-    setMood,
-    displayDailyLogs
-} from "./modules/dailyLogs.js";
+function triggerHaptic(style = "light") {
+    try {
+        if (tg?.HapticFeedback) {
+            if (style === "light" || style === "medium" || style === "heavy") {
+                tg.HapticFeedback.impactOccurred(style);
+            } else if (style === "success" || style === "error" || style === "warning") {
+                tg.HapticFeedback.notificationOccurred(style);
+            }
+        }
+    } catch (e) {}
+}
 
-import {
-    loadTasks,
-    showTaskForm,
-    hideTaskForm,
-    saveTask,
-    displayTasks
-} from "./modules/tasks.js";
-
-import {
-    loadReminders,
-    showReminderForm,
-    hideReminderForm,
-    saveReminder,
-    displayReminders
-} from "./modules/reminders.js";
-
-import {
-    loadVault,
-    setVaultType,
-    showVaultForm,
-    hideVaultForm,
-    saveVaultItem,
-    displayFolderBar,
-    displayVaultItems
-} from "./modules/vault.js";
+function showToast(message) {
+    let toast = document.getElementById("toastNotification");
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toastNotification";
+        document.body.appendChild(toast);
+    }
+    toast.innerText = message;
+    toast.style.display = "block";
+    setTimeout(() => {
+        toast.style.display = "none";
+    }, 2800);
+}
 
 // ---------------------------------------------------------
-// NAVIGATION & PAGE ROUTING
+// STATE MANAGEMENT
 // ---------------------------------------------------------
+let birthdays = [];
+let dailyLogs = [];
+let tasks = [];
+let reminders = [];
+let vaultItems = [];
+let currentVaultType = "other";
+let currentMood = "neutral";
 
+// ---------------------------------------------------------
+// STORAGE LOADERS
+// ---------------------------------------------------------
+function loadAllData() {
+    try {
+        birthdays = JSON.parse(localStorage.getItem("kuyaB_birthdays")) || [];
+    } catch (e) { birthdays = []; }
+
+    try {
+        dailyLogs = JSON.parse(localStorage.getItem("kuyaB_dailyLogs")) || [];
+    } catch (e) { dailyLogs = []; }
+
+    try {
+        tasks = JSON.parse(localStorage.getItem("kuyaB_tasks")) || [];
+    } catch (e) { tasks = []; }
+
+    try {
+        reminders = JSON.parse(localStorage.getItem("kuyaB_reminders")) || [];
+    } catch (e) { reminders = []; }
+
+    try {
+        vaultItems = JSON.parse(localStorage.getItem("kuyaB_vault")) || [];
+    } catch (e) { vaultItems = []; }
+}
+
+// ---------------------------------------------------------
+// VIEW ROUTING
+// ---------------------------------------------------------
 const ALL_PAGES = [
     "dashboardPage",
     "birthdaysPage",
@@ -60,11 +86,11 @@ const ALL_PAGES = [
 ];
 
 function hideAllForms() {
-    hideBirthdayForm();
-    hideLogForm();
-    hideTaskForm();
-    hideReminderForm();
-    hideVaultForm();
+    const formIds = ["birthdayForm", "logForm", "taskForm", "reminderForm", "vaultItemForm"];
+    formIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+    });
 }
 
 function hideAllPages() {
@@ -75,7 +101,7 @@ function hideAllPages() {
     hideAllForms();
 }
 
-export function showDashboard() {
+function showDashboard() {
     hideAllPages();
     const dashboard = document.getElementById("dashboardPage");
     if (dashboard) dashboard.style.display = "block";
@@ -85,12 +111,14 @@ export function showDashboard() {
     }
 }
 
-export function showPage(pageId, renderFn) {
+function showPage(pageId, renderFn) {
     hideAllPages();
     const page = document.getElementById(pageId);
     if (page) page.style.display = "block";
 
-    if (renderFn) renderFn();
+    if (typeof renderFn === "function") {
+        renderFn();
+    }
 
     if (tg?.BackButton) {
         tg.BackButton.show();
@@ -99,24 +127,333 @@ export function showPage(pageId, renderFn) {
 }
 
 // ---------------------------------------------------------
-// APP BOOTSTRAP
+// BIRTHDAYS LOGIC
 // ---------------------------------------------------------
+function calculateDaysLeft(dateStr) {
+    if (!dateStr || !dateStr.includes("-")) return 999;
+    const [month, day] = dateStr.split("-").map(Number);
+    const today = new Date();
+    const currentYear = today.getFullYear();
 
+    let nextBirthday = new Date(currentYear, month - 1, day);
+    if (nextBirthday < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+        nextBirthday = new Date(currentYear + 1, month - 1, day);
+    }
+
+    const diffTime = nextBirthday - new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+function displayBirthdays() {
+    const list = document.getElementById("birthdaysList");
+    if (!list) return;
+
+    if (birthdays.length === 0) {
+        list.innerHTML = '<p class="empty-state">No birthdays saved yet. Tap + to add one!</p>';
+        return;
+    }
+
+    const sorted = [...birthdays].sort((a, b) => calculateDaysLeft(a.date) - calculateDaysLeft(b.date));
+
+    list.innerHTML = sorted.map(b => {
+        const daysLeft = calculateDaysLeft(b.date);
+        let badge = `<span class="bday-badge">${daysLeft} days left</span>`;
+        if (daysLeft === 0) badge = '<span class="bday-badge today">🎉 Today!</span>';
+        else if (daysLeft === 1) badge = '<span class="bday-badge tomorrow">Tomorrow</span>';
+
+        return `
+            <div class="birthday-card" data-id="${b.id}">
+                <div class="birthday-info">
+                    <div class="birthday-title-row">
+                        <span class="birthday-name">${b.name}</span>
+                        ${badge}
+                    </div>
+                    <span class="birthday-date">📅 ${b.date}</span>
+                </div>
+                <div class="birthday-actions">
+                    <button class="btn-greet" data-name="${b.name}">📢 Greet</button>
+                    <button class="btn-delete" data-type="birthday" data-id="${b.id}">🗑️</button>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function saveBirthday() {
+    const nameEl = document.getElementById("birthdayName");
+    const dateEl = document.getElementById("birthdayDate");
+    const name = nameEl?.value.trim();
+    const date = dateEl?.value.trim();
+
+    if (!name || !date) {
+        alert("Please enter both a name and date (MM-DD).");
+        return;
+    }
+
+    birthdays.push({ id: Date.now().toString(), name, date });
+    localStorage.setItem("kuyaB_birthdays", JSON.stringify(birthdays));
+    triggerHaptic("medium");
+
+    nameEl.value = "";
+    dateEl.value = "";
+    const form = document.getElementById("birthdayForm");
+    if (form) form.style.display = "none";
+
+    displayBirthdays();
+}
+
+async function sendGreetingToChat(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const chatId = urlParams.get("chat_id");
+
+    if (!chatId) {
+        showToast("Open via /kuyab inside a group chat to send greetings!");
+        return;
+    }
+
+    triggerHaptic("medium");
+    try {
+        const res = await fetch("/api/birthdays/greet", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chatId, name: name })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Greeting sent for ${name}! 🎉`);
+        } else {
+            showToast("Failed to send greeting.");
+        }
+    } catch (e) {
+        showToast("Network error.");
+    }
+}
+
+// ---------------------------------------------------------
+// DAILY LOGS LOGIC
+// ---------------------------------------------------------
+function displayDailyLogs() {
+    const list = document.getElementById("dailyLogsList");
+    if (!list) return;
+
+    if (dailyLogs.length === 0) {
+        list.innerHTML = '<p class="empty-state">No daily logs saved yet. Tap + to add one!</p>';
+        return;
+    }
+
+    list.innerHTML = dailyLogs.map(l => `
+        <div class="birthday-card" data-id="${l.id}">
+            <div class="birthday-info">
+                <div class="birthday-title-row">
+                    <span class="birthday-name">${l.title}</span>
+                </div>
+                <span class="birthday-date">${l.content || ""}</span>
+            </div>
+            <div class="birthday-actions">
+                <button class="btn-delete" data-type="log" data-id="${l.id}">🗑️</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function saveLog() {
+    const titleEl = document.getElementById("logTitle");
+    const contentEl = document.getElementById("logContent");
+    const title = titleEl?.value.trim();
+    const content = contentEl?.value.trim();
+
+    if (!title) {
+        alert("Please enter a title or summary.");
+        return;
+    }
+
+    dailyLogs.unshift({ id: Date.now().toString(), title, content, date: new Date().toLocaleDateString() });
+    localStorage.setItem("kuyaB_dailyLogs", JSON.stringify(dailyLogs));
+    triggerHaptic("medium");
+
+    titleEl.value = "";
+    contentEl.value = "";
+    const form = document.getElementById("logForm");
+    if (form) form.style.display = "none";
+
+    displayDailyLogs();
+}
+
+// ---------------------------------------------------------
+// TASKS LOGIC
+// ---------------------------------------------------------
+function displayTasks() {
+    const list = document.getElementById("tasksList");
+    if (!list) return;
+
+    if (tasks.length === 0) {
+        list.innerHTML = '<p class="empty-state">No tasks pending. Tap + to add one!</p>';
+        return;
+    }
+
+    list.innerHTML = tasks.map(t => `
+        <div class="birthday-card" data-id="${t.id}">
+            <div class="birthday-info">
+                <span class="birthday-name" style="${t.completed ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${t.title}</span>
+            </div>
+            <div class="birthday-actions">
+                <button class="btn-greet" data-action="toggle-task" data-id="${t.id}">${t.completed ? '↩️️' : '✓'}</button>
+                <button class="btn-delete" data-type="task" data-id="${t.id}">🗑️</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function saveTask() {
+    const titleEl = document.getElementById("taskTitle");
+    const title = titleEl?.value.trim();
+
+    if (!title) {
+        alert("Please enter a task.");
+        return;
+    }
+
+    tasks.push({ id: Date.now().toString(), title, completed: false });
+    localStorage.setItem("kuyaB_tasks", JSON.stringify(tasks));
+    triggerHaptic("medium");
+
+    titleEl.value = "";
+    const form = document.getElementById("taskForm");
+    if (form) form.style.display = "none";
+
+    displayTasks();
+}
+
+// ---------------------------------------------------------
+// REMINDERS LOGIC
+// ---------------------------------------------------------
+function displayReminders() {
+    const list = document.getElementById("remindersList");
+    if (!list) return;
+
+    if (reminders.length === 0) {
+        list.innerHTML = '<p class="empty-state">No reminders saved. Tap + to add one!</p>';
+        return;
+    }
+
+    list.innerHTML = reminders.map(r => `
+        <div class="birthday-card" data-id="${r.id}">
+            <div class="birthday-info">
+                <span class="birthday-name">${r.title}</span>
+            </div>
+            <div class="birthday-actions">
+                <button class="btn-delete" data-type="reminder" data-id="${r.id}">🗑️</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function saveReminder() {
+    const titleEl = document.getElementById("reminderTitle");
+    const title = titleEl?.value.trim();
+
+    if (!title) {
+        alert("Please enter a reminder.");
+        return;
+    }
+
+    reminders.push({ id: Date.now().toString(), title });
+    localStorage.setItem("kuyaB_reminders", JSON.stringify(reminders));
+    triggerHaptic("medium");
+
+    titleEl.value = "";
+    const form = document.getElementById("reminderForm");
+    if (form) form.style.display = "none";
+
+    displayReminders();
+}
+
+// ---------------------------------------------------------
+// VAULT LOGIC
+// ---------------------------------------------------------
+function setVaultType(type) {
+    currentVaultType = type;
+    const titleEl = document.getElementById("vaultPageTitle");
+    if (titleEl) {
+        if (type === "videos") titleEl.innerText = "🎥 Videos";
+        else if (type === "pictures") titleEl.innerText = "🖼️ Pictures";
+        else titleEl.innerText = "📁 Vault";
+    }
+}
+
+function displayVaultItems() {
+    const list = document.getElementById("vaultItemsList");
+    if (!list) return;
+
+    const filtered = vaultItems.filter(item => (item.type || "other") === currentVaultType);
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<p class="empty-state">No files saved here yet. Tap + to add one!</p>';
+        return;
+    }
+
+    list.innerHTML = filtered.map(item => `
+        <div class="birthday-card" data-id="${item.id}">
+            <div class="birthday-info">
+                <div class="birthday-title-row">
+                    <span class="birthday-name">${item.title}</span>
+                    <span class="bday-badge">${item.folder || "General"}</span>
+                </div>
+                <span class="birthday-date">Msg ID: ${item.messageId}</span>
+            </div>
+            <div class="birthday-actions">
+                <button class="btn-greet" data-action="forward-vault" data-msg="${item.messageId}">Forward</button>
+                <button class="btn-delete" data-type="vault" data-id="${item.id}">🗑️</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function saveVaultItem() {
+    const titleEl = document.getElementById("vaultItemTitle");
+    const folderEl = document.getElementById("vaultItemFolder");
+    const msgIdEl = document.getElementById("vaultItemMsgId");
+
+    const title = titleEl?.value.trim();
+    const folder = folderEl?.value.trim() || "General";
+    const msgId = msgIdEl?.value.trim();
+
+    if (!title || !msgId) {
+        alert("Please enter title and Message ID.");
+        return;
+    }
+
+    vaultItems.push({
+        id: Date.now().toString(),
+        title,
+        folder,
+        messageId: msgId,
+        type: currentVaultType
+    });
+    localStorage.setItem("kuyaB_vault", JSON.stringify(vaultItems));
+    triggerHaptic("medium");
+
+    titleEl.value = "";
+    folderEl.value = "";
+    msgIdEl.value = "";
+    const form = document.getElementById("vaultItemForm");
+    if (form) form.style.display = "none";
+
+    displayVaultItems();
+}
+
+// ---------------------------------------------------------
+// APP INITIALIZATION & GLOBAL CLICK HANDLER
+// ---------------------------------------------------------
 function initApp() {
-    // 1. Preload data
-    loadBirthdays();
-    loadDailyLogs();
-    loadTasks();
-    loadReminders();
-    loadVault();
+    loadAllData();
 
-    // 2. Read query parameters
+    // 1. Process URL parameters for direct deep-linking & cleanup
     const urlParams = new URLSearchParams(window.location.search);
     const msgId = urlParams.get("msg_id");
     const chatId = urlParams.get("chat_id");
     const startSection = urlParams.get("start");
 
-    // Clean up invoking message in chat
     if (msgId && chatId) {
         fetch("/api/cleanup-message", {
             method: "POST",
@@ -125,7 +462,7 @@ function initApp() {
         }).catch(() => {});
     }
 
-    // 3. Routing: Deep link direct jump vs. Dashboard
+    // 2. Open specific feature or load Dashboard
     if (startSection === "birthdays") {
         showPage("birthdaysPage", displayBirthdays);
     } else if (startSection === "daily") {
@@ -136,68 +473,56 @@ function initApp() {
         showPage("remindersPage", displayReminders);
     } else if (["videos", "pictures", "other"].includes(startSection)) {
         setVaultType(startSection);
-        showPage("vaultPage", () => {
-            displayFolderBar();
-            displayVaultItems();
-        });
+        showPage("vaultPage", displayVaultItems);
     } else {
         showDashboard();
     }
 
-    // ---------------------------------------------------------
-    // EVENT LISTENERS
-    // ---------------------------------------------------------
+    // 3. Global Click Handler
     document.addEventListener("click", function (e) {
-        // --- Navigation: Personal ---
-        const bdayBtn = e.target.closest('[data-feature="birthdays"]');
-        if (bdayBtn) {
+        // --- Dashboard Navigation ---
+        const bdayNav = e.target.closest('[data-feature="birthdays"]');
+        if (bdayNav) {
             e.preventDefault();
             triggerHaptic("light");
             showPage("birthdaysPage", displayBirthdays);
             return;
         }
 
-        const dailyBtn = e.target.closest('[data-feature="daily"]');
-        if (dailyBtn) {
+        const dailyNav = e.target.closest('[data-feature="daily"]');
+        if (dailyNav) {
             e.preventDefault();
             triggerHaptic("light");
             showPage("dailyLogsPage", displayDailyLogs);
             return;
         }
 
-        const taskBtn = e.target.closest('[data-feature="tasks"]');
-        if (taskBtn) {
+        const taskNav = e.target.closest('[data-feature="tasks"]');
+        if (taskNav) {
             e.preventDefault();
             triggerHaptic("light");
             showPage("tasksPage", displayTasks);
             return;
         }
 
-        const remBtn = e.target.closest('[data-feature="reminders"]');
-        if (remBtn) {
+        const remNav = e.target.closest('[data-feature="reminders"]');
+        if (remNav) {
             e.preventDefault();
             triggerHaptic("light");
             showPage("remindersPage", displayReminders);
             return;
         }
 
-        // --- Navigation: Vault ---
-        const vaultTrigger = e.target.closest(
-            '[data-feature="videos"], [data-feature="pictures"], [data-feature="other"]'
-        );
-        if (vaultTrigger) {
+        const vaultNav = e.target.closest('[data-feature="videos"], [data-feature="pictures"], [data-feature="other"]');
+        if (vaultNav) {
             e.preventDefault();
             triggerHaptic("light");
-            const type = vaultTrigger.dataset.feature;
-            setVaultType(type);
-            showPage("vaultPage", () => {
-                displayFolderBar();
-                displayVaultItems();
-            });
+            setVaultType(vaultNav.dataset.feature);
+            showPage("vaultPage", displayVaultItems);
             return;
         }
 
-        // Back to Dashboard
+        // --- Back Buttons ---
         if (e.target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton, #vaultBackButton")) {
             e.preventDefault();
             triggerHaptic("light");
@@ -205,16 +530,15 @@ function initApp() {
             return;
         }
 
-        // --- Birthdays Actions ---
+        // --- Add Forms Toggle ---
         if (e.target.closest("#addBirthdayButton")) {
             e.preventDefault();
-            triggerHaptic("light");
-            showBirthdayForm();
+            document.getElementById("birthdayForm").style.display = "block";
             return;
         }
         if (e.target.closest("#cancelBirthdayButton")) {
             e.preventDefault();
-            hideBirthdayForm();
+            document.getElementById("birthdayForm").style.display = "none";
             return;
         }
         if (e.target.closest("#saveBirthdayButton")) {
@@ -223,16 +547,14 @@ function initApp() {
             return;
         }
 
-        // --- Daily Logs Actions ---
         if (e.target.closest("#addLogButton")) {
             e.preventDefault();
-            triggerHaptic("light");
-            showLogForm();
+            document.getElementById("logForm").style.display = "block";
             return;
         }
         if (e.target.closest("#cancelLogButton")) {
             e.preventDefault();
-            hideLogForm();
+            document.getElementById("logForm").style.display = "none";
             return;
         }
         if (e.target.closest("#saveLogButton")) {
@@ -240,24 +562,15 @@ function initApp() {
             saveLog();
             return;
         }
-        const moodBtn = e.target.closest(".mood-btn");
-        if (moodBtn) {
-            e.preventDefault();
-            triggerHaptic("light");
-            setMood(moodBtn.dataset.mood);
-            return;
-        }
 
-        // --- Tasks Actions ---
         if (e.target.closest("#addTaskButton")) {
             e.preventDefault();
-            triggerHaptic("light");
-            showTaskForm();
+            document.getElementById("taskForm").style.display = "block";
             return;
         }
         if (e.target.closest("#cancelTaskButton")) {
             e.preventDefault();
-            hideTaskForm();
+            document.getElementById("taskForm").style.display = "none";
             return;
         }
         if (e.target.closest("#saveTaskButton")) {
@@ -266,16 +579,14 @@ function initApp() {
             return;
         }
 
-        // --- Reminders Actions ---
         if (e.target.closest("#addReminderButton")) {
             e.preventDefault();
-            triggerHaptic("light");
-            showReminderForm();
+            document.getElementById("reminderForm").style.display = "block";
             return;
         }
         if (e.target.closest("#cancelReminderButton")) {
             e.preventDefault();
-            hideReminderForm();
+            document.getElementById("reminderForm").style.display = "none";
             return;
         }
         if (e.target.closest("#saveReminderButton")) {
@@ -284,16 +595,14 @@ function initApp() {
             return;
         }
 
-        // --- Vault Actions ---
         if (e.target.closest("#addVaultItemButton")) {
             e.preventDefault();
-            triggerHaptic("light");
-            showVaultForm();
+            document.getElementById("vaultItemForm").style.display = "block";
             return;
         }
         if (e.target.closest("#cancelVaultItemButton")) {
             e.preventDefault();
-            hideVaultForm();
+            document.getElementById("vaultItemForm").style.display = "none";
             return;
         }
         if (e.target.closest("#saveVaultItemButton")) {
@@ -302,48 +611,97 @@ function initApp() {
             return;
         }
 
-        // --- Bottom Actions ---
-        if (e.target.closest("#addContentButton")) {
+        // --- Item Actions (Greet, Toggle Task, Delete, Forward) ---
+        const greetBtn = e.target.closest(".btn-greet[data-name]");
+        if (greetBtn) {
             e.preventDefault();
-            triggerHaptic("light");
-            setVaultType("other");
-            showPage("vaultPage", () => {
-                displayVaultItems();
-                showVaultForm();
-            });
+            sendGreetingToChat(greetBtn.dataset.name);
             return;
         }
 
+        const toggleBtn = e.target.closest('[data-action="toggle-task"]');
+        if (toggleBtn) {
+            e.preventDefault();
+            const id = toggleBtn.dataset.id;
+            const t = tasks.find(x => x.id === id);
+            if (t) {
+                t.completed = !t.completed;
+                localStorage.setItem("kuyaB_tasks", JSON.stringify(tasks));
+                triggerHaptic("light");
+                displayTasks();
+            }
+            return;
+        }
+
+        const deleteBtn = e.target.closest(".btn-delete");
+        if (deleteBtn) {
+            e.preventDefault();
+            const id = deleteBtn.dataset.id;
+            const type = deleteBtn.dataset.type;
+
+            if (confirm("Delete this item?")) {
+                if (type === "birthday") {
+                    birthdays = birthdays.filter(x => x.id !== id);
+                    localStorage.setItem("kuyaB_birthdays", JSON.stringify(birthdays));
+                    displayBirthdays();
+                } else if (type === "log") {
+                    dailyLogs = dailyLogs.filter(x => x.id !== id);
+                    localStorage.setItem("kuyaB_dailyLogs", JSON.stringify(dailyLogs));
+                    displayDailyLogs();
+                } else if (type === "task") {
+                    tasks = tasks.filter(x => x.id !== id);
+                    localStorage.setItem("kuyaB_tasks", JSON.stringify(tasks));
+                    displayTasks();
+                } else if (type === "reminder") {
+                    reminders = reminders.filter(x => x.id !== id);
+                    localStorage.setItem("kuyaB_reminders", JSON.stringify(reminders));
+                    displayReminders();
+                } else if (type === "vault") {
+                    vaultItems = vaultItems.filter(x => x.id !== id);
+                    localStorage.setItem("kuyaB_vault", JSON.stringify(vaultItems));
+                    displayVaultItems();
+                }
+                triggerHaptic("medium");
+            }
+            return;
+        }
+
+        const fwdBtn = e.target.closest('[data-action="forward-vault"]');
+        if (fwdBtn) {
+            e.preventDefault();
+            const msgId = fwdBtn.dataset.msg;
+            const userId = tg?.initDataUnsafe?.user?.id;
+            if (!userId) {
+                showToast("Could not determine user ID.");
+                return;
+            }
+            fetch("/api/vault/forward", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messageId: msgId, userId: userId })
+            }).then(() => showToast("Message forwarded! 🚀")).catch(() => showToast("Failed to forward."));
+            return;
+        }
+
+        // --- Other Dashboard Links ---
         if (e.target.closest("#gameButton")) {
             e.preventDefault();
             alert("Use /game in chat to play Word Scramble!");
             return;
         }
 
-        if (e.target.closest('#searchButton, [data-feature="search"]')) {
+        if (e.target.closest("#addContentButton")) {
             e.preventDefault();
-            const searchInput = document.getElementById("dashboardSearchInput");
-            if (searchInput) searchInput.focus();
+            setVaultType("other");
+            showPage("vaultPage", () => {
+                displayVaultItems();
+                document.getElementById("vaultItemForm").style.display = "block";
+            });
             return;
         }
     });
 
-    // Enter key submissions
-    ["taskTitle", "reminderTitle", "vaultItemTitle"].forEach(id => {
-        const input = document.getElementById(id);
-        if (input) {
-            input.addEventListener("keydown", function (e) {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    if (id === "taskTitle") saveTask();
-                    if (id === "reminderTitle") saveReminder();
-                    if (id === "vaultItemTitle") saveVaultItem();
-                }
-            });
-        }
-    });
-
-    // Birthday inputs Enter key
+    // Auto-dash format for birthday date
     const bdayDateInput = document.getElementById("birthdayDate");
     if (bdayDateInput) {
         bdayDateInput.addEventListener("input", function () {
@@ -352,25 +710,10 @@ function initApp() {
             if (val.length >= 3) val = val.substring(0, 2) + "-" + val.substring(2);
             this.value = val;
         });
-        bdayDateInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                saveBirthday();
-            }
-        });
-    }
-
-    const bdayNameInput = document.getElementById("birthdayName");
-    if (bdayNameInput) {
-        bdayNameInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                saveBirthday();
-            }
-        });
     }
 }
 
+// Run initialization immediately on load
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initApp);
 } else {
