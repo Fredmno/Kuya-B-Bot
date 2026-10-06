@@ -46,7 +46,6 @@ import {
     displayVaultItems
 } from "./modules/vault.js";
 
-
 // ---------------------------------------------------------
 // NAVIGATION & PAGE ROUTING
 // ---------------------------------------------------------
@@ -76,7 +75,7 @@ function hideAllPages() {
     hideAllForms();
 }
 
-function showDashboard() {
+export function showDashboard() {
     hideAllPages();
     const dashboard = document.getElementById("dashboardPage");
     if (dashboard) dashboard.style.display = "block";
@@ -86,7 +85,7 @@ function showDashboard() {
     }
 }
 
-function showPage(pageId, renderFn) {
+export function showPage(pageId, renderFn) {
     hideAllPages();
     const page = document.getElementById(pageId);
     if (page) page.style.display = "block";
@@ -104,17 +103,20 @@ function showPage(pageId, renderFn) {
 // ---------------------------------------------------------
 
 function initApp() {
+    // 1. Preload data
     loadBirthdays();
     loadDailyLogs();
     loadTasks();
     loadReminders();
     loadVault();
 
-    // 1. Auto-clean the triggering launcher message in chat
+    // 2. Query parameter checks
     const urlParams = new URLSearchParams(window.location.search);
     const msgId = urlParams.get("msg_id");
     const chatId = urlParams.get("chat_id");
+    const startSection = urlParams.get("start");
 
+    // Clean up invoking message in chat
     if (msgId && chatId) {
         fetch("/api/cleanup-message", {
             method: "POST",
@@ -123,9 +125,7 @@ function initApp() {
         }).catch(() => {});
     }
 
-    // 2. Direct Feature Routing (Bypasses Dashboard if ?start= is present)
-    const startSection = urlParams.get("start");
-
+    // 3. Launch Routing: Deep Link vs Dashboard
     if (startSection === "birthdays") {
         showPage("birthdaysPage", displayBirthdays);
     } else if (startSection === "daily") {
@@ -145,32 +145,36 @@ function initApp() {
     }
 
     // ---------------------------------------------------------
-    // GLOBAL EVENT LISTENERS
+    // EVENT DELEGATION FOR ALL BUTTONS
     // ---------------------------------------------------------
     document.addEventListener("click", function (e) {
         // --- Navigation: Personal ---
-        if (e.target.closest('[data-feature="birthdays"]')) {
+        const bdayBtn = e.target.closest('[data-feature="birthdays"]');
+        if (bdayBtn) {
             e.preventDefault();
             triggerHaptic("light");
             showPage("birthdaysPage", displayBirthdays);
             return;
         }
 
-        if (e.target.closest('[data-feature="daily"]')) {
+        const dailyBtn = e.target.closest('[data-feature="daily"]');
+        if (dailyBtn) {
             e.preventDefault();
             triggerHaptic("light");
             showPage("dailyLogsPage", displayDailyLogs);
             return;
         }
 
-        if (e.target.closest('[data-feature="tasks"]')) {
+        const taskBtn = e.target.closest('[data-feature="tasks"]');
+        if (taskBtn) {
             e.preventDefault();
             triggerHaptic("light");
             showPage("tasksPage", displayTasks);
             return;
         }
 
-        if (e.target.closest('[data-feature="reminders"]')) {
+        const remBtn = e.target.closest('[data-feature="reminders"]');
+        if (remBtn) {
             e.preventDefault();
             triggerHaptic("light");
             showPage("remindersPage", displayReminders);
@@ -298,7 +302,7 @@ function initApp() {
             return;
         }
 
-        // --- Bottom Actions & Placeholders ---
+        // --- Bottom Actions ---
         if (e.target.closest("#addContentButton")) {
             e.preventDefault();
             triggerHaptic("light");
@@ -312,13 +316,14 @@ function initApp() {
 
         if (e.target.closest("#gameButton")) {
             e.preventDefault();
-            alert("Word Scramble launcher ready!");
+            alert("Use /game in chat to play Word Scramble!");
             return;
         }
 
         if (e.target.closest('#searchButton, [data-feature="search"]')) {
             e.preventDefault();
-            alert("Universal Search coming next!");
+            const searchInput = document.getElementById("dashboardSearchInput");
+            if (searchInput) searchInput.focus();
             return;
         }
     });
@@ -338,7 +343,7 @@ function initApp() {
         }
     });
 
-    // Auto-dash format for birthday date input
+    // Birthday inputs Enter key
     const bdayDateInput = document.getElementById("birthdayDate");
     if (bdayDateInput) {
         bdayDateInput.addEventListener("input", function () {
@@ -347,7 +352,6 @@ function initApp() {
             if (val.length >= 3) val = val.substring(0, 2) + "-" + val.substring(2);
             this.value = val;
         });
-
         bdayDateInput.addEventListener("keydown", function (e) {
             if (e.key === "Enter") {
                 e.preventDefault();
