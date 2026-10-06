@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kuya B Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="/app/style.css">
 </head>
 <body>
     <div id="app">
-        <!-- DASHBOARD PAGE -->
+        <!-- ================= DASHBOARD ================= -->
         <div id="dashboardPage">
             <header class="dashboard-header">
-                <div class="greeting">WELCOME BACK 👋</div>
+                <div class="greeting">Welcome Back 👋</div>
                 <h1>Kuya B</h1>
                 <div class="subtext">Your personal hub</div>
             </header>
@@ -25,34 +25,19 @@
             <div class="section-title">Personal</div>
             <div class="grid-2">
                 <div class="feature-card" data-feature="daily">
-                    <div class="card-header">
-                        <span class="card-icon">📅</span>
-                        <span class="card-title">Daily Logs</span>
-                    </div>
+                    <div class="card-header"><span class="card-icon">📅</span><span class="card-title">Daily Logs</span></div>
                     <span class="card-desc">Your days</span>
                 </div>
-
                 <div class="feature-card" data-feature="tasks">
-                    <div class="card-header">
-                        <span class="card-icon">✅</span>
-                        <span class="card-title">Tasks</span>
-                    </div>
+                    <div class="card-header"><span class="card-icon">✅</span><span class="card-title">Tasks</span></div>
                     <span class="card-desc">Get things done</span>
                 </div>
-
                 <div class="feature-card" data-feature="reminders">
-                    <div class="card-header">
-                        <span class="card-icon">⏰</span>
-                        <span class="card-title">Reminders</span>
-                    </div>
+                    <div class="card-header"><span class="card-icon">⏰</span><span class="card-title">Reminders</span></div>
                     <span class="card-desc">Don't forget</span>
                 </div>
-
                 <div class="feature-card" data-feature="birthdays">
-                    <div class="card-header">
-                        <span class="card-icon">🎂</span>
-                        <span class="card-title">Birthdays</span>
-                    </div>
+                    <div class="card-header"><span class="card-icon">🎂</span><span class="card-title">Birthdays</span></div>
                     <span class="card-desc">Important dates</span>
                 </div>
             </div>
@@ -60,34 +45,19 @@
             <div class="section-title">Media & Content</div>
             <div class="grid-2">
                 <div class="feature-card" data-feature="videos">
-                    <div class="card-header">
-                        <span class="card-icon">🎥</span>
-                        <span class="card-title">Videos</span>
-                    </div>
+                    <div class="card-header"><span class="card-icon">🎥</span><span class="card-title">Videos</span></div>
                     <span class="card-desc">Your video vault</span>
                 </div>
-
                 <div class="feature-card" data-feature="pictures">
-                    <div class="card-header">
-                        <span class="card-icon">🖼️</span>
-                        <span class="card-title">Pictures</span>
-                    </div>
+                    <div class="card-header"><span class="card-icon">🖼️</span><span class="card-title">Pictures</span></div>
                     <span class="card-desc">Your photo vault</span>
                 </div>
-
                 <div class="feature-card" data-feature="other">
-                    <div class="card-header">
-                        <span class="card-icon">📁</span>
-                        <span class="card-title">Other</span>
-                    </div>
+                    <div class="card-header"><span class="card-icon">📁</span><span class="card-title">Other</span></div>
                     <span class="card-desc">Everything else</span>
                 </div>
-
                 <div class="feature-card" data-feature="search">
-                    <div class="card-header">
-                        <span class="card-icon">🔍</span>
-                        <span class="card-title">Search</span>
-                    </div>
+                    <div class="card-header"><span class="card-icon">🔍</span><span class="card-title">Search</span></div>
                     <span class="card-desc">Find anything</span>
                 </div>
             </div>
@@ -103,115 +73,104 @@
                 <div class="card-arrow">›</div>
             </div>
 
-            <button class="btn-soft cancel full-btn" id="addContentButton">+ Add Content</button>
+            <button class="full-btn" id="addContentButton">+ Add Content</button>
 
-            <footer class="dashboard-footer">
-                Kuya B Personal Hub
-            </footer>
+            <footer class="dashboard-footer">Kuya B Personal Hub</footer>
         </div>
 
-        <!-- BIRTHDAYS PAGE -->
+        <!-- ================= BIRTHDAYS ================= -->
         <div id="birthdaysPage" style="display: none;">
             <div class="top-bar">
                 <button class="btn-icon-back" id="birthdayBackButton">←</button>
                 <h2>🎂 Birthdays</h2>
                 <button class="btn-icon-add" id="addBirthdayButton">+</button>
             </div>
-
             <div class="form-box" id="birthdayForm" style="display: none;">
-                <input type="text" class="underline-input" id="birthdayName" placeholder="Name">
-                <input type="text" class="underline-input" id="birthdayDate" placeholder="Date (MM-DD)" maxlength="5">
+                <input type="text" class="neu-input" id="birthdayName" placeholder="Name">
+                <input type="text" class="neu-input" id="birthdayDate" placeholder="Date (MM-DD)" maxlength="5">
                 <div class="form-actions">
                     <button class="btn-soft cancel" id="cancelBirthdayButton">Cancel</button>
                     <button class="btn-soft save" id="saveBirthdayButton">Save</button>
                 </div>
             </div>
-
             <div id="birthdaysList"></div>
         </div>
 
-        <!-- DAILY LOGS PAGE -->
+        <!-- ================= DAILY LOGS ================= -->
         <div id="dailyLogsPage" style="display: none;">
             <div class="top-bar">
                 <button class="btn-icon-back" id="dailyLogsBackButton">←</button>
                 <h2>📅 Daily Logs</h2>
                 <button class="btn-icon-add" id="addLogButton">+</button>
             </div>
-
             <div class="form-box" id="logForm" style="display: none;">
-                <input type="text" class="underline-input" id="logTitle" placeholder="Title or Summary">
-                <textarea class="underline-input" id="logContent" placeholder="Write your note..." rows="3"></textarea>
+                <input type="text" class="neu-input" id="logTitle" placeholder="Title or Summary">
+                <textarea class="neu-input" id="logContent" placeholder="Write your note..." rows="3"></textarea>
                 <div class="form-actions">
                     <button class="btn-soft cancel" id="cancelLogButton">Cancel</button>
                     <button class="btn-soft save" id="saveLogButton">Save</button>
                 </div>
             </div>
-
             <div id="dailyLogsList"></div>
         </div>
 
-        <!-- TASKS PAGE -->
+        <!-- ================= TASKS ================= -->
         <div id="tasksPage" style="display: none;">
             <div class="top-bar">
                 <button class="btn-icon-back" id="tasksBackButton">←</button>
                 <h2>✅ Tasks</h2>
                 <button class="btn-icon-add" id="addTaskButton">+</button>
             </div>
-
             <div class="form-box" id="taskForm" style="display: none;">
-                <input type="text" class="underline-input" id="taskTitle" placeholder="Task description...">
+                <input type="text" class="neu-input" id="taskTitle" placeholder="Task description...">
                 <div class="form-actions">
                     <button class="btn-soft cancel" id="cancelTaskButton">Cancel</button>
                     <button class="btn-soft save" id="saveTaskButton">Save</button>
                 </div>
             </div>
-
             <div id="tasksList"></div>
         </div>
 
-        <!-- REMINDERS PAGE -->
+        <!-- ================= REMINDERS ================= -->
         <div id="remindersPage" style="display: none;">
             <div class="top-bar">
                 <button class="btn-icon-back" id="remindersBackButton">←</button>
                 <h2>⏰ Reminders</h2>
                 <button class="btn-icon-add" id="addReminderButton">+</button>
             </div>
-
             <div class="form-box" id="reminderForm" style="display: none;">
-                <input type="text" class="underline-input" id="reminderTitle" placeholder="Reminder text...">
+                <input type="text" class="neu-input" id="reminderTitle" placeholder="Reminder text...">
                 <div class="form-actions">
                     <button class="btn-soft cancel" id="cancelReminderButton">Cancel</button>
                     <button class="btn-soft save" id="saveReminderButton">Save</button>
                 </div>
             </div>
-
             <div id="remindersList"></div>
         </div>
 
-        <!-- VAULT PAGE -->
+        <!-- ================= VAULT ================= -->
         <div id="vaultPage" style="display: none;">
             <div class="top-bar">
                 <button class="btn-icon-back" id="vaultBackButton">←</button>
                 <h2 id="vaultPageTitle">📁 Vault</h2>
                 <button class="btn-icon-add" id="addVaultItemButton">+</button>
             </div>
-
             <div id="vaultFolderBar"></div>
-
             <div class="form-box" id="vaultItemForm" style="display: none;">
-                <input type="text" class="underline-input" id="vaultItemTitle" placeholder="Item caption or description">
-                <input type="text" class="underline-input" id="vaultItemFolder" placeholder="Folder (e.g. Work, Memes, Trips)">
-                <input type="text" class="underline-input" id="vaultItemMsgId" placeholder="Telegram Message ID in Vault Channel">
+                <input type="text" class="neu-input" id="vaultItemTitle" placeholder="Item caption or description">
+                <input type="text" class="neu-input" id="vaultItemFolder" placeholder="Folder (e.g. Work, Memes, Trips)">
+                <input type="text" class="neu-input" id="vaultItemMsgId" placeholder="Telegram Message ID in Vault Channel">
                 <div class="form-actions">
                     <button class="btn-soft cancel" id="cancelVaultItemButton">Cancel</button>
                     <button class="btn-soft save" id="saveVaultItemButton">Save</button>
                 </div>
             </div>
-
             <div id="vaultItemsList"></div>
         </div>
     </div>
 
-    <script type="module" src="./app.js"></script>
+    <!-- Modular Scripts: Features register with window.KuyaB, then app.js launches the router -->
+    <script src="/app/modules/birthdays.js"></script>
+    <script src="/app/app.js"></script>
 </body>
 </html>
