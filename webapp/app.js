@@ -110,7 +110,7 @@ function initApp() {
     loadReminders();
     loadVault();
 
-    // 2. Query parameter checks
+    // 2. Read query parameters
     const urlParams = new URLSearchParams(window.location.search);
     const msgId = urlParams.get("msg_id");
     const chatId = urlParams.get("chat_id");
@@ -125,7 +125,7 @@ function initApp() {
         }).catch(() => {});
     }
 
-    // 3. Launch Routing: Deep Link vs Dashboard
+    // 3. Routing: Deep link direct jump vs. Dashboard
     if (startSection === "birthdays") {
         showPage("birthdaysPage", displayBirthdays);
     } else if (startSection === "daily") {
@@ -145,7 +145,7 @@ function initApp() {
     }
 
     // ---------------------------------------------------------
-    // EVENT DELEGATION FOR ALL BUTTONS
+    // EVENT LISTENERS
     // ---------------------------------------------------------
     document.addEventListener("click", function (e) {
         // --- Navigation: Personal ---
@@ -181,7 +181,7 @@ function initApp() {
             return;
         }
 
-        // --- Navigation: Vault (Videos, Pictures, Other) ---
+        // --- Navigation: Vault ---
         const vaultTrigger = e.target.closest(
             '[data-feature="videos"], [data-feature="pictures"], [data-feature="other"]'
         );
