@@ -1,11 +1,12 @@
 import os
+import time
 import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import PlainTextResponse, JSONResponse
+from starlette.responses import PlainTextResponse, JSONResponse, HTMLResponse
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 
@@ -62,6 +63,26 @@ async def telegram_webhook(request: Request):
 
 async def health_check(request: Request):
     return PlainTextResponse("Kuya B Bot is running.")
+
+
+async def serve_index_no_cache(request: Request):
+    index_path = os.path.join("webapp", "index.html")
+    if not os.path.exists(index_path):
+        return PlainTextResponse("index.html not found", status_code=404)
+
+    with open(index_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # Dynamic timestamp cache-buster injected on every single launch
+    current_time_version = str(int(time.time()))
+    rendered = content.replace("{{ v }}", current_time_version)
+
+    headers = {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    }
+    return HTMLResponse(rendered, headers=headers)
 
 
 async def api_forward_vault_item(request: Request):
@@ -203,7 +224,9 @@ starlette_app = Starlette(
         Route("/api/birthdays/greet", api_send_birthday_greeting, methods=["POST"]),
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
-        Mount("/app", StaticFiles(directory="webapp", html=True), name="app"),
+        Route("/app", serve_index_no_cache, methods=["GET"]),
+        Route("/app/", serve_index_no_cache, methods=["GET"]),
+        Mount("/app", StaticFiles(directory="webapp", html=False), name="app"),
     ],
     lifespan=lifespan,
 )
