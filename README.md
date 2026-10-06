@@ -3,7 +3,6 @@
 
 Kuya B is a personal Telegram-based assistant and Mini App dashboard hosted on Render. It bridges structured local/PostgreSQL data with an unlimited content vault powered by a private Telegram channel.
 
----
 
 ## 🏗️ Architecture Overview
 
