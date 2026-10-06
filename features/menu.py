@@ -125,20 +125,26 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
 
     # 4. Feature Selection: Present the WebApp launcher button
     feature_map = {
-        "open_birthdays": ("🎂 Birthdays", f"{WEBAPP_BASE_URL}?start=birthdays"),
-        "open_daily": ("📅 Daily Logs", f"{WEBAPP_BASE_URL}?start=daily"),
-        "open_tasks": ("✅ Tasks", f"{WEBAPP_BASE_URL}?start=tasks"),
-        "open_reminders": ("⏰ Reminders", f"{WEBAPP_BASE_URL}?start=reminders"),
-        "open_videos": ("🎥 Videos", f"{WEBAPP_BASE_URL}?start=videos"),
-        "open_pictures": ("🖼️ Pictures", f"{WEBAPP_BASE_URL}?start=pictures"),
-        "open_other": ("📚 Other Vault", f"{WEBAPP_BASE_URL}?start=other"),
+        "open_birthdays": ("🎂 Birthdays", "birthdays"),
+        "open_daily": ("📅 Daily Logs", "daily"),
+        "open_tasks": ("✅ Tasks", "tasks"),
+        "open_reminders": ("⏰ Reminders", "reminders"),
+        "open_videos": ("🎥 Videos", "videos"),
+        "open_pictures": ("🖼️ Pictures", "pictures"),
+        "open_other": ("📚 Other Vault", "other"),
     }
 
     if data in feature_map:
-        label, url = feature_map[data]
+        label, section = feature_map[data]
+        msg_id = query.message.message_id
+        chat_id = query.message.chat_id
+
+        # Attach chat_id & msg_id so the frontend can delete this prompt upon opening
+        launch_url = f"{WEBAPP_BASE_URL}?start={section}&msg_id={msg_id}&chat_id={chat_id}"
+
         btn_keyboard = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton(f"🚀 Open {label}", web_app=WebAppInfo(url=url))],
+                [InlineKeyboardButton(f"🚀 Open {label}", web_app=WebAppInfo(url=launch_url))],
                 [
                     InlineKeyboardButton("🔙 Menu", callback_data="menu_open"),
                     InlineKeyboardButton("❌ Close", callback_data="menu_close"),
@@ -146,11 +152,12 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
             ]
         )
         await query.edit_message_text(
-            text=f"Ready to launch **{label}**!\nTap the button below to open your hub:",
+            text=f"Ready to launch **{label}**!\nTap below to open your hub:",
             reply_markup=btn_keyboard,
             parse_mode="Markdown",
         )
         return
+
 
     if data == "open_game":
         game_keyboard = InlineKeyboardMarkup(
