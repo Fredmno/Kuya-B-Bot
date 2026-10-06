@@ -1,26 +1,27 @@
 /* =========================================================
-   KUYA B — SOFT NEUMORPHIC WHITE & BLUE UI THEME
+   KUYA B — ENHANCED NEUMORPHIC WHITE & BLUE UI THEME
+   (DARKENED CONTAINERS & HIGHER CONTRAST HIGHLIGHTS)
    ========================================================= */
 
 :root {
-    --bg-color: #e6ecf4;
-    --surface-card: #e6ecf4;
-    --surface-hover: #e0e7f0;
+    --bg-color: #e2e8f0;
+    --surface-card: #d9e2ec;
+    --surface-hover: #cfdae6;
     
-    /* Neumorphic Dual Shadows */
-    --neu-flat: 8px 8px 16px #c4cdd8, -8px -8px 16px #ffffff;
-    --neu-flat-sm: 4px 4px 10px #c6cfda, -4px -4px 10px #ffffff;
-    --neu-pressed: inset 4px 4px 8px #c6cfda, inset -4px -4px 8px #ffffff;
-    --neu-inset: inset 3px 3px 6px #c4cdd8, inset -3px -3px 6px #ffffff;
+    /* Deepened Dual Neumorphic Shadows */
+    --neu-flat: 8px 8px 18px #b2c0d1, -8px -8px 18px #ffffff;
+    --neu-flat-sm: 5px 5px 12px #b6c4d5, -5px -5px 12px #ffffff;
+    --neu-pressed: inset 4px 4px 8px #b2c0d1, inset -4px -4px 8px #ffffff;
+    --neu-inset: inset 4px 4px 8px #b4c2d3, inset -4px -4px 8px #ffffff;
 
     /* Neumorphic Accent Blue */
     --primary-blue: #2563eb;
     --primary-blue-gradient: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    --blue-shadow: 4px 4px 12px rgba(37, 99, 235, 0.35), -2px -2px 8px rgba(255, 255, 255, 0.8);
+    --blue-shadow: 4px 4px 14px rgba(37, 99, 235, 0.4), -3px -3px 10px rgba(255, 255, 255, 0.9);
     
-    --text-primary: #1e293b;
-    --text-muted: #64748b;
-    --text-sub: #94a3b8;
+    --text-primary: #0f172a;
+    --text-muted: #475569;
+    --text-sub: #64748b;
     --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -58,8 +59,8 @@ body {
 }
 
 .dashboard-header .greeting {
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: 0.78rem;
+    font-weight: 800;
     color: var(--primary-blue);
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -67,14 +68,14 @@ body {
 }
 
 .dashboard-header h1 {
-    font-size: 1.95rem;
+    font-size: 2rem;
     font-weight: 800;
     color: var(--text-primary);
     letter-spacing: -0.5px;
 }
 
 .dashboard-header .subtext {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     color: var(--text-muted);
     margin-top: 2px;
 }
@@ -111,21 +112,21 @@ body {
     transform: translateY(-50%);
     font-size: 0.95rem;
     color: var(--primary-blue);
-    opacity: 0.7;
+    opacity: 0.85;
 }
 
 /* ---------------------------------------------------------
    SECTION TITLES
    --------------------------------------------------------- */
 .section-title {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: 800;
     color: var(--text-primary);
-    margin: 22px 0 12px 2px;
+    margin: 24px 0 14px 2px;
 }
 
 /* ---------------------------------------------------------
-   NEUMORPHIC SOFT PILL CARDS
+   DARKENED NEUMORPHIC PILL CARDS
    --------------------------------------------------------- */
 .grid-2 {
     display: grid;
@@ -138,11 +139,11 @@ body {
     background: var(--surface-card);
     border: none;
     border-radius: 22px;
-    padding: 16px 14px;
+    padding: 18px 15px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 5px;
+    gap: 6px;
     cursor: pointer;
     text-align: left;
     box-shadow: var(--neu-flat);
@@ -161,11 +162,11 @@ body {
 }
 
 .card-icon {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
 }
 
 .card-title {
-    font-size: 0.95rem;
+    font-size: 0.96rem;
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -203,7 +204,7 @@ body {
 
 .card-arrow {
     color: var(--primary-blue);
-    font-size: 1.3rem;
+    font-size: 1.35rem;
     font-weight: bold;
 }
 
@@ -213,8 +214,8 @@ body {
     margin-top: 10px;
     padding: 15px;
     border-radius: 20px;
-    font-size: 0.92rem;
-    font-weight: 700;
+    font-size: 0.94rem;
+    font-weight: 800;
     background: var(--surface-card);
     border: none;
     color: var(--primary-blue);
@@ -239,7 +240,7 @@ body {
 }
 
 .top-bar h2 {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     font-weight: 800;
     color: var(--text-primary);
 }
@@ -249,7 +250,7 @@ body {
     background: var(--surface-card);
     border: none;
     color: var(--primary-blue);
-    font-size: 1.15rem;
+    font-size: 1.2rem;
     cursor: pointer;
     padding: 10px 16px;
     border-radius: 16px;
@@ -291,7 +292,7 @@ body {
 }
 
 .underline-input:focus {
-    box-shadow: inset 4px 4px 8px #bec8d5, inset -4px -4px 8px #ffffff;
+    box-shadow: inset 5px 5px 10px #a9b9cb, inset -5px -5px 10px #ffffff;
 }
 
 .form-actions {
@@ -359,7 +360,7 @@ body {
 
 .birthday-name {
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.96rem;
     color: var(--text-primary);
 }
 
@@ -369,20 +370,19 @@ body {
 }
 
 .bday-badge {
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     padding: 4px 10px;
     border-radius: 12px;
     background: var(--surface-card);
     color: var(--text-muted);
     box-shadow: var(--neu-inset);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .bday-badge.today {
     background: var(--primary-blue-gradient);
     color: #ffffff;
     box-shadow: var(--blue-shadow);
-    font-weight: 700;
 }
 
 .birthday-actions {
@@ -431,7 +431,7 @@ body {
 .empty-state {
     text-align: center;
     color: var(--text-muted);
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     padding: 40px 16px;
 }
 
@@ -439,7 +439,7 @@ body {
     margin-top: auto;
     padding-top: 26px;
     text-align: center;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     color: var(--text-sub);
 }
 
@@ -458,10 +458,10 @@ body {
     transform: translateX(-50%);
     background: var(--surface-card);
     color: var(--text-primary);
-    font-weight: 700;
+    font-weight: 800;
     padding: 12px 24px;
     border-radius: 24px;
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     box-shadow: var(--neu-flat);
     z-index: 1000;
 }
