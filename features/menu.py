@@ -113,7 +113,7 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
             "• 📅 **Daily Logs** — Quick notes & moods\n"
             "• ✅ **Tasks** — To-do lists & priorities\n"
             "• ⏰ **Reminders** — Timed notifications\n"
-            "• 🎥 / 🖼️ / 📚 **Media Vault** — Files in Telegram folders\n"
+            "• 🎥 **Media Vault** — Files in Telegram folders\n"
             "• 🎮 **Word Game** — Word Scramble"
         )
         await query.edit_message_text(
