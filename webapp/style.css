@@ -1,20 +1,18 @@
 /* =========================================================
-   KUYA B — MODERN DARK GREEN ACCENT THEME
+   KUYA B — ORIGINAL MINIMAL DARK THEME (SOFT CORNERS)
    ========================================================= */
 
 :root {
-    --bg-color: #0b0f0c;
-    --surface-color: #121813;
-    --surface-card: #162018;
-    --surface-card-hover: #1c2b20;
+    --bg-color: #121316;
+    --surface-card: #1e2024;
+    --surface-card-hover: #26292e;
+    --surface-input: #181a1d;
     --primary-color: #22c55e;
     --primary-dim: rgba(34, 197, 94, 0.12);
-    --primary-border: rgba(34, 197, 94, 0.45);
-    --primary-glow: rgba(34, 197, 94, 0.25);
-    --text-main: #f3f4f6;
+    --border-color: rgba(255, 255, 255, 0.05);
+    --text-main: #ffffff;
     --text-muted: #9ca3af;
-    --text-sub: #6ee7b7;
-    --danger: #ef4444;
+    --text-sub: #828a96;
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -32,40 +30,37 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden;
 }
 
 #app {
     width: 100%;
     max-width: 480px;
     margin: 0 auto;
-    padding: 20px 16px 36px 16px;
+    padding: 24px 18px 36px 18px;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
 }
 
 /* ---------------------------------------------------------
-   DASHBOARD HEADER
+   HEADER
    --------------------------------------------------------- */
 .dashboard-header {
     margin-bottom: 20px;
 }
 
 .dashboard-header .greeting {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--primary-color);
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     margin-bottom: 4px;
 }
 
 .dashboard-header h1 {
-    font-size: 1.85rem;
+    font-size: 1.8rem;
     font-weight: 800;
     color: #ffffff;
-    letter-spacing: -0.5px;
 }
 
 .dashboard-header .subtext {
@@ -75,7 +70,7 @@ body {
 }
 
 /* ---------------------------------------------------------
-   SEARCH BAR
+   SEARCH
    --------------------------------------------------------- */
 .search-container {
     position: relative;
@@ -84,101 +79,68 @@ body {
 
 .search-input {
     width: 100%;
-    background: var(--surface-color);
-    border: 1px solid var(--primary-border);
-    border-radius: 12px;
-    padding: 12px 16px 12px 42px;
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 14px 16px 14px 44px;
     color: var(--text-main);
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     outline: none;
-    transition: all 0.2s ease;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4);
+    transition: background 0.2s;
 }
 
 .search-input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 12px var(--primary-glow);
+    background: var(--surface-card-hover);
 }
 
 .search-icon {
     position: absolute;
-    left: 14px;
+    left: 16px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 0.95rem;
-    color: var(--primary-color);
-    opacity: 0.8;
+    opacity: 0.5;
 }
 
 /* ---------------------------------------------------------
-   SECTION TITLES
+   SECTIONS & SOFT CARDS
    --------------------------------------------------------- */
 .section-title {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #ffffff;
-    margin: 18px 0 12px 2px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin: 20px 0 12px 2px;
 }
 
-.section-title::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, var(--primary-border), transparent);
-}
-
-/* ---------------------------------------------------------
-   GREEN LINE ACCENT CARDS
-   --------------------------------------------------------- */
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
 }
 
 .feature-card {
     background: var(--surface-card);
-    border: 1px solid var(--primary-border);
-    border-radius: 14px;
-    padding: 14px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 16px 14px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
     cursor: pointer;
     text-align: left;
-    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-    position: relative;
-    overflow: hidden;
-}
-
-.feature-card::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 3px;
-    height: 100%;
-    background: var(--primary-color);
+    transition: transform 0.12s, background 0.15s;
 }
 
 .feature-card:active {
     transform: scale(0.97);
     background: var(--surface-card-hover);
-    box-shadow: 0 0 16px var(--primary-glow);
-    border-color: var(--primary-color);
 }
 
 .card-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 100%;
 }
 
 .card-icon {
@@ -192,42 +154,26 @@ body {
 }
 
 .card-desc {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     color: var(--text-sub);
-    padding-left: 2px;
 }
 
-/* FULL-WIDTH CARD */
 .feature-card-full {
     background: var(--surface-card);
-    border: 1px solid var(--primary-border);
-    border-radius: 14px;
-    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
     margin-bottom: 12px;
-    transition: all 0.18s ease;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-    position: relative;
-    overflow: hidden;
-}
-
-.feature-card-full::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 3px;
-    height: 100%;
-    background: var(--primary-color);
+    transition: transform 0.12s;
 }
 
 .feature-card-full:active {
     transform: scale(0.98);
     background: var(--surface-card-hover);
-    box-shadow: 0 0 16px var(--primary-glow);
 }
 
 .card-left {
@@ -237,13 +183,12 @@ body {
 }
 
 .card-arrow {
-    color: var(--primary-color);
-    font-size: 1.3rem;
-    font-weight: bold;
+    color: var(--text-sub);
+    font-size: 1.2rem;
 }
 
 /* ---------------------------------------------------------
-   SUBPAGE TOP BAR
+   SUBPAGES & TOP BARS
    --------------------------------------------------------- */
 .top-bar {
     display: flex;
@@ -251,59 +196,55 @@ body {
     align-items: center;
     padding-bottom: 14px;
     margin-bottom: 20px;
-    border-bottom: 1px solid var(--primary-border);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .top-bar h2 {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: var(--primary-color);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffffff;
 }
 
 .btn-icon-back,
 .btn-icon-add {
-    background: var(--primary-dim);
-    border: 1px solid var(--primary-border);
-    color: var(--primary-color);
-    font-size: 1.15rem;
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-size: 1.1rem;
     cursor: pointer;
     padding: 6px 12px;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s ease;
 }
 
 .btn-icon-back:active,
 .btn-icon-add:active {
-    background: var(--primary-color);
-    color: #000;
+    background: var(--surface-card-hover);
 }
 
 /* ---------------------------------------------------------
-   FORM INPUTS (UNDERLINE STYLE)
+   INPUTS & BUTTONS
    --------------------------------------------------------- */
 .form-box {
-    background: var(--surface-color);
-    border: 1px solid var(--primary-border);
-    border-radius: 14px;
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
     padding: 16px;
     margin-bottom: 20px;
-    box-shadow: 0 0 14px var(--primary-glow);
 }
 
 .underline-input {
     width: 100%;
     background: transparent;
     border: none;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     color: #ffffff;
     padding: 10px 4px;
     font-size: 0.95rem;
     margin-bottom: 14px;
     outline: none;
-    transition: border-color 0.2s;
 }
 
 .underline-input:focus {
@@ -314,15 +255,14 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 10px;
 }
 
 .btn-soft {
-    padding: 8px 18px;
+    padding: 10px 18px;
     border-radius: 20px;
     font-size: 0.85rem;
-    font-weight: 700;
-    border: 1px solid transparent;
+    font-weight: 600;
+    border: none;
     cursor: pointer;
 }
 
@@ -334,17 +274,24 @@ body {
 .btn-soft.save {
     background: var(--primary-dim);
     color: var(--primary-color);
-    border-color: var(--primary-border);
+}
+
+.full-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px;
+    border-radius: 16px;
+    font-size: 0.95rem;
 }
 
 /* ---------------------------------------------------------
-   BIRTHDAY CARDS & GREET BUTTON
+   BIRTHDAY CARDS
    --------------------------------------------------------- */
 .birthday-card {
     background: var(--surface-card);
-    border: 1px solid var(--primary-border);
-    border-radius: 12px;
-    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 14px 16px;
     margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
@@ -366,7 +313,6 @@ body {
 .birthday-name {
     font-weight: 700;
     font-size: 0.95rem;
-    color: #ffffff;
 }
 
 .birthday-date {
@@ -377,7 +323,7 @@ body {
 .bday-badge {
     font-size: 0.72rem;
     padding: 2px 8px;
-    border-radius: 12px;
+    border-radius: 10px;
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-muted);
 }
@@ -385,14 +331,6 @@ body {
 .bday-badge.today {
     background: var(--primary-dim);
     color: var(--primary-color);
-    border: 1px solid var(--primary-border);
-    font-weight: 800;
-}
-
-.bday-badge.tomorrow {
-    background: rgba(234, 179, 8, 0.15);
-    color: #facc15;
-    border: 1px solid rgba(234, 179, 8, 0.35);
     font-weight: 700;
 }
 
@@ -405,17 +343,12 @@ body {
 .btn-greet {
     background: var(--primary-dim);
     color: var(--primary-color);
-    border: 1px solid var(--primary-border);
+    border: none;
     padding: 6px 14px;
-    border-radius: 16px;
-    font-size: 0.78rem;
+    border-radius: 14px;
+    font-size: 0.8rem;
     font-weight: 700;
     cursor: pointer;
-    transition: transform 0.1s;
-}
-
-.btn-greet:active {
-    transform: scale(0.94);
 }
 
 .btn-delete {
@@ -423,44 +356,38 @@ body {
     border: none;
     cursor: pointer;
     font-size: 0.95rem;
-    padding: 6px;
     opacity: 0.6;
 }
 
 /* ---------------------------------------------------------
-   EMPTY STATES & FOOTER
+   FOOTER
    --------------------------------------------------------- */
-.empty-state {
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    padding: 36px 16px;
-}
-
 .dashboard-footer {
     margin-top: auto;
     padding-top: 24px;
     text-align: center;
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: var(--text-sub);
 }
 
-/* ---------------------------------------------------------
-   TOAST NOTIFICATION
-   --------------------------------------------------------- */
+#vaultFolderBar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
 #toastNotification {
     position: fixed;
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(18, 24, 19, 0.95);
-    color: var(--text-main);
-    border: 1px solid var(--primary-border);
-    padding: 10px 18px;
+    background: #22252a;
+    color: #ffffff;
+    padding: 10px 20px;
     border-radius: 20px;
     font-size: 0.85rem;
-    font-weight: 600;
-    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
     z-index: 1000;
-    box-shadow: 0 0 16px var(--primary-glow);
 }
