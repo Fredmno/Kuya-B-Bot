@@ -3,16 +3,16 @@
    ========================================================= */
 
 :root {
-    --bg-color: #121316;
-    --surface-card: #1e2024;
-    --surface-card-hover: #26292e;
-    --surface-input: #181a1d;
+    --bg-color: #0f1012;
+    --surface-card: #1c1e22;
+    --surface-card-hover: #25282e;
+    --surface-input: #16181b;
     --primary-color: #22c55e;
-    --primary-dim: rgba(34, 197, 94, 0.12);
-    --border-color: rgba(255, 255, 255, 0.05);
-    --text-main: #ffffff;
+    --primary-dim: rgba(34, 197, 94, 0.15);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-main: #f3f4f6;
     --text-muted: #9ca3af;
-    --text-sub: #828a96;
+    --text-sub: #6b7280;
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -36,7 +36,7 @@ body {
     width: 100%;
     max-width: 480px;
     margin: 0 auto;
-    padding: 24px 18px 36px 18px;
+    padding: 20px 16px 36px 16px;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
@@ -50,17 +50,19 @@ body {
 }
 
 .dashboard-header .greeting {
-    font-size: 0.78rem;
-    color: var(--primary-color);
-    font-weight: 700;
-    letter-spacing: 0.8px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     margin-bottom: 4px;
 }
 
 .dashboard-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.85rem;
     font-weight: 800;
     color: #ffffff;
+    letter-spacing: -0.5px;
 }
 
 .dashboard-header .subtext {
@@ -70,63 +72,65 @@ body {
 }
 
 /* ---------------------------------------------------------
-   SEARCH
+   SEARCH BAR
    --------------------------------------------------------- */
 .search-container {
     position: relative;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
 
 .search-input {
     width: 100%;
     background: var(--surface-card);
     border: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 14px 16px 14px 44px;
+    border-radius: 12px;
+    padding: 12px 16px 12px 42px;
     color: var(--text-main);
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     outline: none;
-    transition: background 0.2s;
+    transition: background 0.2s, border-color 0.2s;
 }
 
 .search-input:focus {
     background: var(--surface-card-hover);
+    border-color: rgba(255, 255, 255, 0.18);
 }
 
 .search-icon {
     position: absolute;
-    left: 16px;
+    left: 14px;
     top: 50%;
     transform: translateY(-50%);
+    font-size: 0.95rem;
     opacity: 0.5;
 }
 
 /* ---------------------------------------------------------
-   SECTIONS & SOFT CARDS
+   SECTION HEADINGS & GRID CARDS
    --------------------------------------------------------- */
 .section-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #ffffff;
-    margin: 20px 0 12px 2px;
+    margin: 18px 0 10px 2px;
 }
 
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 14px;
 }
 
 .feature-card {
     background: var(--surface-card);
     border: 1px solid var(--border-color);
-    border-radius: 18px;
-    padding: 16px 14px;
+    border-radius: 14px;
+    padding: 14px 12px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
+    gap: 5px;
     cursor: pointer;
     text-align: left;
     transition: transform 0.12s, background 0.15s;
@@ -144,7 +148,7 @@ body {
 }
 
 .card-icon {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
 }
 
 .card-title {
@@ -155,14 +159,15 @@ body {
 
 .card-desc {
     font-size: 0.78rem;
-    color: var(--text-sub);
+    color: var(--text-muted);
 }
 
+/* FULL-WIDTH ACTION CARD */
 .feature-card-full {
     background: var(--surface-card);
     border: 1px solid var(--border-color);
-    border-radius: 18px;
-    padding: 16px;
+    border-radius: 14px;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -188,14 +193,14 @@ body {
 }
 
 /* ---------------------------------------------------------
-   SUBPAGES & TOP BARS
+   SUBPAGE TOP BAR & NAV
    --------------------------------------------------------- */
 .top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 14px;
-    margin-bottom: 20px;
+    padding-bottom: 12px;
+    margin-bottom: 18px;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -213,7 +218,7 @@ body {
     font-size: 1.1rem;
     cursor: pointer;
     padding: 6px 12px;
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -225,12 +230,12 @@ body {
 }
 
 /* ---------------------------------------------------------
-   INPUTS & BUTTONS
+   FORMS & INPUTS
    --------------------------------------------------------- */
 .form-box {
     background: var(--surface-card);
     border: 1px solid var(--border-color);
-    border-radius: 18px;
+    border-radius: 14px;
     padding: 16px;
     margin-bottom: 20px;
 }
@@ -239,7 +244,7 @@ body {
     width: 100%;
     background: transparent;
     border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid var(--border-color);
     color: #ffffff;
     padding: 10px 4px;
     font-size: 0.95rem;
@@ -258,8 +263,8 @@ body {
 }
 
 .btn-soft {
-    padding: 10px 18px;
-    border-radius: 20px;
+    padding: 8px 18px;
+    border-radius: 18px;
     font-size: 0.85rem;
     font-weight: 600;
     border: none;
@@ -278,20 +283,20 @@ body {
 
 .full-btn {
     width: 100%;
-    margin-top: 10px;
-    padding: 14px;
-    border-radius: 16px;
-    font-size: 0.95rem;
+    margin-top: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
 }
 
 /* ---------------------------------------------------------
-   BIRTHDAY CARDS
+   BIRTHDAY CARDS & GREET BUTTON
    --------------------------------------------------------- */
 .birthday-card {
     background: var(--surface-card);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 14px 16px;
+    border-radius: 14px;
+    padding: 12px 16px;
     margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
@@ -313,11 +318,12 @@ body {
 .birthday-name {
     font-weight: 700;
     font-size: 0.95rem;
+    color: #ffffff;
 }
 
 .birthday-date {
     font-size: 0.8rem;
-    color: var(--text-sub);
+    color: var(--text-muted);
 }
 
 .bday-badge {
@@ -344,9 +350,9 @@ body {
     background: var(--primary-dim);
     color: var(--primary-color);
     border: none;
-    padding: 6px 14px;
-    border-radius: 14px;
-    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
 }
@@ -360,8 +366,15 @@ body {
 }
 
 /* ---------------------------------------------------------
-   FOOTER
+   LISTS & FOOTER
    --------------------------------------------------------- */
+.empty-state {
+    text-align: center;
+    color: var(--text-sub);
+    font-size: 0.85rem;
+    padding: 36px 16px;
+}
+
 .dashboard-footer {
     margin-top: auto;
     padding-top: 24px;
@@ -383,11 +396,12 @@ body {
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    background: #22252a;
+    background: #1c1e22;
     color: #ffffff;
-    padding: 10px 20px;
+    border: 1px solid var(--border-color);
+    padding: 10px 18px;
     border-radius: 20px;
     font-size: 0.85rem;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
     z-index: 1000;
 }
