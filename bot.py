@@ -71,25 +71,54 @@ async def api_forward_vault_item(request: Request):
         user_id = data.get("userId")
 
         if not user_id:
+            logging.error("Vault forward error: No user_id provided by Mini App")
             return JSONResponse({"error": "User ID is required"}, status_code=400)
+
         if not raw_msg_id:
+            logging.error("Vault forward error: No messageId provided")
             return JSONResponse({"error": "Message ID is required"}, status_code=400)
 
         vault_id = os.getenv("VAULT_CHANNEL_ID")
         if not vault_id:
+            logging.error("Vault forward error: VAULT_CHANNEL_ID environment variable is missing on Render")
             return JSONResponse({"error": "VAULT_CHANNEL_ID not set"}, status_code=500)
 
-        from_chat_id = int(vault_id) if (vault_id.startswith("-") or vault_id.isdigit()) else vault_id
+        if vault_id.startswith("-") or vault_id.isdigit():
+            from_chat_id = int(vault_id)
+        else:
+            from_chat_id = vault_id
+
+        message_id = int(raw_msg_id)
+        target_user = int(user_id)
+
+        logging.info(f"Forwarding message {message_id} from {from_chat_id} to user {target_user}")
 
         await application.bot.copy_message(
-            chat_id=int(user_id),
+            chat_id=target_user,
             from_chat_id=from_chat_id,
-            message_id=int(raw_msg_id),
+            message_id=message_id,
         )
+
         return JSONResponse({"success": True})
     except Exception as e:
         logging.error(f"Error copying message from vault: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def api_cleanup_message(request: Request):
+    try:
+        data = await request.json()
+        chat_id = data.get("chat_id")
+        msg_id = data.get("message_id")
+
+        if chat_id and msg_id:
+            await application.bot.delete_message(
+                chat_id=int(chat_id),
+                message_id=int(msg_id)
+            )
+        return JSONResponse({"success": True})
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=200)
 
 
 @asynccontextmanager
@@ -126,7 +155,7 @@ application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("kuyab", kuya_b_menu))
 application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
 
-# Menu & button routing
+# Interactive button router
 application.add_handler(CallbackQueryHandler(menu_callback_handler))
 
 # Feature modules
@@ -145,88 +174,7 @@ starlette_app = Starlette(
         Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
         Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
-        Mount("/app", StaticFiles(directory="webapp", html=True), name="app"),
-    ],
-    lifespan=lifespan,
-)
-
-
-if __name__ == "__main__":
-    uvicorn.run(starlette_app, host="0.0.0.0", port=PORT)
-
-
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logging.exception("Exception while handling an update:", exc_info=context.error)
-
-
-# Base commands
-application.add_handler(CommandHandler("start", start))
-application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
-
-# Feature modules
-register_word_game_handlers(application)
-
-# Error handler should be registered after feature handlers
-application.add_error_handler(error_handler)
-
-VAULT_CHANNEL_ID = os.getenv("VAULT_CHANNEL_ID")
-
-async def api_forward_vault_item(request: Request):
-    try:
-        data = await request.json()
-        raw_msg_id = data.get("messageId")
-        user_id = data.get("userId")
-
-        if not user_id:
-            logging.error("Vault forward error: No user_id provided by Mini App")
-            return JSONResponse({"error": "User ID is required"}, status_code=400)
-
-        if not raw_msg_id:
-            logging.error("Vault forward error: No messageId provided")
-            return JSONResponse({"error": "Message ID is required"}, status_code=400)
-
-        # Ensure channel ID is treated as int if it's numeric, or string if @channel
-        vault_id = os.getenv("VAULT_CHANNEL_ID")
-        if not vault_id:
-            logging.error("Vault forward error: VAULT_CHANNEL_ID environment variable is missing on Render")
-            return JSONResponse({"error": "VAULT_CHANNEL_ID not set"}, status_code=500)
-
-        if vault_id.startswith("-") or vault_id.isdigit():
-            from_chat_id = int(vault_id)
-        else:
-            from_chat_id = vault_id
-
-        message_id = int(raw_msg_id)
-        target_user = int(user_id)
-
-        logging.info(f"Attempting to copy message {message_id} from {from_chat_id} to user {target_user}")
-
-        await application.bot.copy_message(
-            chat_id=target_user,
-            from_chat_id=from_chat_id,
-            message_id=message_id,
-        )
-
-        return JSONResponse({"success": True})
-    except Exception as e:
-        logging.error(f"Error copying message from vault: {e}", exc_info=True)
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-
-
-starlette_app = Starlette(
-    routes=[
-        Route("/", health_check, methods=["GET", "HEAD"]),
-        Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
-
-        Route("/api/birthdays", api_get_birthdays, methods=["GET"]),
-Route("/api/birthdays", api_add_birthday, methods=["POST"]),
-Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
-Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
-
-        Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
-
-
+        Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
         Mount("/app", StaticFiles(directory="webapp", html=True), name="app"),
     ],
     lifespan=lifespan,
