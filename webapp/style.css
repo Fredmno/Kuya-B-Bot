@@ -1,1637 +1,246 @@
-/* =========================
-   KUYA B — PREMIUM THEME
-   PART 1
-   ========================= */
+/* =========================================================
+   KUYA B — GLOBAL STYLES & GREEN MINIMAL THEME
+   ========================================================= */
 
 :root {
-    --bg: #070b16;
-    --card: #111827;
-    --card2: #172033;
-
-    --text: #f8fafc;
-    --muted: #94a3b8;
-
-    --blue: #38bdf8;
-    --green: #4ade80;
-    --orange: #fb923c;
-    --pink: #f472b6;
-    --purple: #a78bfa;
-    --cyan: #22d3ee;
-
-    --border: rgba(255, 255, 255, 0.08);
-
-    --shadow:
-        0 15px 40px rgba(0, 0, 0, 0.35);
+    --bg-color: #121212;
+    --surface-color: #1e1e1e;
+    --surface-color-2: #2a2a2a;
+    --primary-color: #22c55e;
+    --primary-dim: rgba(34, 197, 94, 0.15);
+    --primary-border: rgba(34, 197, 94, 0.35);
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --danger-color: #ef4444;
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
-
 
 * {
     box-sizing: border-box;
-}
-
-
-html {
-    background: var(--bg);
-}
-
-
-body {
     margin: 0;
-
-    min-height: 100vh;
-
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-
-    background:
-        radial-gradient(
-            circle at top left,
-            rgba(56, 189, 248, 0.10),
-            transparent 35%
-        ),
-        radial-gradient(
-            circle at bottom right,
-            rgba(167, 139, 250, 0.10),
-            transparent 35%
-        ),
-        var(--bg);
-
-    color: var(--text);
-
-    -webkit-font-smoothing: antialiased;
-}
-
-
-button,
-input {
-    font: inherit;
-}
-
-
-button {
+    padding: 0;
     -webkit-tap-highlight-color: transparent;
 }
 
-
-.app {
-    width: 100%;
-    max-width: 520px;
-
-    min-height: 100vh;
-
-    margin: 0 auto;
-
-    padding:
-        calc(18px + env(safe-area-inset-top))
-        18px
-        calc(28px + env(safe-area-inset-bottom));
-}
-
-
-/* =========================
-   HEADER
-   ========================= */
-
-.header {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    margin-bottom: 22px;
-}
-
-
-.greeting {
-    color: var(--muted);
-
-    font-size: 13px;
-
-    font-weight: 600;
-
-    letter-spacing: 0.5px;
-
-    text-transform: uppercase;
-
-    margin-bottom: 4px;
-}
-
-
-.header h1 {
-    margin: 0;
-
-    font-size: 32px;
-
-    line-height: 1.1;
-
-    font-weight: 800;
-
-    letter-spacing: -1px;
-
-    background:
-        linear-gradient(
-            90deg,
-            #ffffff,
-            #a5f3fc
-        );
-
-    -webkit-background-clip: text;
-
-    background-clip: text;
-
-    color: transparent;
-}
-
-
-.header p {
-    margin: 6px 0 0;
-
-    color: var(--muted);
-
-    font-size: 14px;
-}
-
-
-.avatar {
-    width: 52px;
-
-    height: 52px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border-radius: 18px;
-
-    font-size: 27px;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(56, 189, 248, 0.22),
-            rgba(167, 139, 250, 0.22)
-        );
-
-    border: 1px solid var(--border);
-
-    box-shadow:
-        0 8px 25px rgba(0, 0, 0, 0.25);
-}
-
-
-/* =========================
-   SEARCH
-   ========================= */
-
-.search-bar {
-    width: 100%;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    border: 1px solid var(--border);
-
-    border-radius: 17px;
-
-    padding: 15px 17px;
-
-    margin-bottom: 28px;
-
-    background:
-        rgba(17, 24, 39, 0.88);
-
-    color: var(--muted);
-
-    box-shadow:
-        0 8px 25px rgba(0, 0, 0, 0.18);
-
-    cursor: pointer;
-
-    text-align: left;
-
-    transition:
-        transform 0.15s ease,
-        border-color 0.15s ease;
-}
-
-
-.search-bar:active {
-    transform: scale(0.98);
-
-    border-color:
-        rgba(56, 189, 248, 0.4);
-}
-
-
-.search-bar > span:first-child {
-    font-size: 19px;
-}
-
-
-.search-text {
-    font-size: 15px;
-
-    font-weight: 500;
-}
-
-
-/* =========================
-   SECTIONS
-   ========================= */
-
-.section {
-    margin-bottom: 27px;
-}
-
-
-.section h2 {
-    margin: 0 0 13px;
-
-    font-size: 14px;
-
-    color: #cbd5e1;
-
-    font-weight: 700;
-
-    letter-spacing: 0.5px;
-
-    text-transform: uppercase;
-}
-
-
-/* =========================
-   GRID
-   ========================= */
-
-.grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 12px;
-}
-
-
-/* =========================
-   TILES
-   ========================= */
-
-.tile {
-    position: relative;
-
-    min-height: 125px;
-
-    border: 1px solid var(--border);
-
-    border-radius: 20px;
-
-    padding: 17px;
-
-    color: white;
-
-    text-align: left;
-
-    cursor: pointer;
-
-    overflow: hidden;
-
-    box-shadow: var(--shadow);
-
-    transition:
-        transform 0.15s ease,
-        border-color 0.15s ease;
-}
-
-
-.tile::after {
-    content: "";
-
-    position: absolute;
-
-    width: 90px;
-
-    height: 90px;
-
-    right: -30px;
-
-    bottom: -35px;
-
-    border-radius: 50%;
-
-    background: rgba(255, 255, 255, 0.08);
-}
-
-
-.tile:active {
-    transform: scale(0.96);
-}
-
-
-.tile:hover {
-    border-color:
-        rgba(255, 255, 255, 0.16);
-}
-
-
-.tile .icon {
-    display: block;
-
-    font-size: 27px;
-
-    margin-bottom: 13px;
-}
-
-
-.tile strong {
-    display: block;
-
-    font-size: 16px;
-
-    font-weight: 750;
-
-    position: relative;
-
-    z-index: 1;
-}
-
-
-.tile small {
-    display: block;
-
-    margin-top: 4px;
-
-    color: rgba(255, 255, 255, 0.58);
-
-    font-size: 12px;
-
-    position: relative;
-
-    z-index: 1;
-}
-/* =========================
-   TILE COLORS
-   ========================= */
-
-.tile-blue {
-    background:
-        linear-gradient(
-            145deg,
-            #075985,
-            #0c4a6e
-        );
-}
-
-.tile-green {
-    background:
-        linear-gradient(
-            145deg,
-            #166534,
-            #14532d
-        );
-}
-
-.tile-orange {
-    background:
-        linear-gradient(
-            145deg,
-            #9a3412,
-            #7c2d12
-        );
-}
-
-.tile-pink {
-    background:
-        linear-gradient(
-            145deg,
-            #9d174d,
-            #831843
-        );
-}
-
-.tile-purple {
-    background:
-        linear-gradient(
-            145deg,
-            #6d28d9,
-            #4c1d95
-        );
-}
-
-.tile-cyan {
-    background:
-        linear-gradient(
-            145deg,
-            #155e75,
-            #164e63
-        );
-}
-
-.tile-gray {
-    background:
-        linear-gradient(
-            145deg,
-            #374151,
-            #1f2937
-        );
-}
-
-.tile-dark {
-    background:
-        linear-gradient(
-            145deg,
-            #1e293b,
-            #0f172a
-        );
-}
-
-
-/* =========================
-   ADD CONTENT BUTTON
-   ========================= */
-
-.add-button {
-    width: 100%;
-
-    border: 1px solid
-        rgba(74, 222, 128, 0.25);
-
-    border-radius: 17px;
-
-    padding: 16px;
-
-    margin: 3px 0 13px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 9px;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(34, 197, 94, 0.18),
-            rgba(16, 185, 129, 0.10)
-        );
-
-    color: #86efac;
-
-    font-size: 16px;
-
-    font-weight: 750;
-
-    cursor: pointer;
-
-    transition:
-        transform 0.15s ease,
-        background 0.15s ease;
-}
-
-
-.add-button span {
-    font-size: 22px;
-
-    line-height: 1;
-}
-
-
-.add-button:active {
-    transform: scale(0.97);
-
-    background:
-        rgba(34, 197, 94, 0.25);
-}
-
-
-/* =========================
-   GAME BUTTON
-   ========================= */
-
-.game-button {
-    width: 100%;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 13px;
-
-    border: 1px solid var(--border);
-
-    border-radius: 17px;
-
-    padding: 15px 17px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #1e293b,
-            #111827
-        );
-
-    color: white;
-
-    text-align: left;
-
-    cursor: pointer;
-
-    box-shadow:
-        0 8px 25px rgba(0, 0, 0, 0.2);
-
-    transition:
-        transform 0.15s ease;
-}
-
-
-.game-button:active {
-    transform: scale(0.97);
-}
-
-
-.game-button > span:first-child {
-    width: 42px;
-
-    height: 42px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border-radius: 13px;
-
-    background:
-        rgba(167, 139, 250, 0.16);
-
-    font-size: 22px;
-}
-
-
-.game-button div {
-    flex: 1;
-}
-
-
-.game-button strong {
-    display: block;
-
-    font-size: 15px;
-}
-
-
-.game-button small {
-    display: block;
-
-    margin-top: 3px;
-
-    color: var(--muted);
-
-    font-size: 12px;
-}
-
-
-.game-button .arrow {
-    color: #64748b;
-
-    font-size: 25px;
-}
-
-
-/* =========================
-   FOOTER
-   ========================= */
-
-footer {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    padding: 22px 4px 4px;
-
-    color: #64748b;
-
-    font-size: 11px;
-}
-
-
-footer span:first-child {
-    color: #94a3b8;
-
-    font-weight: 600;
-}
-
-
-/* =========================
-   BIRTHDAY PAGE
-   ========================= */
-
-#birthdaysPage {
-    animation:
-        pageIn 0.2s ease;
-}
-
-
-@keyframes pageIn {
-
-    from {
-        opacity: 0;
-
-        transform:
-            translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translateY(0);
-    }
-
-}
-
-
-/* Birthday list cards */
-
-#birthdayList > div {
-    border:
-        1px solid var(--border) !important;
-
-    box-shadow:
-        0 10px 30px
-        rgba(0, 0, 0, 0.18);
-
-    transition:
-        transform 0.15s ease,
-        border-color 0.15s ease;
-}
-
-
-#birthdayList > div:active {
-    transform: scale(0.98);
-}
-
-
-/* Birthday form */
-
-#birthdayForm {
-    border:
-        1px solid var(--border);
-
-    box-shadow: var(--shadow);
-}
-
-
-#birthdayForm h2 {
-    margin-top: 0;
-
-    margin-bottom: 18px;
-
-    font-size: 20px;
-}
-
-
-#birthdayForm label {
-    display: block;
-
-    margin:
-        14px 0 7px;
-
-    color: #cbd5e1;
-
-    font-size: 13px;
-
-    font-weight: 600;
-}
-
-
-#birthdayForm input {
-    width: 100%;
-
-    border: 1px solid
-        rgba(255, 255, 255, 0.08);
-
-    border-radius: 12px;
-
-    padding: 13px;
-
-    outline: none;
-
-    background: #0f172a;
-
-    color: white;
-}
-
-
-#birthdayForm input:focus {
-    border-color:
-        rgba(56, 189, 248, 0.5);
-
-    box-shadow:
-        0 0 0 3px
-        rgba(56, 189, 248, 0.08);
-}
-
-
-#cancelBirthdayButton {
-    width: 100%;
-
-    margin-top: 10px;
-
-    padding: 13px;
-
-    border: none;
-
-    border-radius: 12px;
-
-    background: #273449;
-
-    color: #cbd5e1;
-
-    font-weight: 650;
-}
-/* =========================
-   RESPONSIVE MOBILE TUNING
-   ========================= */
-
-@media (max-width: 380px) {
-
-    .app {
-        padding-left: 14px;
-        padding-right: 14px;
-    }
-
-    .header h1 {
-        font-size: 28px;
-    }
-
-    .tile {
-        min-height: 115px;
-        padding: 15px;
-    }
-
-}
-
-
-/* =========================
-   LARGE PHONES
-   ========================= */
-
-@media (min-width: 480px) {
-
-    .app {
-        padding-left: 22px;
-        padding-right: 22px;
-    }
-
-}
-
-
-/* =========================
-   ACCESSIBILITY
-   ========================= */
-
-button:focus-visible {
-    outline: 2px solid var(--blue);
-
-    outline-offset: 3px;
-}
-
-
-/* =========================
-   REDUCE MOTION
-   ========================= */
-
-@media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
-
-        animation-duration: 0.01ms !important;
-
-        animation-iteration-count: 1 !important;
-
-        transition-duration: 0.01ms !important;
-
-        scroll-behavior: auto !important;
-    }
-
-}
-
-
-/* =========================
-   SCROLLBAR
-   ========================= */
-
-::-webkit-scrollbar {
-    width: 5px;
-}
-
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-
-::-webkit-scrollbar-thumb {
-    background: #334155;
-
-    border-radius: 10px;
-}
-
-
-/* =========================
-   SELECTION
-   ========================= */
-
-::selection {
-    background:
-        rgba(56, 189, 248, 0.25);
-
-    color: white;
-}
-
-
-/* =========================
-   SAFE AREA
-   ========================= */
-
-@supports (padding: max(0px)) {
-
-    .app {
-        padding-bottom:
-            max(
-                28px,
-                env(safe-area-inset-bottom)
-            );
-    }
-
-}
-
-
-/* =========================
-   SMOOTH PAGE FEEL
-   ========================= */
-
 body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: var(--font-family);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     overflow-x: hidden;
 }
 
-
-.app {
-    animation:
-        appIn 0.35s ease;
-}
-
-
-@keyframes appIn {
-
-    from {
-        opacity: 0;
-
-        transform:
-            translateY(6px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translateY(0);
-    }
-
-}
-/* =========================
-   BIRTHDAY CARDS
-   ========================= */
-
-.birthday-card {
-    position: relative;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 14px;
-
+#app {
     width: 100%;
-
+    max-width: 500px;
+    margin: 0 auto;
     padding: 16px;
-
-    margin-bottom: 12px;
-
-    border-radius: 18px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #172033,
-            #111827
-        );
-
-    border: 1px solid
-        rgba(255, 255, 255, 0.07);
-
-    box-shadow:
-        0 10px 28px
-        rgba(0, 0, 0, 0.22);
-
-    transition:
-        transform 0.15s ease,
-        border-color 0.15s ease;
-}
-
-
-.birthday-card:active {
-    transform: scale(0.98);
-}
-
-
-.birthday-icon {
-    width: 48px;
-
-    height: 48px;
-
-    flex-shrink: 0;
-
     display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border-radius: 15px;
-
-    font-size: 24px;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(244, 114, 182, 0.20),
-            rgba(167, 139, 250, 0.20)
-        );
-
-    border: 1px solid
-        rgba(255, 255, 255, 0.06);
-}
-
-
-.birthday-info {
-    flex: 1;
-
-    min-width: 0;
-}
-
-
-.birthday-info strong {
-    display: block;
-
-    color: #f8fafc;
-
-    font-size: 16px;
-
-    font-weight: 750;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-}
-
-
-.birthday-info span {
-    display: block;
-
-    margin-top: 3px;
-
-    color: #cbd5e1;
-
-    font-size: 13px;
-}
-
-
-.birthday-info small {
-    display: block;
-
-    margin-top: 4px;
-
-    color: #64748b;
-
-    font-size: 11px;
-
-    font-weight: 600;
-}
-
-
-.birthday-delete {
-    width: 38px;
-
-    height: 38px;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border: none;
-
-    border-radius: 12px;
-
-    background:
-        rgba(239, 68, 68, 0.10);
-
-    color: #fca5a5;
-
-    cursor: pointer;
-
-    transition:
-        transform 0.15s ease,
-        background 0.15s ease;
-}
-
-
-.birthday-delete:active {
-    transform: scale(0.9);
-
-    background:
-        rgba(239, 68, 68, 0.20);
-}
-
-
-/* =========================
-   UPCOMING BIRTHDAY
-   ========================= */
-
-.birthday-soon {
-    border-color:
-        rgba(251, 146, 60, 0.30);
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(154, 52, 18, 0.20),
-            #111827
-        );
-}
-
-
-.birthday-soon .birthday-icon {
-    background:
-        linear-gradient(
-            135deg,
-            rgba(251, 146, 60, 0.25),
-            rgba(244, 114, 182, 0.18)
-        );
-}
-
-
-/* =========================
-   EMPTY BIRTHDAY STATE
-   ========================= */
-
-.empty-state {
-    display: flex;
-
     flex-direction: column;
-
-    align-items: center;
-
-    justify-content: center;
-
-    text-align: center;
-
-    min-height: 190px;
-
-    padding: 25px;
-
-    border-radius: 20px;
-
-    background:
-        rgba(17, 24, 39, 0.65);
-
-    border: 1px dashed
-        rgba(255, 255, 255, 0.10);
+    flex-grow: 1;
 }
 
-
-.empty-icon {
-    font-size: 42px;
-
-    margin-bottom: 12px;
-}
-
-
-.empty-state strong {
-    color: #f8fafc;
-
-    font-size: 16px;
-}
-
-
-.empty-state small {
-    max-width: 260px;
-
-    margin-top: 7px;
-
-    color: #64748b;
-
-    font-size: 12px;
-
-    line-height: 1.5;
-}
-
-/* =========================
-   BIRTHDAY CARDS
-   ========================= */
-
-.birthday-card {
-    position: relative;
-
+/* ---------------------------------------------------------
+   HEADER & TOP BARS
+   --------------------------------------------------------- */
+.top-bar {
     display: flex;
-
+    justify-content: space-between;
     align-items: center;
-
-    gap: 14px;
-
-    width: 100%;
-
-    padding: 16px;
-
-    margin-bottom: 12px;
-
-    border-radius: 18px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #172033,
-            #111827
-        );
-
-    border: 1px solid
-        rgba(255, 255, 255, 0.07);
-
-    box-shadow:
-        0 10px 28px
-        rgba(0, 0, 0, 0.22);
-
-    transition:
-        transform 0.15s ease,
-        border-color 0.15s ease;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--surface-color-2);
 }
 
-
-.birthday-card:active {
-    transform: scale(0.98);
-}
-
-
-.birthday-icon {
-    width: 48px;
-
-    height: 48px;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border-radius: 15px;
-
-    font-size: 24px;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(244, 114, 182, 0.20),
-            rgba(167, 139, 250, 0.20)
-        );
-
-    border: 1px solid
-        rgba(255, 255, 255, 0.06);
-}
-
-
-.birthday-info {
-    flex: 1;
-
-    min-width: 0;
-}
-
-
-.birthday-info strong {
-    display: block;
-
-    color: #f8fafc;
-
-    font-size: 16px;
-
-    font-weight: 750;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-}
-
-
-.birthday-info span {
-    display: block;
-
-    margin-top: 3px;
-
-    color: #cbd5e1;
-
-    font-size: 13px;
-}
-
-
-.birthday-info small {
-    display: block;
-
-    margin-top: 4px;
-
-    color: #64748b;
-
-    font-size: 11px;
-
-    font-weight: 600;
-}
-
-
-.birthday-delete {
-    width: 38px;
-
-    height: 38px;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border: none;
-
-    border-radius: 12px;
-
-    background:
-        rgba(239, 68, 68, 0.10);
-
-    color: #fca5a5;
-
-    cursor: pointer;
-
-    transition:
-        transform 0.15s ease,
-        background 0.15s ease;
-}
-
-
-.birthday-delete:active {
-    transform: scale(0.9);
-
-    background:
-        rgba(239, 68, 68, 0.20);
-}
-
-
-/* =========================
-   UPCOMING BIRTHDAY
-   ========================= */
-
-.birthday-soon {
-    border-color:
-        rgba(251, 146, 60, 0.30);
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(154, 52, 18, 0.20),
-            #111827
-        );
-}
-
-
-.birthday-soon .birthday-icon {
-    background:
-        linear-gradient(
-            135deg,
-            rgba(251, 146, 60, 0.25),
-            rgba(244, 114, 182, 0.18)
-        );
-}
-
-
-/* =========================
-   EMPTY BIRTHDAY STATE
-   ========================= */
-
-.empty-state {
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    justify-content: center;
-
-    text-align: center;
-
-    min-height: 190px;
-
-    padding: 25px;
-
-    border-radius: 20px;
-
-    background:
-        rgba(17, 24, 39, 0.65);
-
-    border: 1px dashed
-        rgba(255, 255, 255, 0.10);
-}
-
-
-.empty-icon {
-    font-size: 42px;
-
-    margin-bottom: 12px;
-}
-
-
-.empty-state strong {
-    color: #f8fafc;
-
-    font-size: 16px;
-}
-
-
-.empty-state small {
-    max-width: 260px;
-
-    margin-top: 7px;
-
-    color: #64748b;
-
-    font-size: 12px;
-
-    line-height: 1.5;
-}
-
-
-/* =========================
-   BIRTHDAY ACTION BUTTONS
-   ========================= */
-
-.birthday-actions {
-    display: flex;
-
-    align-items: center;
-
-    gap: 6px;
-
-    flex-shrink: 0;
-}
-
-
-.birthday-edit,
-.birthday-delete {
-    width: 36px;
-
-    height: 36px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border: none;
-
-    border-radius: 11px;
-
-    cursor: pointer;
-
-    font-size: 15px;
-
-    transition:
-        transform 0.15s ease,
-        background 0.15s ease;
-}
-
-
-.birthday-edit {
-    background:
-        rgba(56, 189, 248, 0.10);
-
-    color: #7dd3fc;
-}
-
-
-.birthday-edit:active {
-    transform: scale(0.9);
-
-    background:
-        rgba(56, 189, 248, 0.20);
-}
-
-
-.birthday-delete {
-    background:
-        rgba(239, 68, 68, 0.10);
-
-    color: #fca5a5;
-}
-
-
-.birthday-delete:active {
-    transform: scale(0.9);
-
-    background:
-        rgba(239, 68, 68, 0.20);
-}
-
-/* =========================================================
-   CLEAN UNDERLINE FORM INPUTS (GREEN ACCENT)
-   ========================================================= */
-
-/* Form container cleanup */
-#birthdayForm,
-#logForm,
-#taskForm,
-#reminderForm,
-#vaultForm {
-    background: rgba(30, 41, 59, 0.7) !important;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-    padding: 22px !important;
-    box-sizing: border-box;
-}
-
-/* Form Headings */
-#birthdayForm h2,
-#logFormHeading,
-#taskFormHeading,
-#reminderFormHeading,
-#vaultFormHeading {
-    margin: 0 0 16px 0;
+.top-bar h2 {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #f8fafc;
+    color: var(--primary-color);
 }
 
-/* Clean, modern labels */
-#birthdayForm label,
-#logForm label,
-#taskForm label,
-#reminderForm label,
-#vaultForm label {
-    display: block;
-    margin-top: 14px;
-    margin-bottom: 4px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #94a3b8;
-}
-
-/* Transform box inputs into single bottom lines */
-input[type="text"],
-input[type="date"],
-input[type="time"],
-select,
-textarea {
-    width: 100% !important;
-    background: transparent !important;
-    border: none !important;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 0 !important;
-    padding: 10px 4px !important;
-    color: #f8fafc !important;
-    font-size: 1rem !important;
-    font-family: inherit;
-    outline: none !important;
-    box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Placeholder styling */
-input::placeholder,
-textarea::placeholder {
-    color: #64748b;
-    font-weight: 400;
-}
-
-/* Active / Focused state: turns into a vibrant matching green line */
-input[type="text"]:focus,
-input[type="date"]:focus,
-input[type="time"]:focus,
-select:focus,
-textarea:focus {
-    border-bottom: 2px solid #22c55e !important; /* Green accent */
-    box-shadow: 0 1px 0 0 #22c55e;
-}
-
-/* Textarea subtle line styling */
-textarea {
-    resize: vertical;
-    min-height: 80px;
-    background: rgba(255, 255, 255, 0.02) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 8px !important;
-    padding: 10px !important;
-}
-
-textarea:focus {
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    border-bottom: 2px solid #22c55e !important;
-}
-
-/* Align buttons cleanly at the bottom */
-#saveBirthdayButton,
-#saveLogButton,
-#saveTaskButton,
-#saveReminderButton,
-#saveVaultItemButton {
-    margin-top: 22px !important;
-}
-
-#cancelBirthdayButton,
-#cancelLogButton,
-#cancelTaskButton,
-#cancelReminderButton,
-#cancelVaultItemButton {
-    display: block;
-    width: 100%;
-    background: none;
+.btn-icon-back,
+.btn-icon-add {
+    background: transparent;
     border: none;
-    color: #94a3b8;
-    padding: 12px;
-    margin-top: 6px;
-    font-size: 0.95rem;
+    color: var(--primary-color);
+    font-size: 1.3rem;
     cursor: pointer;
-    text-align: center;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-#cancelBirthdayButton:active,
-#cancelLogButton:active,
-#cancelTaskButton:active,
-#cancelReminderButton:active,
-#cancelVaultItemButton:active {
-    color: #f8fafc;
+/* ---------------------------------------------------------
+   INPUTS & FORMS (UNDERLINE MODERN STYLE)
+   --------------------------------------------------------- */
+.form-box {
+    background: var(--surface-color);
+    border: 1px solid var(--surface-color-2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
 }
 
-/* =========================================================
-   FOLDER FILTER PILLS
-   ========================================================= */
+.underline-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--surface-color-2);
+    color: var(--text-main);
+    padding: 10px 4px;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+    outline: none;
+}
 
-.folder-pill {
-    flex-shrink: 0;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #94a3b8;
-    padding: 6px 14px;
+.underline-input:focus {
+    border-bottom-color: var(--primary-color);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.btn-soft {
+    padding: 8px 16px;
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 600;
+    border: 1px solid transparent;
     cursor: pointer;
-    transition: all 0.2s ease;
 }
 
-.folder-pill.active {
-    background: #22c55e !important; /* Matches save green */
-    color: #0f172a !important;
-    border-color: #22c55e !important;
+.btn-soft.cancel {
+    background: var(--surface-color-2);
+    color: var(--text-muted);
+}
+
+.btn-soft.save {
+    background: var(--primary-dim);
+    color: var(--primary-color);
+    border-color: var(--primary-border);
+}
+
+/* ---------------------------------------------------------
+   BIRTHDAY CARDS & GREET BUTTON
+   --------------------------------------------------------- */
+.birthday-card {
+    background: var(--surface-color);
+    border: 1px solid var(--surface-color-2);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.birthday-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.birthday-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.birthday-name {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.birthday-date {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.bday-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: var(--surface-color-2);
+    color: var(--text-muted);
+}
+
+.bday-badge.today {
+    background: var(--primary-dim);
+    color: var(--primary-color);
     font-weight: 700;
 }
 
+.bday-badge.tomorrow {
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+    font-weight: 600;
+}
+
+.birthday-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-greet {
+    background: var(--primary-dim);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-border);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.btn-greet:active {
+    transform: scale(0.95);
+}
+
+.btn-delete {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 6px;
+    opacity: 0.7;
+}
+
+.btn-delete:active {
+    opacity: 1;
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 32px 16px;
+}
+
+/* ---------------------------------------------------------
+   TOAST NOTIFICATION
+   --------------------------------------------------------- */
+#toastNotification {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(30, 30, 30, 0.95);
+    color: var(--text-main);
+    border: 1px solid var(--primary-color);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
