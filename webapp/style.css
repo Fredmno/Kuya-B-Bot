@@ -1,19 +1,19 @@
 /* =========================================================
-   KUYA B — COMPLETE MODERN DARK THEME & LAYOUT
+   KUYA B — MODERN DARK GREEN ACCENT THEME
    ========================================================= */
 
 :root {
-    --bg-color: #0f1012;
-    --surface-color: #1a1c1e;
-    --surface-card: #22252a;
-    --surface-card-hover: #2a2e35;
-    --border-color: rgba(255, 255, 255, 0.08);
+    --bg-color: #0b0f0c;
+    --surface-color: #121813;
+    --surface-card: #162018;
+    --surface-card-hover: #1c2b20;
     --primary-color: #22c55e;
-    --primary-glow: rgba(34, 197, 94, 0.18);
-    --primary-border: rgba(34, 197, 94, 0.35);
+    --primary-dim: rgba(34, 197, 94, 0.12);
+    --primary-border: rgba(34, 197, 94, 0.45);
+    --primary-glow: rgba(34, 197, 94, 0.25);
     --text-main: #f3f4f6;
     --text-muted: #9ca3af;
-    --text-sub: #6b7280;
+    --text-sub: #6ee7b7;
     --danger: #ef4444;
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -39,7 +39,7 @@ body {
     width: 100%;
     max-width: 480px;
     margin: 0 auto;
-    padding: 20px 16px 32px 16px;
+    padding: 20px 16px 36px 16px;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
@@ -53,20 +53,19 @@ body {
 }
 
 .dashboard-header .greeting {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+    font-size: 0.8rem;
+    color: var(--primary-color);
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
     margin-bottom: 4px;
 }
 
 .dashboard-header h1 {
-    font-size: 1.75rem;
+    font-size: 1.85rem;
     font-weight: 800;
     color: #ffffff;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    letter-spacing: -0.5px;
 }
 
 .dashboard-header .subtext {
@@ -86,18 +85,19 @@ body {
 .search-input {
     width: 100%;
     background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--primary-border);
     border-radius: 12px;
-    padding: 12px 16px 12px 40px;
+    padding: 12px 16px 12px 42px;
     color: var(--text-main);
     font-size: 0.9rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4);
 }
 
 .search-input:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-glow);
+    box-shadow: 0 0 12px var(--primary-glow);
 }
 
 .search-icon {
@@ -106,33 +106,43 @@ body {
     top: 50%;
     transform: translateY(-50%);
     font-size: 0.95rem;
-    opacity: 0.6;
+    color: var(--primary-color);
+    opacity: 0.8;
 }
 
 /* ---------------------------------------------------------
-   SECTION HEADINGS
+   SECTION TITLES
    --------------------------------------------------------- */
 .section-title {
     font-size: 1.05rem;
     font-weight: 700;
     color: #ffffff;
-    margin: 20px 0 12px 0;
-    letter-spacing: -0.2px;
+    margin: 18px 0 12px 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--primary-border), transparent);
 }
 
 /* ---------------------------------------------------------
-   FEATURE GRID & CARDS
+   GREEN LINE ACCENT CARDS
    --------------------------------------------------------- */
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 16px;
 }
 
 .feature-card {
     background: var(--surface-card);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--primary-border);
     border-radius: 14px;
     padding: 14px 12px;
     display: flex;
@@ -141,19 +151,34 @@ body {
     gap: 6px;
     cursor: pointer;
     text-align: left;
-    transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--primary-color);
 }
 
 .feature-card:active {
     transform: scale(0.97);
     background: var(--surface-card-hover);
-    border-color: var(--primary-border);
+    box-shadow: 0 0 16px var(--primary-glow);
+    border-color: var(--primary-color);
 }
 
 .card-header {
     display: flex;
     align-items: center;
     gap: 8px;
+    width: 100%;
 }
 
 .card-icon {
@@ -163,32 +188,46 @@ body {
 .card-title {
     font-size: 0.95rem;
     font-weight: 700;
-    color: var(--text-main);
+    color: #ffffff;
 }
 
 .card-desc {
     font-size: 0.75rem;
-    color: var(--text-muted);
-    line-height: 1.2;
+    color: var(--text-sub);
+    padding-left: 2px;
 }
 
-/* Wide / Full-width cards */
+/* FULL-WIDTH CARD */
 .feature-card-full {
     background: var(--surface-card);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--primary-border);
     border-radius: 14px;
     padding: 14px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    margin-bottom: 10px;
-    transition: transform 0.12s ease, background-color 0.15s ease;
+    margin-bottom: 12px;
+    transition: all 0.18s ease;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card-full::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--primary-color);
 }
 
 .feature-card-full:active {
     transform: scale(0.98);
     background: var(--surface-card-hover);
+    box-shadow: 0 0 16px var(--primary-glow);
 }
 
 .card-left {
@@ -198,69 +237,73 @@ body {
 }
 
 .card-arrow {
-    color: var(--text-sub);
-    font-size: 1.1rem;
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    font-weight: bold;
 }
 
 /* ---------------------------------------------------------
-   SUB-PAGE TOP BARS
+   SUBPAGE TOP BAR
    --------------------------------------------------------- */
 .top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 12px;
+    padding-bottom: 14px;
     margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--primary-border);
 }
 
 .top-bar h2 {
-    font-size: 1.2rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 800;
     color: var(--primary-color);
 }
 
 .btn-icon-back,
 .btn-icon-add {
-    background: transparent;
-    border: none;
+    background: var(--primary-dim);
+    border: 1px solid var(--primary-border);
     color: var(--primary-color);
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     cursor: pointer;
-    padding: 6px 8px;
+    padding: 6px 12px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
+    transition: all 0.15s ease;
 }
 
 .btn-icon-back:active,
 .btn-icon-add:active {
-    background: var(--primary-glow);
+    background: var(--primary-color);
+    color: #000;
 }
 
 /* ---------------------------------------------------------
-   UNDERLINE FORMS & INPUTS
+   FORM INPUTS (UNDERLINE STYLE)
    --------------------------------------------------------- */
 .form-box {
     background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--primary-border);
     border-radius: 14px;
     padding: 16px;
     margin-bottom: 20px;
+    box-shadow: 0 0 14px var(--primary-glow);
 }
 
 .underline-input {
     width: 100%;
     background: transparent;
     border: none;
-    border-bottom: 2px solid var(--surface-card);
-    color: var(--text-main);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
     padding: 10px 4px;
     font-size: 0.95rem;
-    margin-bottom: 12px;
-    transition: border-color 0.2s;
+    margin-bottom: 14px;
     outline: none;
+    transition: border-color 0.2s;
 }
 
 .underline-input:focus {
@@ -278,18 +321,18 @@ body {
     padding: 8px 18px;
     border-radius: 20px;
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     border: 1px solid transparent;
     cursor: pointer;
 }
 
 .btn-soft.cancel {
-    background: var(--surface-card);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--text-muted);
 }
 
 .btn-soft.save {
-    background: var(--primary-glow);
+    background: var(--primary-dim);
     color: var(--primary-color);
     border-color: var(--primary-border);
 }
@@ -298,8 +341,8 @@ body {
    BIRTHDAY CARDS & GREET BUTTON
    --------------------------------------------------------- */
 .birthday-card {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: var(--surface-card);
+    border: 1px solid var(--primary-border);
     border-radius: 12px;
     padding: 12px 14px;
     margin-bottom: 10px;
@@ -328,27 +371,29 @@ body {
 
 .birthday-date {
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: var(--text-sub);
 }
 
 .bday-badge {
     font-size: 0.72rem;
     padding: 2px 8px;
     border-radius: 12px;
-    background: var(--surface-card);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--text-muted);
 }
 
 .bday-badge.today {
-    background: var(--primary-glow);
+    background: var(--primary-dim);
     color: var(--primary-color);
-    font-weight: 700;
+    border: 1px solid var(--primary-border);
+    font-weight: 800;
 }
 
 .bday-badge.tomorrow {
-    background: rgba(234, 179, 8, 0.18);
+    background: rgba(234, 179, 8, 0.15);
     color: #facc15;
-    font-weight: 600;
+    border: 1px solid rgba(234, 179, 8, 0.35);
+    font-weight: 700;
 }
 
 .birthday-actions {
@@ -358,10 +403,10 @@ body {
 }
 
 .btn-greet {
-    background: var(--primary-glow);
+    background: var(--primary-dim);
     color: var(--primary-color);
     border: 1px solid var(--primary-border);
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 16px;
     font-size: 0.78rem;
     font-weight: 700;
@@ -382,33 +427,22 @@ body {
     opacity: 0.6;
 }
 
-.btn-delete:active {
-    opacity: 1;
-}
-
 /* ---------------------------------------------------------
-   LISTS & EMPTY STATES
+   EMPTY STATES & FOOTER
    --------------------------------------------------------- */
 .empty-state {
     text-align: center;
-    color: var(--text-sub);
+    color: var(--text-muted);
     font-size: 0.85rem;
     padding: 36px 16px;
 }
 
-/* ---------------------------------------------------------
-   FOOTER TAG
-   --------------------------------------------------------- */
 .dashboard-footer {
     margin-top: auto;
     padding-top: 24px;
     text-align: center;
     font-size: 0.8rem;
-    color: var(--text-sub);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+    color: var(--text-muted);
 }
 
 /* ---------------------------------------------------------
@@ -419,7 +453,7 @@ body {
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(20, 22, 26, 0.95);
+    background: rgba(18, 24, 19, 0.95);
     color: var(--text-main);
     border: 1px solid var(--primary-border);
     padding: 10px 18px;
@@ -428,5 +462,5 @@ body {
     font-weight: 600;
     backdrop-filter: blur(10px);
     z-index: 1000;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 16px var(--primary-glow);
 }
