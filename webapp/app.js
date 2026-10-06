@@ -51,6 +51,15 @@ import {
 // NAVIGATION & PAGE ROUTING
 // ---------------------------------------------------------
 
+const ALL_PAGES = [
+    "dashboardPage",
+    "birthdaysPage",
+    "dailyLogsPage",
+    "tasksPage",
+    "remindersPage",
+    "vaultPage"
+];
+
 function hideAllForms() {
     hideBirthdayForm();
     hideLogForm();
@@ -59,24 +68,18 @@ function hideAllForms() {
     hideVaultForm();
 }
 
-function showDashboard() {
-    const pages = [
-        "birthdaysPage",
-        "dailyLogsPage",
-        "tasksPage",
-        "remindersPage",
-        "vaultPage"
-    ];
-
-    pages.forEach(id => {
+function hideAllPages() {
+    ALL_PAGES.forEach(id => {
         const page = document.getElementById(id);
         if (page) page.style.display = "none";
     });
+    hideAllForms();
+}
 
+function showDashboard() {
+    hideAllPages();
     const dashboard = document.getElementById("dashboardPage");
     if (dashboard) dashboard.style.display = "block";
-
-    hideAllForms();
 
     if (tg?.BackButton) {
         tg.BackButton.hide();
@@ -84,8 +87,7 @@ function showDashboard() {
 }
 
 function showPage(pageId, renderFn) {
-    showDashboard();
-    document.getElementById("dashboardPage").style.display = "none";
+    hideAllPages();
     const page = document.getElementById(pageId);
     if (page) page.style.display = "block";
 
@@ -108,7 +110,7 @@ function initApp() {
     loadReminders();
     loadVault();
 
-    // 1. Clean up the launcher prompt message in Telegram
+    // 1. Auto-clean the triggering launcher message in chat
     const urlParams = new URLSearchParams(window.location.search);
     const msgId = urlParams.get("msg_id");
     const chatId = urlParams.get("chat_id");
@@ -121,7 +123,7 @@ function initApp() {
         }).catch(() => {});
     }
 
-    // 2. Check for deep link or default to Dashboard
+    // 2. Direct Feature Routing (Bypasses Dashboard if ?start= is present)
     const startSection = urlParams.get("start");
 
     if (startSection === "birthdays") {
@@ -143,7 +145,7 @@ function initApp() {
     }
 
     // ---------------------------------------------------------
-    // GLOBAL CLICK LISTENERS
+    // GLOBAL EVENT LISTENERS
     // ---------------------------------------------------------
     document.addEventListener("click", function (e) {
         // --- Navigation: Personal ---
@@ -336,7 +338,7 @@ function initApp() {
         }
     });
 
-    // Auto-dash format for birthday date
+    // Auto-dash format for birthday date input
     const bdayDateInput = document.getElementById("birthdayDate");
     if (bdayDateInput) {
         bdayDateInput.addEventListener("input", function () {
