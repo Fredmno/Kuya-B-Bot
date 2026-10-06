@@ -62,12 +62,17 @@ Kuya-B-Bot/
  * ⏰ Reminders: Schedule tracking with date, time, and recurrence options (None / Daily / Weekly).
 ```
 
-📚 Media & Content Vault
+## 📚 Media & Content Vault
+
+```text
  * 🎥 Videos & 🖼️ Pictures: Browse channel-hosted media filtered by dynamic Folder Pills (e.g., Travel, Family, Receipts).
  * 📥 Send to Bot Chat: Relays channel media directly to your private chat using Telegram's native copy_message without third-party hosting.
 🎮 Entertainment
  * 🎮 Word Scramble: Mini-game integration accessible via bot or dashboard.
-⚙️ Environment Variables (Render)
+```
+
+## ⚙️ Environment Variables (Render)
+
 | Variable | Description | Example |
 |---|---|---|
 | BOT_TOKEN | Telegram Bot Token from @BotFather | 123456:ABC-DEF... |
@@ -75,24 +80,17 @@ Kuya-B-Bot/
 | DATABASE_URL | PostgreSQL connection string | postgresql://user:pass@host/db |
 | VAULT_CHANNEL_ID | Private vault channel ID (must include -100) | -1002345678901 |
 | PORT | Web server listening port | 10000 |
-🛠️ Development & Deployment
+
+## 🛠️ Development & Deployment
+
  * Deploying Updates:
    Pushes to the main branch automatically trigger a deploy on Render.
  * Frontend Cache-Busting:
    When editing files inside webapp/, always bump the query string version in webapp/index.html to bypass Telegram's mobile cache:
+
    <link rel="stylesheet" href="/app/style.css?v=X"/>
 <script type="module" src="/app/app.js?v=X"></script>
 
  * Telegram Channel Permissions:
    Ensure @KuyaBBot is added as an Administrator in your vault channel with permission to post and read messages.
-
----
-
-### What to Document Next
-
-To keep everything easy to maintain:
-1. **Save this to your `README.md`** in GitHub[span_4](start_span)[span_4](end_span).
-2. Create a private note or `.env.example` documenting your exact channel IDs and test account chat IDs so you never lose track of configuration secrets.
-
-Would you like to continue refining the vault error diagnostics next, or move on to **Phase 5: Universal Search**?
 
