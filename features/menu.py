@@ -37,7 +37,7 @@ def get_features_keyboard():
             InlineKeyboardButton("🖼️ Pictures", callback_data="open_pictures"),
         ],
         [
-            InlineKeyboardButton("📚 Vault", callback_data="open_other"),
+            InlineKeyboardButton("📁 Vault", callback_data="open_other"),
             InlineKeyboardButton("🎮 Word Game", callback_data="open_game"),
         ],
         [
@@ -48,7 +48,7 @@ def get_features_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
-# Command: /kuyab
+# Command: /kuyab or /kuya_b
 async def kuya_b_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
@@ -59,7 +59,6 @@ async def kuya_b_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "or **Close** to dismiss this panel."
     )
 
-    # In group/supergroup contexts, delete the user's triggering command if permissions allow
     if chat.type in ["group", "supergroup"]:
         try:
             await update.message.delete()
@@ -80,8 +79,10 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
     await query.answer()
 
     data = query.data
+    chat_id = query.message.chat_id
+    message_id = query.message.message_id
 
-    # 1. Close: Dismiss the entire ephemeral box
+    # 1. Close: Dismiss the panel cleanly
     if data == "menu_close":
         try:
             await query.message.delete()
@@ -89,7 +90,7 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
             await query.edit_message_text("🙏 Kuya B panel closed. Use /kuyab anytime.")
         return
 
-    # 2. Back: Return to greeting
+    # 2. Back: Return to initial welcome screen
     if data == "menu_back":
         user = update.effective_user
         welcome_text = (
@@ -104,17 +105,19 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
         )
         return
 
-    # 3. Open Main Menu
+    # 3. Open Features Menu
     if data == "menu_open":
         instructions = (
             "📋 **Kuya B — Main Menu**\n\n"
-            "Select an option to launch that specific tool in your Mini App:\n\n"
+            "Select an option below to open that tool directly inside your Mini App:\n\n"
             "• 🎂 **Birthdays** — Dates & upcoming alerts\n"
             "• 📅 **Daily Logs** — Quick notes & moods\n"
             "• ✅ **Tasks** — To-do lists & priorities\n"
             "• ⏰ **Reminders** — Timed notifications\n"
-            "• 🎥 **Media Vault** — Files in Telegram folders\n"
-            "• 🎮 **Word Game** — Word Scramble"
+            "• 🎥 **Videos** — Channel video vault\n"
+            "• 🖼️ **Pictures** — Channel photo vault\n"
+            "• 📁 **Vault** — Documents & other files\n"
+            "• 🎮 **Word Game** — Play Word Scramble"
         )
         await query.edit_message_text(
             text=instructions,
@@ -123,7 +126,7 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
         )
         return
 
-    # 4. Feature Selection: Present the WebApp launcher button
+    # 4. Feature Selection: Launch button with deep-link and cleanup query params
     feature_map = {
         "open_birthdays": ("🎂 Birthdays", "birthdays"),
         "open_daily": ("📅 Daily Logs", "daily"),
@@ -131,16 +134,12 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
         "open_reminders": ("⏰ Reminders", "reminders"),
         "open_videos": ("🎥 Videos", "videos"),
         "open_pictures": ("🖼️ Pictures", "pictures"),
-        "open_other": ("📚 Other Vault", "other"),
+        "open_other": ("📁 Vault", "other"),
     }
 
     if data in feature_map:
         label, section = feature_map[data]
-        msg_id = query.message.message_id
-        chat_id = query.message.chat_id
-
-        # Attach chat_id & msg_id so the frontend can delete this prompt upon opening
-        launch_url = f"{WEBAPP_BASE_URL}?start={section}&msg_id={msg_id}&chat_id={chat_id}"
+        launch_url = f"{WEBAPP_BASE_URL}?start={section}&msg_id={message_id}&chat_id={chat_id}"
 
         btn_keyboard = InlineKeyboardMarkup(
             [
@@ -152,12 +151,11 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
             ]
         )
         await query.edit_message_text(
-            text=f"Ready to launch **{label}**!\nTap below to open your hub:",
+            text=f"Opening **{label}** directly.\nTap below to launch:",
             reply_markup=btn_keyboard,
             parse_mode="Markdown",
         )
         return
-
 
     if data == "open_game":
         game_keyboard = InlineKeyboardMarkup(
