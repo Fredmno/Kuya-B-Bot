@@ -2,499 +2,228 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width,
-                   initial-scale=1.0,
-                   viewport-fit=cover">
-
-    <title>Kuya B</title>
-
-    <link rel="stylesheet" href="/app/style.css?v=2"/>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kuya B Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="/app/style.css?v=999">
 </head>
-
 <body>
-
-<main class="app">
-
-    <section class="card" id="dashboardPage">
-
-        <header class="header">
-
-            <div>
-                <div class="greeting">
-                    Welcome back 👋
-                </div>
-
+    <div id="app">
+        <!-- =========================================================
+             DASHBOARD PAGE
+             ========================================================= -->
+        <div id="dashboardPage">
+            <header class="dashboard-header">
+                <div class="greeting">Welcome back 👋</div>
                 <h1>Kuya B</h1>
+                <div class="subtext">Your personal hub</div>
+            </header>
 
-                <p>Your personal hub</p>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search your vault..." id="dashboardSearchInput">
             </div>
 
-            <div class="avatar">🤖</div>
-        </header>
-
-
-        <button class="search-bar" id="searchButton">
-            <span>🔍</span>
-            <span class="search-text">
-                Search your vault...
-            </span>
-        </button>
-
-
-        <section class="section">
-
-            <h2>Personal</h2>
-
-            <div class="grid">
-
-                <button class="tile tile-blue"
-                        data-feature="daily">
-                    <span class="icon">📅</span>
-                    <strong>Daily Logs</strong>
-                    <small>Your days</small>
-                </button>
-
-                <button class="tile tile-green"
-                        data-feature="tasks">
-                    <span class="icon">✅</span>
-                    <strong>Tasks</strong>
-                    <small>Get things done</small>
-                </button>
-
-                <button class="tile tile-orange"
-                        data-feature="reminders">
-                    <span class="icon">⏰</span>
-                    <strong>Reminders</strong>
-                    <small>Don't forget</small>
-                </button>
-
-                <button class="tile tile-pink"
-                        data-feature="birthdays">
-                    <span class="icon">🎂</span>
-                    <strong>Birthdays</strong>
-                    <small>Important dates</small>
-                </button>
-
-            </div>
-        </section>
-        <section class="section">
-
-            <h2>Media &amp; Content</h2>
-
-            <div class="grid">
-
-                <button class="tile tile-purple"
-                        data-feature="videos">
-                    <span class="icon">🎥</span>
-                    <strong>Videos</strong>
-                    <small>Your video vault</small>
-                </button>
-
-                <button class="tile tile-cyan"
-                        data-feature="pictures">
-                    <span class="icon">🖼️</span>
-                    <strong>Pictures</strong>
-                    <small>Your photo vault</small>
-                </button>
-
-                <button class="tile tile-gray"
-                        data-feature="other">
-                    <span class="icon">📚</span>
-                    <strong>Other</strong>
-                    <small>Everything else</small>
-                </button>
-
-                <button class="tile tile-dark"
-                        data-feature="search">
-                    <span class="icon">🔎</span>
-                    <strong>Search</strong>
-                    <small>Find anything</small>
-                </button>
-
-            </div>
-
-        </section>
-
-
-        <button class="add-button"
-                id="addContentButton">
-
-            <span>＋</span>
-            Add Content
-
-        </button>
-
-
-        <button class="game-button"
-                id="gameButton">
-
-            <span>🎮</span>
-
-            <div>
-                <strong>Word Scramble</strong>
-                <small>Take a quick break</small>
-            </div>
-
-            <span class="arrow">›</span>
-
-        </button>
-
-
-        <footer>
-            <span>🤖 Kuya B</span>
-            <span>Personal Hub</span>
-        </footer>
-
-    </section>
-
-
-    <!-- BIRTHDAYS PAGE -->
-
-    <section class="card" id="birthdaysPage"
-             style="display:none;">
-
-        <header class="header">
-
-            <div>
-                <div class="greeting">
-                    Personal
+            <div class="section-title">Personal</div>
+            <div class="grid-2">
+                <div class="feature-card" data-feature="daily">
+                    <div class="card-header">
+                        <span class="card-icon">📅</span>
+                        <span class="card-title">Daily Logs</span>
+                    </div>
+                    <span class="card-desc">Your days</span>
                 </div>
 
-                <h1>🎂 Birthdays</h1>
-
-                <p>Important dates</p>
-            </div>
-
-            <div class="avatar">🎂</div>
-
-        </header>
-
-
-        <button class="search-bar"
-                id="birthdayBackButton">
-
-            <span>←</span>
-
-            <span class="search-text">
-                Back to Kuya B
-            </span>
-
-        </button>
-
-
-        <div id="birthdayList"
-             style="margin-top:20px;">
-
-            <div style="
-                text-align:center;
-                color:#94a3b8;
-                padding:30px;
-            ">
-                Loading birthdays...
-            </div>
-
-        </div>
-        <button class="add-button"
-                id="addBirthdayButton">
-
-            <span>＋</span>
-            Add Birthday
-
-        </button>
-
-
-        <div id="birthdayForm"
-             style="
-                display:none;
-                margin-top:16px;
-                background:#1e293b;
-                border-radius:18px;
-                padding:20px;
-             ">
-
-            <h2>Add Birthday</h2>
-
-
-            <label for="birthdayName">
-                Name
-            </label>
-
-            <input
-                id="birthdayName"
-                type="text"
-                placeholder="Example: Mom"
-                autocomplete="off"
-            >
-
-
-            <label for="birthdayDate">
-                Birthday
-            </label>
-
-            <input
-                id="birthdayDate"
-                type="text"
-                placeholder="MM-DD"
-                maxlength="5"
-                autocomplete="off"
-            >
-
-
-            <button
-                class="add-button"
-                id="saveBirthdayButton">
-
-                Save Birthday
-
-            </button>
-
-
-            <button
-                id="cancelBirthdayButton">
-
-                Cancel
-
-            </button>
-
-        </div>
-
-    </section>
-
-    <!-- DAILY LOGS PAGE -->
-    <section class="card" id="dailyLogsPage" style="display:none;">
-
-        <header class="header">
-            <div>
-                <div class="greeting">Personal</div>
-                <h1>📅 Daily Logs</h1>
-                <p>Record your days</p>
-            </div>
-            <div class="avatar">📅</div>
-        </header>
-
-        <button class="search-bar" id="dailyLogsBackButton">
-            <span>←</span>
-            <span class="search-text">Back to Kuya B</span>
-        </button>
-
-        <button class="add-button" id="addLogButton" style="margin-top: 14px;">
-            <span>＋</span>
-            New Log Entry
-        </button>
-
-        <!-- ADD / EDIT LOG FORM -->
-        <div id="logForm" style="display:none; margin-top:16px; background:#1e293b; border-radius:18px; padding:20px;">
-            <h2 id="logFormHeading">New Entry</h2>
-
-            <label for="logDate">Date</label>
-            <input id="logDate" type="date">
-
-            <label>Mood</label>
-            <div id="moodSelector" style="display: flex; gap: 8px; margin-bottom: 14px; margin-top: 6px;">
-                <button type="button" class="mood-btn" data-mood="😊" style="font-size: 1.5rem; background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px; padding: 6px 12px; cursor: pointer;">😊</button>
-                <button type="button" class="mood-btn" data-mood="⚡" style="font-size: 1.5rem; background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px; padding: 6px 12px; cursor: pointer;">⚡</button>
-                <button type="button" class="mood-btn" data-mood="😌" style="font-size: 1.5rem; background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px; padding: 6px 12px; cursor: pointer;">😌</button>
-                <button type="button" class="mood-btn" data-mood="😴" style="font-size: 1.5rem; background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px; padding: 6px 12px; cursor: pointer;">😴</button>
-                <button type="button" class="mood-btn" data-mood="🌧️" style="font-size: 1.5rem; background: rgba(255,255,255,0.08); border: 2px solid transparent; border-radius: 12px; padding: 6px 12px; cursor: pointer;">🌧️</button>
-            </div>
-
-            <label for="logText">What's on your mind?</label>
-            <textarea id="logText" rows="4" placeholder="Write about your day, progress, thoughts..." style="width: 100%; border-radius: 12px; padding: 12px; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.1); margin-top: 6px; margin-bottom: 14px; font-family: inherit; font-size: 0.95rem; resize: vertical; box-sizing: border-box;"></textarea>
-
-            <button class="add-button" id="saveLogButton">Save Entry</button>
-            <button type="button" id="cancelLogButton" style="width: 100%; background: none; border: none; color: #94a3b8; padding: 10px; margin-top: 8px; cursor: pointer;">Cancel</button>
-        </div>
-
-        <!-- LOGS LIST CONTAINER -->
-        <div id="logsList" style="margin-top:20px;">
-            <div style="text-align:center; color:#94a3b8; padding:30px;">
-                Loading logs...
-            </div>
-        </div>
-
-    </section>
-
-    <!-- TASKS PAGE -->
-    <section class="card" id="tasksPage" style="display:none;">
-
-        <header class="header">
-            <div>
-                <div class="greeting">Personal</div>
-                <h1>✅ Tasks</h1>
-                <p>Get things done</p>
-            </div>
-            <div class="avatar">✅</div>
-        </header>
-
-        <button class="search-bar" id="tasksBackButton">
-            <span>←</span>
-            <span class="search-text">Back to Kuya B</span>
-        </button>
-
-        <button class="add-button" id="addTaskButton" style="margin-top: 14px;">
-            <span>＋</span>
-            New Task
-        </button>
-
-        <!-- ADD / EDIT TASK FORM -->
-        <div id="taskForm" style="display:none; margin-top:16px; background:#1e293b; border-radius:18px; padding:20px;">
-            <h2 id="taskFormHeading">Add Task</h2>
-
-            <label for="taskTitle">Task Name</label>
-            <input id="taskTitle" type="text" placeholder="Example: Pay electric bill" autocomplete="off">
-
-            <label for="taskDueDate">Due Date (Optional)</label>
-            <input id="taskDueDate" type="date">
-
-            <label for="taskPriority" style="display:block; margin-top:10px;">Priority</label>
-            <select id="taskPriority" style="width:100%; border-radius:12px; padding:12px; background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.1); margin-top:6px; margin-bottom:14px; font-family:inherit; font-size:0.95rem; box-sizing:border-box;">
-                <option value="normal">Normal</option>
-                <option value="high">🔥 High</option>
-                <option value="low">🌱 Low</option>
-            </select>
-
-            <button class="add-button" id="saveTaskButton">Save Task</button>
-            <button type="button" id="cancelTaskButton" style="width: 100%; background: none; border: none; color: #94a3b8; padding: 10px; margin-top: 8px; cursor: pointer;">Cancel</button>
-        </div>
-
-        <!-- TASKS LIST CONTAINER -->
-        <div id="tasksList" style="margin-top:20px;">
-            <div style="text-align:center; color:#94a3b8; padding:30px;">
-                Loading tasks...
-            </div>
-        </div>
-
-    </section>
-
-    <!-- REMINDERS PAGE -->
-    <section class="card" id="remindersPage" style="display:none;">
-
-        <header class="header">
-            <div>
-                <div class="greeting">Personal</div>
-                <h1>⏰ Reminders</h1>
-                <p>Never forget important things</p>
-            </div>
-            <div class="avatar">⏰</div>
-        </header>
-
-        <button class="search-bar" id="remindersBackButton">
-            <span>←</span>
-            <span class="search-text">Back to Kuya B</span>
-        </button>
-
-        <button class="add-button" id="addReminderButton" style="margin-top: 14px;">
-            <span>＋</span>
-            New Reminder
-        </button>
-
-        <!-- ADD / EDIT REMINDER FORM -->
-        <div id="reminderForm" style="display:none; margin-top:16px; background:#1e293b; border-radius:18px; padding:20px;">
-            <h2 id="reminderFormHeading">Add Reminder</h2>
-
-            <label for="reminderTitle">Reminder</label>
-            <input id="reminderTitle" type="text" placeholder="Example: Take medicine / Meeting" autocomplete="off">
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                <div>
-                    <label for="reminderDate">Date</label>
-                    <input id="reminderDate" type="date">
+                <div class="feature-card" data-feature="tasks">
+                    <div class="card-header">
+                        <span class="card-icon">✅</span>
+                        <span class="card-title">Tasks</span>
+                    </div>
+                    <span class="card-desc">Get things done</span>
                 </div>
-                <div>
-                    <label for="reminderTime">Time</label>
-                    <input id="reminderTime" type="time">
+
+                <div class="feature-card" data-feature="reminders">
+                    <div class="card-header">
+                        <span class="card-icon">⏰</span>
+                        <span class="card-title">Reminders</span>
+                    </div>
+                    <span class="card-desc">Don't forget</span>
+                </div>
+
+                <div class="feature-card" data-feature="birthdays">
+                    <div class="card-header">
+                        <span class="card-icon">🎂</span>
+                        <span class="card-title">Birthdays</span>
+                    </div>
+                    <span class="card-desc">Important dates</span>
                 </div>
             </div>
 
-            <label for="reminderRepeat" style="display:block; margin-top:10px;">Repeat</label>
-            <select id="reminderRepeat" style="width:100%; border-radius:12px; padding:12px; background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.1); margin-top:6px; margin-bottom:14px; font-family:inherit; font-size:0.95rem; box-sizing:border-box;">
-                <option value="none">Once (No repeat)</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-            </select>
+            <div class="section-title">Media & Content</div>
+            <div class="grid-2">
+                <div class="feature-card" data-feature="videos">
+                    <div class="card-header">
+                        <span class="card-icon">🎥</span>
+                        <span class="card-title">Videos</span>
+                    </div>
+                    <span class="card-desc">Your video vault</span>
+                </div>
 
-            <button class="add-button" id="saveReminderButton">Save Reminder</button>
-            <button type="button" id="cancelReminderButton" style="width: 100%; background: none; border: none; color: #94a3b8; padding: 10px; margin-top: 8px; cursor: pointer;">Cancel</button>
-        </div>
+                <div class="feature-card" data-feature="pictures">
+                    <div class="card-header">
+                        <span class="card-icon">🖼️</span>
+                        <span class="card-title">Pictures</span>
+                    </div>
+                    <span class="card-desc">Your photo vault</span>
+                </div>
 
-        <!-- REMINDERS LIST CONTAINER -->
-        <div id="remindersList" style="margin-top:20px;">
-            <div style="text-align:center; color:#94a3b8; padding:30px;">
-                Loading reminders...
-            </div>
-        </div>
+                <div class="feature-card" data-feature="other">
+                    <div class="card-header">
+                        <span class="card-icon">📁</span>
+                        <span class="card-title">Other</span>
+                    </div>
+                    <span class="card-desc">Everything else</span>
+                </div>
 
-    </section>
-
-
-    <!-- CONTENT VAULT PAGE -->
-    <section class="card" id="vaultPage" style="display:none;">
-
-        <header class="header">
-            <div>
-                <div class="greeting">Content Vault</div>
-                <h1 id="vaultHeaderTitle">📚 Vault</h1>
-                <p id="vaultHeaderSubtitle">Organized Telegram media</p>
-            </div>
-            <div class="avatar" id="vaultHeaderIcon">📚</div>
-        </header>
-
-        <button class="search-bar" id="vaultBackButton">
-            <span>←</span>
-            <span class="search-text">Back to Kuya B</span>
-        </button>
-
-        <!-- FOLDER FILTER BAR -->
-        <div id="vaultFoldersBar" style="display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 6px 0; scrollbar-width: none;">
-            <!-- Rendered dynamically: 'All', 'Travel', 'Work', etc. -->
-        </div>
-
-        <button class="add-button" id="addVaultItemButton" style="margin-top: 10px;">
-            <span>＋</span>
-            Add to Vault
-        </button>
-
-        <!-- ADD / EDIT VAULT ITEM FORM -->
-        <div id="vaultForm" style="display:none; margin-top:16px;">
-            <h2 id="vaultFormHeading">Save Content</h2>
-
-            <label for="vaultItemTitle">Title / Description</label>
-            <input id="vaultItemTitle" type="text" placeholder="Example: Japan Trip 2025" autocomplete="off">
-
-            <label for="vaultFolderSelect">Folder / Category</label>
-            <select id="vaultFolderSelect">
-                <!-- Dynamically populated -->
-            </select>
-
-            <div id="newFolderContainer" style="display: none; margin-top: 8px;">
-                <label for="vaultNewFolderInput">New Folder Name</label>
-                <input id="vaultNewFolderInput" type="text" placeholder="e.g. Vacation, Receipts, Tutorials" autocomplete="off">
+                <div class="feature-card" data-feature="search">
+                    <div class="card-header">
+                        <span class="card-icon">🔍</span>
+                        <span class="card-title">Search</span>
+                    </div>
+                    <span class="card-desc">Find anything</span>
+                </div>
             </div>
 
-            <label for="vaultItemUrl">Channel Post Link or Message ID</label>
-            <input id="vaultItemUrl" type="text" placeholder="e.g. https://t.me/c/.../42 or 42" autocomplete="off">
-
-            <button class="add-button" id="saveVaultItemButton">Save Item</button>
-            <button type="button" id="cancelVaultItemButton">Cancel</button>
-        </div>
-
-        <!-- VAULT ITEMS LIST CONTAINER -->
-        <div id="vaultList" style="margin-top:16px;">
-            <div style="text-align:center; color:#94a3b8; padding:30px;">
-                Loading vault...
+            <div class="feature-card-full" id="gameButton">
+                <div class="card-left">
+                    <span class="card-icon">🎮</span>
+                    <div>
+                        <div class="card-title">Word Scramble</div>
+                        <div class="card-desc">Take a quick break</div>
+                    </div>
+                </div>
+                <div class="card-arrow">›</div>
             </div>
+
+            <button class="btn-soft cancel" id="addContentButton" style="width: 100%; margin-top: 12px; padding: 12px; border-radius: 12px;">+ Add Content</button>
+
+            <footer class="dashboard-footer">
+                🤖 Kuya B Personal Hub
+            </footer>
         </div>
 
-    </section>
+        <!-- =========================================================
+             BIRTHDAYS PAGE
+             ========================================================= -->
+        <div id="birthdaysPage" style="display: none;">
+            <div class="top-bar">
+                <button class="btn-icon-back" id="birthdayBackButton">←</button>
+                <h2>🎂 Birthdays</h2>
+                <button class="btn-icon-add" id="addBirthdayButton">+</button>
+            </div>
 
+            <div class="form-box" id="birthdayForm" style="display: none;">
+                <input type="text" class="underline-input" id="birthdayName" placeholder="Name">
+                <input type="text" class="underline-input" id="birthdayDate" placeholder="Date (MM-DD)" maxlength="5">
+                <div class="form-actions">
+                    <button class="btn-soft cancel" id="cancelBirthdayButton">Cancel</button>
+                    <button class="btn-soft save" id="saveBirthdayButton">Save</button>
+                </div>
+            </div>
 
-</main>
+            <div id="birthdaysList"></div>
+        </div>
 
-<script type="module" src="/app/app.js?v=20"></script>
+        <!-- =========================================================
+             DAILY LOGS PAGE
+             ========================================================= -->
+        <div id="dailyLogsPage" style="display: none;">
+            <div class="top-bar">
+                <button class="btn-icon-back" id="dailyLogsBackButton">←</button>
+                <h2>📅 Daily Logs</h2>
+                <button class="btn-icon-add" id="addLogButton">+</button>
+            </div>
 
+            <div class="form-box" id="logForm" style="display: none;">
+                <input type="text" class="underline-input" id="logTitle" placeholder="Title or Summary">
+                <textarea class="underline-input" id="logContent" placeholder="Write your note..." rows="3" style="resize: none;"></textarea>
+                <div class="form-actions">
+                    <button class="btn-soft cancel" id="cancelLogButton">Cancel</button>
+                    <button class="btn-soft save" id="saveLogButton">Save</button>
+                </div>
+            </div>
+
+            <div id="dailyLogsList"></div>
+        </div>
+
+        <!-- =========================================================
+             TASKS PAGE
+             ========================================================= -->
+        <div id="tasksPage" style="display: none;">
+            <div class="top-bar">
+                <button class="btn-icon-back" id="tasksBackButton">←</button>
+                <h2>✅ Tasks</h2>
+                <button class="btn-icon-add" id="addTaskButton">+</button>
+            </div>
+
+            <div class="form-box" id="taskForm" style="display: none;">
+                <input type="text" class="underline-input" id="taskTitle" placeholder="Task description...">
+                <div class="form-actions">
+                    <button class="btn-soft cancel" id="cancelTaskButton">Cancel</button>
+                    <button class="btn-soft save" id="saveTaskButton">Save</button>
+                </div>
+            </div>
+
+            <div id="tasksList"></div>
+        </div>
+
+        <!-- =========================================================
+             REMINDERS PAGE
+             ========================================================= -->
+        <div id="remindersPage" style="display: none;">
+            <div class="top-bar">
+                <button class="btn-icon-back" id="remindersBackButton">←</button>
+                <h2>⏰ Reminders</h2>
+                <button class="btn-icon-add" id="addReminderButton">+</button>
+            </div>
+
+            <div class="form-box" id="reminderForm" style="display: none;">
+                <input type="text" class="underline-input" id="reminderTitle" placeholder="Reminder text...">
+                <div class="form-actions">
+                    <button class="btn-soft cancel" id="cancelReminderButton">Cancel</button>
+                    <button class="btn-soft save" id="saveReminderButton">Save</button>
+                </div>
+            </div>
+
+            <div id="remindersList"></div>
+        </div>
+
+        <!-- =========================================================
+             VAULT PAGE
+             ========================================================= -->
+        <div id="vaultPage" style="display: none;">
+            <div class="top-bar">
+                <button class="btn-icon-back" id="vaultBackButton">←</button>
+                <h2 id="vaultPageTitle">📁 Vault</h2>
+                <button class="btn-icon-add" id="addVaultItemButton">+</button>
+            </div>
+
+            <div id="vaultFolderBar" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px;"></div>
+
+            <div class="form-box" id="vaultItemForm" style="display: none;">
+                <input type="text" class="underline-input" id="vaultItemTitle" placeholder="Item caption or description">
+                <input type="text" class="underline-input" id="vaultItemFolder" placeholder="Folder (e.g. Work, Memes, Trips)">
+                <input type="text" class="underline-input" id="vaultItemMsgId" placeholder="Telegram Message ID in Vault Channel">
+                <div class="form-actions">
+                    <button class="btn-soft cancel" id="cancelVaultItemButton">Cancel</button>
+                    <button class="btn-soft save" id="saveVaultItemButton">Save</button>
+                </div>
+            </div>
+
+            <div id="vaultItemsList"></div>
+        </div>
+    </div>
+
+    <script type="module" src="/app/app.js?v=999"></script>
 </body>
 </html>
