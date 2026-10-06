@@ -1,0 +1,11 @@
+/* =========================================================
+   FEATURE: VAULT (ISOLATED CSS)
+   ========================================================= */
+
+#vaultFolderBar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
