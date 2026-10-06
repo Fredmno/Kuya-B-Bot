@@ -107,8 +107,44 @@ function initApp() {
     loadTasks();
     loadReminders();
     loadVault();
-    showDashboard();
 
+    // 1. Clean up the launcher prompt message in Telegram
+    const urlParams = new URLSearchParams(window.location.search);
+    const msgId = urlParams.get("msg_id");
+    const chatId = urlParams.get("chat_id");
+
+    if (msgId && chatId) {
+        fetch("/api/cleanup-message", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chatId, message_id: msgId })
+        }).catch(() => {});
+    }
+
+    // 2. Check for deep link or default to Dashboard
+    const startSection = urlParams.get("start");
+
+    if (startSection === "birthdays") {
+        showPage("birthdaysPage", displayBirthdays);
+    } else if (startSection === "daily") {
+        showPage("dailyLogsPage", displayDailyLogs);
+    } else if (startSection === "tasks") {
+        showPage("tasksPage", displayTasks);
+    } else if (startSection === "reminders") {
+        showPage("remindersPage", displayReminders);
+    } else if (["videos", "pictures", "other"].includes(startSection)) {
+        setVaultType(startSection);
+        showPage("vaultPage", () => {
+            displayFolderBar();
+            displayVaultItems();
+        });
+    } else {
+        showDashboard();
+    }
+
+    // ---------------------------------------------------------
+    // GLOBAL CLICK LISTENERS
+    // ---------------------------------------------------------
     document.addEventListener("click", function (e) {
         // --- Navigation: Personal ---
         if (e.target.closest('[data-feature="birthdays"]')) {
