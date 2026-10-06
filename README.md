@@ -3,7 +3,6 @@
 
 Kuya B is a personal Telegram-based assistant and Mini App dashboard hosted on Render. It bridges structured local/PostgreSQL data with an unlimited content vault powered by a private Telegram channel.
 
-
 ## 🏗️ Architecture Overview
 
 ```text
@@ -25,8 +24,11 @@ Kuya B is a personal Telegram-based assistant and Mini App dashboard hosted on R
        ▼                         ▼
   PostgreSQL              Telegram Channel
  (Structured Data)        (Media Vault: Videos/Photos)
+```
 
-📁 Repository Structure
+## 📁 Repository Structure
+
+```text
 Kuya-B-Bot/
 ├── bot.py                  # Main backend server (Starlette + Bot Webhook)
 ├── database.py             # PostgreSQL connection & migrations
@@ -48,13 +50,18 @@ Kuya-B-Bot/
         ├── tasks.js        # Personal task manager (done/undone toggles)
         ├── reminders.js    # Time-sensitive reminder tracker
         └── vault.js        # Channel media indexer with folder categorization
+```
 
-🚀 Active Features
+## 🚀 Active Features
+
+```text
 👤 Personal Hub
  * 🎂 Birthdays: MM-DD date validation, leap-year support, upcoming countdowns, and automated 7-day highlight badges.
  * 📅 Daily Logs: Journal with mood tracking (😊, ⚡, 😌, 😴, 🌧️) and reverse-chronological timeline.
  * ✅ Tasks: Checklist manager with high/normal/low priority tags and one-tap completion toggles.
  * ⏰ Reminders: Schedule tracking with date, time, and recurrence options (None / Daily / Weekly).
+```
+
 📚 Media & Content Vault
  * 🎥 Videos & 🖼️ Pictures: Browse channel-hosted media filtered by dynamic Folder Pills (e.g., Travel, Family, Receipts).
  * 📥 Send to Bot Chat: Relays channel media directly to your private chat using Telegram's native copy_message without third-party hosting.
