@@ -121,6 +121,33 @@ async def api_cleanup_message(request: Request):
         return JSONResponse({"success": False, "error": str(e)}, status_code=200)
 
 
+async def api_send_birthday_greeting(request: Request):
+    try:
+        data = await request.json()
+        chat_id = data.get("chat_id")
+        name = data.get("name", "Someone special")
+
+        if not chat_id:
+            return JSONResponse({"error": "No chat_id provided"}, status_code=400)
+
+        greeting_text = (
+            f"🎉🎂 **Happy Birthday, {name}!** 🎂🎉\n\n"
+            "Wishing you good health, happiness, and more blessings ahead! "
+            "Let's celebrate! 🥳✨\n\n"
+            "— *Kuya B Hub*"
+        )
+
+        await application.bot.send_message(
+            chat_id=int(chat_id),
+            text=greeting_text,
+            parse_mode="Markdown"
+        )
+        return JSONResponse({"success": True})
+    except Exception as e:
+        logging.error(f"Error sending birthday greeting: {e}", exc_info=True)
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @asynccontextmanager
 async def lifespan(app):
     init_db()
@@ -173,6 +200,7 @@ starlette_app = Starlette(
         Route("/api/birthdays", api_add_birthday, methods=["POST"]),
         Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
         Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
+        Route("/api/birthdays/greet", api_send_birthday_greeting, methods=["POST"]),
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
         Mount("/app", StaticFiles(directory="webapp", html=True), name="app"),
