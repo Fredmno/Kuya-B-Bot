@@ -1,19 +1,21 @@
 /* =========================================================
-   KUYA B — ORIGINAL CLEAN MINIMAL DARK THEME
+   KUYA B — NEON WIREFRAME DARK THEME
    ========================================================= */
 
 :root {
-    --bg-color: #000000;
-    --surface-card: #1c1c1e;
-    --surface-card-hover: #2c2c2e;
-    --surface-input: #121214;
-    --primary-color: #22c55e;
-    --primary-dim: rgba(34, 197, 94, 0.16);
-    --border-color: rgba(255, 255, 255, 0.06);
-    --text-main: #ffffff;
-    --text-muted: #8e8e93;
-    --text-sub: #636366;
-    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --bg-color: #080a08;
+    --surface-card: #111512;
+    --surface-card-hover: #182019;
+    --surface-input: #0d110e;
+    --neon-green: #22c55e;
+    --neon-wireframe: rgba(34, 197, 94, 0.45);
+    --neon-wireframe-subtle: rgba(34, 197, 94, 0.25);
+    --neon-glow: rgba(34, 197, 94, 0.3);
+    --neon-dim: rgba(34, 197, 94, 0.12);
+    --text-primary: #ffffff;
+    --text-muted: #9ca3af;
+    --text-sub: #4ade80;
+    --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 * {
@@ -25,8 +27,8 @@
 
 body {
     background-color: var(--bg-color);
-    color: var(--text-main);
-    font-family: var(--font-family);
+    color: var(--text-primary);
+    font-family: var(--font-stack);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -34,7 +36,7 @@ body {
 
 #app {
     width: 100%;
-    max-width: 480px;
+    max-width: 460px;
     margin: 0 auto;
     padding: 24px 16px 40px 16px;
     display: flex;
@@ -50,23 +52,23 @@ body {
 }
 
 .dashboard-header .greeting {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    font-weight: 500;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--neon-green);
+    letter-spacing: 1px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .dashboard-header h1 {
-    font-size: 2rem;
+    font-size: 1.9rem;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-primary);
     letter-spacing: -0.5px;
 }
 
 .dashboard-header .subtext {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--text-muted);
     margin-top: 2px;
 }
@@ -76,26 +78,28 @@ body {
    --------------------------------------------------------- */
 .search-container {
     position: relative;
-    margin-bottom: 24px;
+    margin-bottom: 22px;
 }
 
 .search-input {
     width: 100%;
     background: var(--surface-card);
-    border: none;
+    border: 1px solid var(--neon-wireframe-subtle);
     border-radius: 12px;
-    padding: 13px 16px 13px 42px;
-    color: var(--text-main);
-    font-size: 0.92rem;
+    padding: 12px 16px 12px 42px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
     outline: none;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
 }
 
 .search-input::placeholder {
-    color: var(--text-sub);
+    color: var(--text-muted);
 }
 
 .search-input:focus {
+    border-color: var(--neon-green);
+    box-shadow: 0 0 12px var(--neon-glow);
     background: var(--surface-card-hover);
 }
 
@@ -105,19 +109,33 @@ body {
     top: 50%;
     transform: translateY(-50%);
     font-size: 0.95rem;
-    opacity: 0.5;
+    color: var(--neon-green);
+    opacity: 0.8;
 }
 
 /* ---------------------------------------------------------
-   SECTION HEADINGS & GRID CARDS
+   SECTION TITLES
    --------------------------------------------------------- */
 .section-title {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
-    color: #ffffff;
-    margin: 22px 0 12px 2px;
+    color: var(--text-primary);
+    margin: 18px 0 10px 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
+.section-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--neon-wireframe), transparent);
+}
+
+/* ---------------------------------------------------------
+   GRID & NEON WIREFRAME CARDS
+   --------------------------------------------------------- */
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -127,8 +145,8 @@ body {
 
 .feature-card {
     background: var(--surface-card);
-    border: none;
-    border-radius: 14px;
+    border: 1px solid var(--neon-wireframe);
+    border-radius: 16px;
     padding: 14px 14px;
     display: flex;
     flex-direction: column;
@@ -136,12 +154,15 @@ body {
     gap: 4px;
     cursor: pointer;
     text-align: left;
-    transition: transform 0.12s, background 0.15s;
+    transition: all 0.15s ease;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.08);
 }
 
 .feature-card:active {
     transform: scale(0.97);
     background: var(--surface-card-hover);
+    border-color: var(--neon-green);
+    box-shadow: 0 0 16px var(--neon-glow);
 }
 
 .card-header {
@@ -151,37 +172,40 @@ body {
 }
 
 .card-icon {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
 }
 
 .card-title {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .card-desc {
     font-size: 0.78rem;
-    color: var(--text-muted);
+    color: var(--text-sub);
 }
 
-/* FULL-WIDTH CARD */
+/* FULL-WIDTH CARD (Word Scramble) */
 .feature-card-full {
     background: var(--surface-card);
-    border: none;
-    border-radius: 14px;
+    border: 1px solid var(--neon-wireframe);
+    border-radius: 16px;
     padding: 14px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
     margin-bottom: 12px;
-    transition: transform 0.12s;
+    transition: all 0.15s ease;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.08);
 }
 
 .feature-card-full:active {
     transform: scale(0.98);
     background: var(--surface-card-hover);
+    border-color: var(--neon-green);
+    box-shadow: 0 0 16px var(--neon-glow);
 }
 
 .card-left {
@@ -191,33 +215,55 @@ body {
 }
 
 .card-arrow {
-    color: var(--text-sub);
-    font-size: 1.2rem;
+    color: var(--neon-green);
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+/* Full Width Add Content Button */
+.full-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 14px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: var(--surface-card);
+    border: 1px solid var(--neon-wireframe);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.full-btn:active {
+    background: var(--surface-card-hover);
+    border-color: var(--neon-green);
+    box-shadow: 0 0 12px var(--neon-glow);
 }
 
 /* ---------------------------------------------------------
-   SUBPAGE TOP BAR & NAV
+   SUBPAGE HEADER & BUTTONS
    --------------------------------------------------------- */
 .top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 14px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--neon-wireframe);
 }
 
 .top-bar h2 {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--neon-green);
 }
 
 .btn-icon-back,
 .btn-icon-add {
     background: var(--surface-card);
-    border: none;
-    color: var(--text-main);
+    border: 1px solid var(--neon-wireframe);
+    color: var(--neon-green);
     font-size: 1.15rem;
     cursor: pointer;
     padding: 6px 12px;
@@ -225,11 +271,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.15s ease;
 }
 
 .btn-icon-back:active,
 .btn-icon-add:active {
-    background: var(--surface-card-hover);
+    background: var(--neon-green);
+    color: #000;
+    box-shadow: 0 0 12px var(--neon-glow);
 }
 
 /* ---------------------------------------------------------
@@ -237,26 +286,28 @@ body {
    --------------------------------------------------------- */
 .form-box {
     background: var(--surface-card);
-    border: none;
-    border-radius: 14px;
+    border: 1px solid var(--neon-wireframe);
+    border-radius: 16px;
     padding: 16px;
     margin-bottom: 20px;
+    box-shadow: 0 0 14px rgba(34, 197, 94, 0.1);
 }
 
 .underline-input {
     width: 100%;
     background: transparent;
     border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    color: #ffffff;
+    border-bottom: 1px solid var(--neon-wireframe-subtle);
+    color: var(--text-primary);
     padding: 10px 4px;
     font-size: 0.95rem;
     margin-bottom: 14px;
     outline: none;
+    transition: border-color 0.2s;
 }
 
 .underline-input:focus {
-    border-bottom-color: var(--primary-color);
+    border-bottom-color: var(--neon-green);
 }
 
 .form-actions {
@@ -270,7 +321,7 @@ body {
     border-radius: 18px;
     font-size: 0.85rem;
     font-weight: 600;
-    border: none;
+    border: 1px solid transparent;
     cursor: pointer;
 }
 
@@ -280,31 +331,24 @@ body {
 }
 
 .btn-soft.save {
-    background: var(--primary-dim);
-    color: var(--primary-color);
-}
-
-.full-btn {
-    width: 100%;
-    margin-top: 10px;
-    padding: 14px;
-    border-radius: 14px;
-    font-size: 0.9rem;
-    font-weight: 600;
+    background: var(--neon-dim);
+    color: var(--neon-green);
+    border-color: var(--neon-wireframe);
 }
 
 /* ---------------------------------------------------------
-   BIRTHDAY CARDS & GREET BUTTON
+   CARDS INSIDE PAGES (Birthdays, Tasks, Logs)
    --------------------------------------------------------- */
 .birthday-card {
     background: var(--surface-card);
-    border: none;
-    border-radius: 14px;
+    border: 1px solid var(--neon-wireframe);
+    border-radius: 16px;
     padding: 14px 16px;
     margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.08);
 }
 
 .birthday-info {
@@ -322,12 +366,12 @@ body {
 .birthday-name {
     font-weight: 600;
     font-size: 0.95rem;
-    color: #ffffff;
+    color: var(--text-primary);
 }
 
 .birthday-date {
     font-size: 0.82rem;
-    color: var(--text-muted);
+    color: var(--text-sub);
 }
 
 .bday-badge {
@@ -339,8 +383,9 @@ body {
 }
 
 .bday-badge.today {
-    background: var(--primary-dim);
-    color: var(--primary-color);
+    background: var(--neon-dim);
+    color: var(--neon-green);
+    border: 1px solid var(--neon-wireframe);
     font-weight: 700;
 }
 
@@ -351,14 +396,19 @@ body {
 }
 
 .btn-greet {
-    background: var(--primary-dim);
-    color: var(--primary-color);
-    border: none;
+    background: var(--neon-dim);
+    color: var(--neon-green);
+    border: 1px solid var(--neon-wireframe);
     padding: 6px 12px;
     border-radius: 12px;
     font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.btn-greet:active {
+    transform: scale(0.95);
 }
 
 .btn-delete {
@@ -366,15 +416,15 @@ body {
     border: none;
     cursor: pointer;
     font-size: 0.95rem;
-    opacity: 0.5;
+    opacity: 0.6;
 }
 
 /* ---------------------------------------------------------
-   LISTS & FOOTER
+   FOOTER & EMPTY STATES
    --------------------------------------------------------- */
 .empty-state {
     text-align: center;
-    color: var(--text-sub);
+    color: var(--text-muted);
     font-size: 0.85rem;
     padding: 36px 16px;
 }
@@ -384,7 +434,7 @@ body {
     padding-top: 24px;
     text-align: center;
     font-size: 0.8rem;
-    color: var(--text-sub);
+    color: var(--text-muted);
 }
 
 #vaultFolderBar {
@@ -400,11 +450,12 @@ body {
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    background: #1c1c1e;
-    color: #ffffff;
+    background: #111512;
+    color: var(--text-primary);
+    border: 1px solid var(--neon-green);
+    box-shadow: 0 0 16px var(--neon-glow);
     padding: 10px 18px;
     border-radius: 20px;
     font-size: 0.85rem;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
     z-index: 1000;
 }
