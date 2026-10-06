@@ -60,12 +60,26 @@ async def health_check(request: Request):
 
 
 @asynccontextmanager
+from telegram import BotCommand, BotCommandScopeDefault
+
+@asynccontextmanager
 async def lifespan(app):
     init_db()
     init_birthday_db()
 
     await application.initialize()
     await application.bot.set_webhook(WEBHOOK_URL)
+    
+    # Register /kuyab command
+    try:
+        commands = [
+            BotCommand("kuyab", "Open Kuya B Personal Hub"),
+            BotCommand("game", "Play Word Scramble"),
+        ]
+        await application.bot.set_my_commands(commands, scope=BotCommandScopeDefault())
+    except Exception as e:
+        logging.warning(f"Could not set commands: {e}")
+
     await application.start()
 
     yield
