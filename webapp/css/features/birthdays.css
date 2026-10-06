@@ -1,0 +1,93 @@
+/* =========================================================
+   FEATURE: BIRTHDAYS (ISOLATED CSS)
+   ========================================================= */
+
+.birthday-card {
+    background: var(--surface-card);
+    border-radius: 22px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--neu-flat);
+}
+
+.birthday-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.birthday-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.birthday-name {
+    font-weight: 700;
+    font-size: 0.96rem;
+    color: var(--text-primary);
+}
+
+.birthday-date {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.bday-badge {
+    font-size: 0.74rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: var(--surface-card);
+    color: var(--text-muted);
+    box-shadow: var(--neu-inset);
+    font-weight: 700;
+}
+
+.bday-badge.today {
+    background: var(--primary-blue-gradient);
+    color: #ffffff;
+    box-shadow: var(--blue-shadow);
+}
+
+.birthday-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-greet {
+    background: var(--primary-blue-gradient);
+    color: #ffffff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--blue-shadow);
+    transition: transform 0.1s ease;
+}
+
+.btn-greet:active {
+    transform: scale(0.95);
+}
+
+.btn-delete {
+    background: var(--surface-card);
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: var(--neu-flat-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-delete:active {
+    box-shadow: var(--neu-pressed);
+}
