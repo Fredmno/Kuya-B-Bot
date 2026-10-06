@@ -1,20 +1,26 @@
 /* =========================================================
-   KUYA B — NEON WIREFRAME DARK THEME
+   KUYA B — SOFT NEUMORPHIC WHITE & BLUE UI THEME
    ========================================================= */
 
 :root {
-    --bg-color: #080a08;
-    --surface-card: #111512;
-    --surface-card-hover: #182019;
-    --surface-input: #0d110e;
-    --neon-green: #22c55e;
-    --neon-wireframe: rgba(34, 197, 94, 0.45);
-    --neon-wireframe-subtle: rgba(34, 197, 94, 0.25);
-    --neon-glow: rgba(34, 197, 94, 0.3);
-    --neon-dim: rgba(34, 197, 94, 0.12);
-    --text-primary: #ffffff;
-    --text-muted: #9ca3af;
-    --text-sub: #4ade80;
+    --bg-color: #e6ecf4;
+    --surface-card: #e6ecf4;
+    --surface-hover: #e0e7f0;
+    
+    /* Neumorphic Dual Shadows */
+    --neu-flat: 8px 8px 16px #c4cdd8, -8px -8px 16px #ffffff;
+    --neu-flat-sm: 4px 4px 10px #c6cfda, -4px -4px 10px #ffffff;
+    --neu-pressed: inset 4px 4px 8px #c6cfda, inset -4px -4px 8px #ffffff;
+    --neu-inset: inset 3px 3px 6px #c4cdd8, inset -3px -3px 6px #ffffff;
+
+    /* Neumorphic Accent Blue */
+    --primary-blue: #2563eb;
+    --primary-blue-gradient: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    --blue-shadow: 4px 4px 12px rgba(37, 99, 235, 0.35), -2px -2px 8px rgba(255, 255, 255, 0.8);
+    
+    --text-primary: #1e293b;
+    --text-muted: #64748b;
+    --text-sub: #94a3b8;
     --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -48,20 +54,20 @@ body {
    HEADER
    --------------------------------------------------------- */
 .dashboard-header {
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 }
 
 .dashboard-header .greeting {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    color: var(--neon-green);
+    color: var(--primary-blue);
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-bottom: 4px;
 }
 
 .dashboard-header h1 {
-    font-size: 1.9rem;
+    font-size: 1.95rem;
     font-weight: 800;
     color: var(--text-primary);
     letter-spacing: -0.5px;
@@ -74,43 +80,38 @@ body {
 }
 
 /* ---------------------------------------------------------
-   SEARCH BAR
+   CARVED INSET SEARCH BAR
    --------------------------------------------------------- */
 .search-container {
     position: relative;
-    margin-bottom: 22px;
+    margin-bottom: 24px;
 }
 
 .search-input {
     width: 100%;
     background: var(--surface-card);
-    border: 1px solid var(--neon-wireframe-subtle);
-    border-radius: 12px;
-    padding: 12px 16px 12px 42px;
+    border: none;
+    border-radius: 20px;
+    padding: 14px 16px 14px 44px;
     color: var(--text-primary);
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     outline: none;
+    box-shadow: var(--neu-inset);
     transition: all 0.2s ease;
 }
 
 .search-input::placeholder {
-    color: var(--text-muted);
-}
-
-.search-input:focus {
-    border-color: var(--neon-green);
-    box-shadow: 0 0 12px var(--neon-glow);
-    background: var(--surface-card-hover);
+    color: var(--text-sub);
 }
 
 .search-icon {
     position: absolute;
-    left: 14px;
+    left: 16px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 0.95rem;
-    color: var(--neon-green);
-    opacity: 0.8;
+    color: var(--primary-blue);
+    opacity: 0.7;
 }
 
 /* ---------------------------------------------------------
@@ -120,49 +121,37 @@ body {
     font-size: 1.05rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin: 18px 0 10px 2px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.section-title::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, var(--neon-wireframe), transparent);
+    margin: 22px 0 12px 2px;
 }
 
 /* ---------------------------------------------------------
-   GRID & NEON WIREFRAME CARDS
+   NEUMORPHIC SOFT PILL CARDS
    --------------------------------------------------------- */
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 12px;
+    gap: 14px;
+    margin-bottom: 14px;
 }
 
 .feature-card {
     background: var(--surface-card);
-    border: 1px solid var(--neon-wireframe);
-    border-radius: 16px;
-    padding: 14px 14px;
+    border: none;
+    border-radius: 22px;
+    padding: 16px 14px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
+    gap: 5px;
     cursor: pointer;
     text-align: left;
+    box-shadow: var(--neu-flat);
     transition: all 0.15s ease;
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.08);
 }
 
 .feature-card:active {
-    transform: scale(0.97);
-    background: var(--surface-card-hover);
-    border-color: var(--neon-green);
-    box-shadow: 0 0 16px var(--neon-glow);
+    box-shadow: var(--neu-pressed);
+    transform: scale(0.98);
 }
 
 .card-header {
@@ -177,35 +166,33 @@ body {
 
 .card-title {
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
 }
 
 .card-desc {
     font-size: 0.78rem;
-    color: var(--text-sub);
+    color: var(--text-muted);
 }
 
-/* FULL-WIDTH CARD (Word Scramble) */
+/* FULL-WIDTH CARD */
 .feature-card-full {
     background: var(--surface-card);
-    border: 1px solid var(--neon-wireframe);
-    border-radius: 16px;
-    padding: 14px 16px;
+    border: none;
+    border-radius: 22px;
+    padding: 16px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    box-shadow: var(--neu-flat);
     transition: all 0.15s ease;
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.08);
 }
 
 .feature-card-full:active {
+    box-shadow: var(--neu-pressed);
     transform: scale(0.98);
-    background: var(--surface-card-hover);
-    border-color: var(--neon-green);
-    box-shadow: 0 0 16px var(--neon-glow);
 }
 
 .card-left {
@@ -215,59 +202,58 @@ body {
 }
 
 .card-arrow {
-    color: var(--neon-green);
+    color: var(--primary-blue);
     font-size: 1.3rem;
     font-weight: bold;
 }
 
-/* Full Width Add Content Button */
+/* Add Content Full Button */
 .full-btn {
     width: 100%;
-    margin-top: 8px;
-    padding: 14px;
-    border-radius: 14px;
-    font-size: 0.9rem;
-    font-weight: 600;
+    margin-top: 10px;
+    padding: 15px;
+    border-radius: 20px;
+    font-size: 0.92rem;
+    font-weight: 700;
     background: var(--surface-card);
-    border: 1px solid var(--neon-wireframe);
-    color: var(--text-primary);
+    border: none;
+    color: var(--primary-blue);
+    box-shadow: var(--neu-flat);
     cursor: pointer;
     transition: all 0.15s ease;
 }
 
 .full-btn:active {
-    background: var(--surface-card-hover);
-    border-color: var(--neon-green);
-    box-shadow: 0 0 12px var(--neon-glow);
+    box-shadow: var(--neu-pressed);
 }
 
 /* ---------------------------------------------------------
-   SUBPAGE HEADER & BUTTONS
+   SUBPAGE TOP BAR & NAV
    --------------------------------------------------------- */
 .top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 12px;
-    margin-bottom: 18px;
-    border-bottom: 1px solid var(--neon-wireframe);
+    padding-bottom: 14px;
+    margin-bottom: 22px;
 }
 
 .top-bar h2 {
     font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--neon-green);
+    font-weight: 800;
+    color: var(--text-primary);
 }
 
 .btn-icon-back,
 .btn-icon-add {
     background: var(--surface-card);
-    border: 1px solid var(--neon-wireframe);
-    color: var(--neon-green);
+    border: none;
+    color: var(--primary-blue);
     font-size: 1.15rem;
     cursor: pointer;
-    padding: 6px 12px;
-    border-radius: 10px;
+    padding: 10px 16px;
+    border-radius: 16px;
+    box-shadow: var(--neu-flat-sm);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -276,79 +262,87 @@ body {
 
 .btn-icon-back:active,
 .btn-icon-add:active {
-    background: var(--neon-green);
-    color: #000;
-    box-shadow: 0 0 12px var(--neon-glow);
+    box-shadow: var(--neu-pressed);
 }
 
 /* ---------------------------------------------------------
-   FORMS & INPUTS
+   FORMS & INSET INPUTS
    --------------------------------------------------------- */
 .form-box {
     background: var(--surface-card);
-    border: 1px solid var(--neon-wireframe);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 20px;
-    box-shadow: 0 0 14px rgba(34, 197, 94, 0.1);
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: var(--neu-flat);
 }
 
 .underline-input {
     width: 100%;
-    background: transparent;
+    background: var(--surface-card);
     border: none;
-    border-bottom: 1px solid var(--neon-wireframe-subtle);
+    border-radius: 16px;
     color: var(--text-primary);
-    padding: 10px 4px;
+    padding: 13px 14px;
     font-size: 0.95rem;
     margin-bottom: 14px;
     outline: none;
-    transition: border-color 0.2s;
+    box-shadow: var(--neu-inset);
+    transition: all 0.2s ease;
 }
 
 .underline-input:focus {
-    border-bottom-color: var(--neon-green);
+    box-shadow: inset 4px 4px 8px #bec8d5, inset -4px -4px 8px #ffffff;
 }
 
 .form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 12px;
+    margin-top: 6px;
 }
 
 .btn-soft {
-    padding: 8px 18px;
+    padding: 10px 20px;
     border-radius: 18px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    border: 1px solid transparent;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: none;
     cursor: pointer;
+    transition: all 0.15s ease;
 }
 
 .btn-soft.cancel {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--surface-card);
     color: var(--text-muted);
+    box-shadow: var(--neu-flat-sm);
+}
+
+.btn-soft.cancel:active {
+    box-shadow: var(--neu-pressed);
 }
 
 .btn-soft.save {
-    background: var(--neon-dim);
-    color: var(--neon-green);
-    border-color: var(--neon-wireframe);
+    background: var(--primary-blue-gradient);
+    color: #ffffff;
+    box-shadow: var(--blue-shadow);
+}
+
+.btn-soft.save:active {
+    transform: scale(0.96);
 }
 
 /* ---------------------------------------------------------
-   CARDS INSIDE PAGES (Birthdays, Tasks, Logs)
+   ITEM CARDS (Birthdays, Tasks, Logs, Vault)
    --------------------------------------------------------- */
 .birthday-card {
     background: var(--surface-card);
-    border: 1px solid var(--neon-wireframe);
-    border-radius: 16px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
+    border-radius: 22px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.08);
+    box-shadow: var(--neu-flat);
 }
 
 .birthday-info {
@@ -364,47 +358,50 @@ body {
 }
 
 .birthday-name {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.95rem;
     color: var(--text-primary);
 }
 
 .birthday-date {
     font-size: 0.82rem;
-    color: var(--text-sub);
+    color: var(--text-muted);
 }
 
 .bday-badge {
     font-size: 0.72rem;
-    padding: 2px 8px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.08);
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: var(--surface-card);
     color: var(--text-muted);
+    box-shadow: var(--neu-inset);
+    font-weight: 600;
 }
 
 .bday-badge.today {
-    background: var(--neon-dim);
-    color: var(--neon-green);
-    border: 1px solid var(--neon-wireframe);
+    background: var(--primary-blue-gradient);
+    color: #ffffff;
+    box-shadow: var(--blue-shadow);
     font-weight: 700;
 }
 
 .birthday-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .btn-greet {
-    background: var(--neon-dim);
-    color: var(--neon-green);
-    border: 1px solid var(--neon-wireframe);
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 0.78rem;
-    font-weight: 600;
+    background: var(--primary-blue-gradient);
+    color: #ffffff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: transform 0.1s;
+    box-shadow: var(--blue-shadow);
+    transition: transform 0.1s ease;
 }
 
 .btn-greet:active {
@@ -412,11 +409,20 @@ body {
 }
 
 .btn-delete {
-    background: transparent;
+    background: var(--surface-card);
     border: none;
     cursor: pointer;
     font-size: 0.95rem;
-    opacity: 0.6;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: var(--neu-flat-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-delete:active {
+    box-shadow: var(--neu-pressed);
 }
 
 /* ---------------------------------------------------------
@@ -425,16 +431,16 @@ body {
 .empty-state {
     text-align: center;
     color: var(--text-muted);
-    font-size: 0.85rem;
-    padding: 36px 16px;
+    font-size: 0.88rem;
+    padding: 40px 16px;
 }
 
 .dashboard-footer {
     margin-top: auto;
-    padding-top: 24px;
+    padding-top: 26px;
     text-align: center;
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: var(--text-sub);
 }
 
 #vaultFolderBar {
@@ -450,12 +456,12 @@ body {
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
-    background: #111512;
+    background: var(--surface-card);
     color: var(--text-primary);
-    border: 1px solid var(--neon-green);
-    box-shadow: 0 0 16px var(--neon-glow);
-    padding: 10px 18px;
-    border-radius: 20px;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 24px;
     font-size: 0.85rem;
+    box-shadow: var(--neu-flat);
     z-index: 1000;
 }
