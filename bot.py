@@ -1,12 +1,11 @@
 import os
-import time
 import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import PlainTextResponse, JSONResponse, HTMLResponse
+from starlette.responses import PlainTextResponse, JSONResponse
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 
@@ -65,25 +64,6 @@ async def health_check(request: Request):
     return PlainTextResponse("Kuya B Bot is running.")
 
 
-async def serve_index(request: Request):
-    index_path = os.path.join("webapp", "index.html")
-    if not os.path.exists(index_path):
-        return PlainTextResponse("index.html not found", status_code=404)
-
-    with open(index_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    # Injects live unix timestamp for auto cache-busting
-    rendered = content.replace("{{ v }}", str(int(time.time())))
-
-    headers = {
-        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-        "Pragma": "no-cache",
-        "Expires": "0",
-    }
-    return HTMLResponse(rendered, headers=headers)
-
-
 async def api_forward_vault_item(request: Request):
     try:
         data = await request.json()
@@ -132,15 +112,14 @@ async def api_send_birthday_greeting(request: Request):
     try:
         data = await request.json()
         chat_id = data.get("chat_id")
-        name = data.get("name", "Someone special")
+        name = data.get("name", "Friend")
 
         if not chat_id:
             return JSONResponse({"error": "No chat_id provided"}, status_code=400)
 
         greeting_text = (
             f"🎉🎂 **Happy Birthday, {name}!** 🎂🎉\n\n"
-            "Wishing you good health, happiness, and more blessings ahead! "
-            "Let's celebrate! 🥳✨\n\n"
+            "Wishing you a fantastic day filled with joy and blessings! 🥳✨\n\n"
             "— *Kuya B Hub*"
         )
 
@@ -210,9 +189,7 @@ starlette_app = Starlette(
         Route("/api/birthdays/greet", api_send_birthday_greeting, methods=["POST"]),
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
-        Route("/app", serve_index, methods=["GET"]),
-        Route("/app/", serve_index, methods=["GET"]),
-        Mount("/app/static", StaticFiles(directory="webapp"), name="static"),
+        Mount("/app", StaticFiles(directory="webapp", html=True), name="app"),
     ],
     lifespan=lifespan,
 )
