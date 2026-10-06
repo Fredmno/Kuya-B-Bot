@@ -1,7 +1,4 @@
-Documenting this project right now is highly recommended.
-Kuya B has grown from a simple script into a multi-layered system involving Starlette/Python, python-telegram-bot, PostgreSQL, Telegram Mini App ES modules, and channel integrations. Having clean documentation now will save you countless hours when you return to debug, push updates, or scale into Universal Search.
-Here is a ready-to-use README.md tailored to your exact repository structure. You can paste this directly into your project root.
-Recommended README.md
+
 # 🤖 Kuya B — Personal Telegram Hub & Assistant
 
 Kuya B is a personal Telegram-based assistant and Mini App dashboard hosted on Render. It bridges structured local/PostgreSQL data with an unlimited content vault powered by a private Telegram channel.
