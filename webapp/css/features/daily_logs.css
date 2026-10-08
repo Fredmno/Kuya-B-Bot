@@ -1,0 +1,173 @@
+/* =========================================================
+   FEATURE: DAILY LOGS (EMOJI PILLS, CARDS & DETAIL MODAL)
+   ========================================================= */
+
+/* Emotion Selector */
+.mood-selector-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mood-selector {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 6px 4px 14px 4px;
+    margin-bottom: 12px;
+}
+
+.mood-pill {
+    background: var(--surface-card);
+    border: none;
+    border-radius: 16px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    box-shadow: var(--neu-flat-sm);
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.mood-pill:active {
+    box-shadow: var(--neu-pressed);
+    transform: scale(0.96);
+}
+
+.mood-pill.selected {
+    box-shadow: var(--neu-pressed);
+    background: var(--surface-hover);
+}
+
+.mood-pill.selected .mood-label {
+    color: var(--primary-blue);
+    font-weight: 800;
+}
+
+.mood-emoji {
+    font-size: 1.4rem;
+}
+
+.mood-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* Compact Saved Row Card: Date + Emoji + Trash */
+.daily-log-card {
+    background: var(--surface-card);
+    border-radius: 20px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--neu-flat);
+    transition: all 0.15s ease;
+}
+
+.log-clickable-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-grow: 1;
+    cursor: pointer;
+}
+
+.log-clickable-area:active {
+    opacity: 0.7;
+}
+
+.log-emoji-badge {
+    font-size: 1.5rem;
+    background: var(--surface-card);
+    box-shadow: var(--neu-inset);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+}
+
+.log-date-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.log-date {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.log-time {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* Detail Modal View */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 2000;
+}
+
+.modal-card {
+    background: var(--surface-card);
+    box-shadow: var(--neu-flat);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 380px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.modal-emoji {
+    font-size: 2.2rem;
+}
+
+.modal-date {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-body {
+    background: var(--surface-card);
+    box-shadow: var(--neu-inset);
+    border-radius: 16px;
+    padding: 14px 16px;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    max-height: 240px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
