@@ -216,7 +216,10 @@
                 if (feature === "birthdays") {
                     showPage("birthdaysPage", window.KuyaB.features.birthdays ? window.KuyaB.features.birthdays.render : null);
                 } else if (feature === "daily") {
-                    showPage("dailyLogsPage", window.KuyaB.features.dailyLogs ? window.KuyaB.features.dailyLogs.render : null);
+                    showPage("dailyLogsPage", function () {
+                        if (window.KuyaBDaily) window.KuyaBDaily.render();
+                        else if (window.KuyaB.features.dailyLogs) window.KuyaB.features.dailyLogs.render();
+                    });
                 } else if (feature === "tasks") {
                     showPage("tasksPage", displayTasks);
                 } else if (feature === "reminders") {
@@ -270,22 +273,11 @@
                 return;
             }
 
-            // 4. Daily Logs Module Delegation
+            // 4. Daily Logs Open Form Handler
             if (target.closest("#addLogButton")) {
                 e.preventDefault();
                 var lForm = document.getElementById("logForm");
                 if (lForm) lForm.style.display = "block";
-                return;
-            }
-            if (target.closest("#cancelLogButton")) {
-                e.preventDefault();
-                var lFormCancel = document.getElementById("logForm");
-                if (lFormCancel) lFormCancel.style.display = "none";
-                return;
-            }
-            if (target.closest("#saveLogButton")) {
-                e.preventDefault();
-                if (window.KuyaB.features.dailyLogs) window.KuyaB.features.dailyLogs.save();
                 return;
             }
 
@@ -461,12 +453,8 @@
     function init() {
         loadSharedData();
 
-        // Initialize modular feature engines if available
         if (window.KuyaB.features.birthdays) {
             window.KuyaB.features.birthdays.init();
-        }
-        if (window.KuyaB.features.dailyLogs) {
-            window.KuyaB.features.dailyLogs.init();
         }
 
         attachGlobalClicks();
@@ -487,7 +475,10 @@
         if (startSection === "birthdays") {
             showPage("birthdaysPage", window.KuyaB.features.birthdays ? window.KuyaB.features.birthdays.render : null);
         } else if (startSection === "daily") {
-            showPage("dailyLogsPage", window.KuyaB.features.dailyLogs ? window.KuyaB.features.dailyLogs.render : null);
+            showPage("dailyLogsPage", function () {
+                if (window.KuyaBDaily) window.KuyaBDaily.render();
+                else if (window.KuyaB.features.dailyLogs) window.KuyaB.features.dailyLogs.render();
+            });
         } else if (startSection === "tasks") {
             showPage("tasksPage", displayTasks);
         } else if (startSection === "reminders") {
