@@ -23,6 +23,7 @@ from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 
+# Clean modular Birthday imports
 from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
@@ -35,7 +36,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.6.1"
+APP_VERSION = "2.7.0"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -96,13 +97,10 @@ async def serve_index(request: Request):
 # ---------------------------------------------------------
 # PERSISTENT TELEGRAM CHANNEL REGISTRY (PINNED MESSAGE INDEX)
 # ---------------------------------------------------------
-# Telegram Bot API cannot fetch full historical chat message lists without a user client.
-# To make storage 100% permanent across any restart, the bot maintains a pinned 
-# master index in your Vault channel called #KUYA_B_REGISTRY.
 async def get_or_create_registry():
     channel_id = get_vault_chat_id()
     if not channel_id:
-        return {"logs": [], "birthdays": []}, None
+        return {"logs": [], "birthdays": [], "users": []}, None
 
     try:
         chat = await application.bot.get_chat(chat_id=channel_id)
@@ -113,7 +111,7 @@ async def get_or_create_registry():
     except Exception as e:
         logging.warning(f"Error fetching pinned registry: {e}")
 
-    return {"logs": [], "birthdays": []}, None
+    return {"logs": [], "birthdays": [], "users": []}, None
 
 
 async def save_registry(registry_data, existing_msg_id=None):
@@ -225,7 +223,6 @@ async def api_delete_daily_log(request: Request):
         except Exception as bot_err:
             logging.warning(f"Could not delete message {msg_id}: {bot_err}")
 
-        # Remove from permanent registry
         reg, p_msg_id = await get_or_create_registry()
         reg["logs"] = [item for item in reg.get("logs", []) if str(item.get("id")) != str(msg_id)]
         await save_registry(reg, p_msg_id)
@@ -234,6 +231,57 @@ async def api_delete_daily_log(request: Request):
     except Exception as e:
         logging.error(f"Error deleting daily log: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ---------------------------------------------------------
+# USER TRACKING APIS
+# ---------------------------------------------------------
+async def api_track_user(request: Request):
+    try:
+        data = await request.json()
+        user_id = str(data.get("id"))
+        first_name = data.get("first_name", "Unknown")
+        username = data.get("username", "N/A")
+        timestamp = data.get("timestamp", "")
+
+        if not user_id:
+            return JSONResponse({"error": "No user ID"}, status_code=400)
+
+        reg, p_msg_id = await get_or_create_registry()
+        users_list = reg.get("users", [])
+
+        # Update existing user or add new
+        found = False
+        for u in users_list:
+            if str(u.get("id")) == user_id:
+                u["first_name"] = first_name
+                u["username"] = username
+                u["last_seen"] = timestamp
+                u["visits"] = u.get("visits", 1) + 1
+                found = True
+                break
+
+        if not found:
+            users_list.insert(0, {
+                "id": user_id,
+                "first_name": first_name,
+                "username": username,
+                "last_seen": timestamp,
+                "visits": 1
+            })
+
+        reg["users"] = users_list
+        await save_registry(reg, p_msg_id)
+
+        return JSONResponse({"success": True})
+    except Exception as e:
+        logging.error(f"Error tracking user: {e}", exc_info=True)
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def api_get_users(request: Request):
+    reg, _ = await get_or_create_registry()
+    return JSONResponse({"success": True, "users": reg.get("users", [])})
 
 
 # ---------------------------------------------------------
@@ -355,6 +403,10 @@ starlette_app = Starlette(
         Route("/api/logs", api_get_daily_logs, methods=["GET"]),
         Route("/api/logs", api_save_daily_log, methods=["POST"]),
         Route("/api/logs/delete", api_delete_daily_log, methods=["POST"]),
+
+        # User Tracking Routes
+        Route("/api/track-user", api_track_user, methods=["POST"]),
+        Route("/api/users", api_get_users, methods=["GET"]),
 
         # Vault Forward & Utility Routes
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
