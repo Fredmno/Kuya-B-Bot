@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import re
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -22,7 +23,6 @@ from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 
-# Match exact repository structure
 from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
@@ -35,7 +35,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.5.5"
+APP_VERSION = "2.6.0"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -45,9 +45,6 @@ WEBHOOK_PATH = "/telegram"
 WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
 
 application = Application.builder().token(BOT_TOKEN).build()
-
-# Fast in-memory cache for Vault channel logs
-VAULT_LOGS_CACHE = []
 
 
 def get_vault_chat_id():
@@ -97,7 +94,60 @@ async def serve_index(request: Request):
 
 
 # ---------------------------------------------------------
-# DAILY LOGS API (TELEGRAM VAULT STORAGE)
+# PERSISTENT TELEGRAM CHANNEL REGISTRY (PINNED MESSAGE INDEX)
+# ---------------------------------------------------------
+# Telegram Bot API cannot fetch full historical chat message lists without a user client.
+# To make storage 100% permanent across any restart, the bot maintains a pinned 
+# master index in your Vault channel called #KUYA_B_REGISTRY.
+async def get_or_create_registry():
+    channel_id = get_vault_chat_id()
+    if not channel_id:
+        return {"logs": [], "birthdays": []}, None
+
+    try:
+        chat = await application.bot.get_chat(chat_id=channel_id)
+        if chat.pinned_message and "#KUYA_B_REGISTRY" in (chat.pinned_message.text or ""):
+            raw_match = re.search(r"#KUYA_B_REGISTRY:(\{.*\})", chat.pinned_message.text)
+            if raw_match:
+                return json.loads(raw_match.group(1)), chat.pinned_message.message_id
+    except Exception as e:
+        logging.warning(f"Error fetching pinned registry: {e}")
+
+    return {"logs": [], "birthdays": []}, None
+
+
+async def save_registry(registry_data, existing_msg_id=None):
+    channel_id = get_vault_chat_id()
+    if not channel_id:
+        return
+
+    text = f"🗄️ **KUYA B PERMANENT VAULT REGISTRY**\nDO NOT DELETE\n\n`#KUYA_B_REGISTRY:{json.dumps(registry_data)}`"
+    
+    if existing_msg_id:
+        try:
+            await application.bot.edit_message_text(
+                chat_id=channel_id,
+                message_id=existing_msg_id,
+                text=text,
+                parse_mode="Markdown"
+            )
+            return
+        except Exception:
+            pass
+
+    msg = await application.bot.send_message(
+        chat_id=channel_id,
+        text=text,
+        parse_mode="Markdown"
+    )
+    try:
+        await application.bot.pin_chat_message(chat_id=channel_id, message_id=msg.message_id)
+    except Exception as e:
+        logging.warning(f"Could not pin registry: {e}")
+
+
+# ---------------------------------------------------------
+# DAILY LOGS API (PERMANENT VAULT STORAGE)
 # ---------------------------------------------------------
 async def api_save_daily_log(request: Request):
     try:
@@ -110,9 +160,8 @@ async def api_save_daily_log(request: Request):
 
         channel_id = get_vault_chat_id()
         if not channel_id:
-            return JSONResponse({"error": "VAULT_CHANNEL_ID not set in environment"}, status_code=500)
+            return JSONResponse({"error": "VAULT_CHANNEL_ID not set"}, status_code=500)
 
-        # Store complete structured metadata in Telegram tag
         metadata_json = json.dumps({"mood": mood, "habits": habits, "date": date_str, "time": time_str})
 
         habits_formatted = ""
@@ -144,19 +193,25 @@ async def api_save_daily_log(request: Request):
             "time": time_str
         }
 
-        VAULT_LOGS_CACHE.insert(0, log_entry)
+        # Save to permanent channel registry
+        reg, msg_id = await get_or_create_registry()
+        reg_logs = reg.get("logs", [])
+        reg_logs.insert(0, log_entry)
+        reg["logs"] = reg_logs
+        await save_registry(reg, msg_id)
+
         return JSONResponse({"success": True, "log": log_entry})
     except Exception as e:
-        logging.error(f"Error posting daily log to vault channel: {e}", exc_info=True)
+        logging.error(f"Error posting daily log: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
 async def api_get_daily_logs(request: Request):
-    return JSONResponse({"success": True, "logs": VAULT_LOGS_CACHE})
+    reg, _ = await get_or_create_registry()
+    return JSONResponse({"success": True, "logs": reg.get("logs", [])})
 
 
 async def api_delete_daily_log(request: Request):
-    global VAULT_LOGS_CACHE
     try:
         data = await request.json()
         msg_id = data.get("id")
@@ -168,12 +223,16 @@ async def api_delete_daily_log(request: Request):
         try:
             await application.bot.delete_message(chat_id=channel_id, message_id=int(msg_id))
         except Exception as bot_err:
-            logging.warning(f"Message {msg_id} already removed or not found: {bot_err}")
+            logging.warning(f"Could not delete message {msg_id}: {bot_err}")
 
-        VAULT_LOGS_CACHE = [item for item in VAULT_LOGS_CACHE if str(item.get("id")) != str(msg_id)]
+        # Remove from permanent registry
+        reg, p_msg_id = await get_or_create_registry()
+        reg["logs"] = [item for item in reg.get("logs", []) if str(item.get("id")) != str(msg_id)]
+        await save_registry(reg, p_msg_id)
+
         return JSONResponse({"success": True})
     except Exception as e:
-        logging.error(f"Error deleting daily log from vault channel: {e}", exc_info=True)
+        logging.error(f"Error deleting daily log: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
@@ -279,7 +338,7 @@ application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
 application.add_handler(CallbackQueryHandler(menu_callback_handler))
 register_word_game_handlers(application)
 
-# Starlette Application Routes
+# Routes
 starlette_app = Starlette(
     routes=[
         Route("/", health_check, methods=["GET", "HEAD"]),
