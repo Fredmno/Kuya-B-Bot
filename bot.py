@@ -19,11 +19,11 @@ from telegram.ext import (
     ContextTypes,
 )
 
-from database import init_db, get_db
+from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 
-# Clean modular imports
+# Modular Birthday Imports
 from features.birthdays.database import init_birthday_db
 from features.birthdays.router import (
     api_get_birthdays,
@@ -37,7 +37,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.5.0"  # Increment to bust browser cache across all clients
+APP_VERSION = "2.5.1"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -113,7 +113,6 @@ async def api_save_daily_log(request: Request):
         if not channel_id:
             return JSONResponse({"error": "VAULT_CHANNEL_ID not set in environment"}, status_code=500)
 
-        # Machine-readable metadata payload encoded directly into Telegram message
         metadata_json = json.dumps({"mood": mood, "date": date_str, "time": time_str})
 
         message_text = (
@@ -139,9 +138,7 @@ async def api_save_daily_log(request: Request):
             "time": time_str
         }
 
-        # Store in volatile cache for instant retrieval
         VAULT_LOGS_CACHE.insert(0, log_entry)
-
         return JSONResponse({"success": True, "log": log_entry})
     except Exception as e:
         logging.error(f"Error posting daily log to vault channel: {e}", exc_info=True)
@@ -162,15 +159,12 @@ async def api_delete_daily_log(request: Request):
 
         channel_id = get_vault_chat_id()
 
-        # Delete message from Telegram Vault channel
         try:
             await application.bot.delete_message(chat_id=channel_id, message_id=int(msg_id))
         except Exception as bot_err:
             logging.warning(f"Message {msg_id} already removed or not found: {bot_err}")
 
-        # Remove from local cache
         VAULT_LOGS_CACHE = [item for item in VAULT_LOGS_CACHE if str(item.get("id")) != str(msg_id)]
-
         return JSONResponse({"success": True})
     except Exception as e:
         logging.error(f"Error deleting daily log from vault channel: {e}", exc_info=True)
@@ -273,14 +267,14 @@ async def lifespan(app):
     await application.shutdown()
 
 
-# Register Bot Handlers
+# Handlers
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("kuyab", kuya_b_menu))
 application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
 application.add_handler(CallbackQueryHandler(menu_callback_handler))
 register_word_game_handlers(application)
 
-# Define Starlette App & Endpoints
+# Starlette Application Routes
 starlette_app = Starlette(
     routes=[
         Route("/", health_check, methods=["GET", "HEAD"]),
@@ -298,7 +292,7 @@ starlette_app = Starlette(
         Route("/api/logs", api_save_daily_log, methods=["POST"]),
         Route("/api/logs/delete", api_delete_daily_log, methods=["POST"]),
 
-        # Vault Item & Utility Routes
+        # Vault Forward & Utility Routes
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
         
@@ -312,4 +306,3 @@ starlette_app = Starlette(
 
 if __name__ == "__main__":
     uvicorn.run(starlette_app, host="0.0.0.0", port=PORT)
-
