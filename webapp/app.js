@@ -206,7 +206,7 @@
             var target = e.target;
             if (!target) return;
 
-            // 1. Dashboard Feature Card Navigation
+            // 1. Dashboard Feature Card Navigation (Fresh fetch from Vault every click)
             var card = target.closest(".feature-card");
             if (card) {
                 e.preventDefault();
@@ -214,11 +214,16 @@
                 window.KuyaB.triggerHaptic("light");
 
                 if (feature === "birthdays") {
-                    showPage("birthdaysPage", window.KuyaB.features.birthdays ? window.KuyaB.features.birthdays.render : null);
+                    showPage("birthdaysPage", function () {
+                        if (window.KuyaB.features.birthdays) {
+                            window.KuyaB.features.birthdays.render();
+                        }
+                    });
                 } else if (feature === "daily") {
                     showPage("dailyLogsPage", function () {
-                        if (window.KuyaBDaily) window.KuyaBDaily.render();
-                        else if (window.KuyaB.features.dailyLogs) window.KuyaB.features.dailyLogs.render();
+                        if (window.KuyaBDaily) {
+                            window.KuyaBDaily.render();
+                        }
                     });
                 } else if (feature === "tasks") {
                     showPage("tasksPage", displayTasks);
@@ -452,11 +457,6 @@
     // ---------------------------------------------------------
     function init() {
         loadSharedData();
-
-        if (window.KuyaB.features.birthdays) {
-            window.KuyaB.features.birthdays.init();
-        }
-
         attachGlobalClicks();
 
         var msgId = window.KuyaB.getParam("msg_id");
@@ -473,11 +473,12 @@
 
         // Direct Route on Launch
         if (startSection === "birthdays") {
-            showPage("birthdaysPage", window.KuyaB.features.birthdays ? window.KuyaB.features.birthdays.render : null);
+            showPage("birthdaysPage", function () {
+                if (window.KuyaB.features.birthdays) window.KuyaB.features.birthdays.render();
+            });
         } else if (startSection === "daily") {
             showPage("dailyLogsPage", function () {
                 if (window.KuyaBDaily) window.KuyaBDaily.render();
-                else if (window.KuyaB.features.dailyLogs) window.KuyaB.features.dailyLogs.render();
             });
         } else if (startSection === "tasks") {
             showPage("tasksPage", displayTasks);
