@@ -1,5 +1,5 @@
 /* =========================================================
-   KUYA B — DAILY LOGS FEATURE MODULE
+   KUYA B — DAILY LOGS FEATURE MODULE (SELF-HEALING)
    ========================================================= */
 
 window.KuyaB = window.KuyaB || {};
@@ -48,6 +48,8 @@ window.KuyaB.features.dailyLogs = (function () {
     function render() {
         var list = document.getElementById("dailyLogsList");
         if (!list) return;
+
+        load();
 
         if (logs.length === 0) {
             list.innerHTML = '<p class="empty-state">No logs yet. Tap + to record how you feel!</p>';
@@ -140,42 +142,74 @@ window.KuyaB.features.dailyLogs = (function () {
         if (modal) modal.style.display = "none";
     }
 
+    function init() {
+        load();
+        renderMoodSelector();
+
+        // Capture clicks directly to avoid app.js interference
+        document.addEventListener("click", function (e) {
+            var target = e.target;
+            if (!target) return;
+
+            // When + Add Log is tapped, ensure moods are rendered
+            if (target.closest("#addLogButton")) {
+                renderMoodSelector();
+                return;
+            }
+
+            // Mood pill selection
+            var pill = target.closest(".mood-pill");
+            if (pill) {
+                e.preventDefault();
+                e.stopPropagation();
+                selectedMood = pill.getAttribute("data-mood");
+                renderMoodSelector();
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                return;
+            }
+
+            // Direct Save Button Handler
+            if (target.closest("#saveLogButton")) {
+                e.preventDefault();
+                e.stopPropagation();
+                save();
+                return;
+            }
+
+            // View log modal
+            var viewTrigger = target.closest('[data-action="view-log"]');
+            if (viewTrigger) {
+                e.preventDefault();
+                view(viewTrigger.getAttribute("data-id"));
+                return;
+            }
+
+            // Delete log
+            var deleteTrigger = target.closest('[data-action="delete-log"]');
+            if (deleteTrigger) {
+                e.preventDefault();
+                remove(deleteTrigger.getAttribute("data-id"));
+                return;
+            }
+
+            // Close modal
+            if (target.closest("#closeLogDetailBtn") || target.id === "logDetailModal") {
+                e.preventDefault();
+                closeDetail();
+                return;
+            }
+        }, true); // Use capture phase so it runs before app.js crashes
+    }
+
+    // Auto-run init as soon as DOM loads
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+
     return {
-        init: function () {
-            load();
-            renderMoodSelector();
-
-            document.body.addEventListener("click", function (e) {
-                var pill = e.target.closest(".mood-pill");
-                if (pill) {
-                    e.preventDefault();
-                    selectedMood = pill.getAttribute("data-mood");
-                    renderMoodSelector();
-                    if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
-                    return;
-                }
-
-                var viewTrigger = e.target.closest('[data-action="view-log"]');
-                if (viewTrigger) {
-                    e.preventDefault();
-                    view(viewTrigger.getAttribute("data-id"));
-                    return;
-                }
-
-                var deleteTrigger = e.target.closest('[data-action="delete-log"]');
-                if (deleteTrigger) {
-                    e.preventDefault();
-                    remove(deleteTrigger.getAttribute("data-id"));
-                    return;
-                }
-
-                if (e.target.closest("#closeLogDetailBtn") || e.target.id === "logDetailModal") {
-                    e.preventDefault();
-                    closeDetail();
-                    return;
-                }
-            });
-        },
+        init: init,
         render: render,
         save: save
     };
