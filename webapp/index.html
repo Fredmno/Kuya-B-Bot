@@ -141,7 +141,7 @@
 
                 <div class="mood-selector-label" style="margin-top: 14px;">Habits Completed</div>
                 
-                <!-- Default Habit Selector Chips -->
+                <!-- Core 8 Habit Selector Chips -->
                 <div class="habit-chips-grid" id="habitsContainer">
                     <button type="button" class="habit-chip" data-habit="💧 2L Water" onclick="window.KuyaBDaily.toggleHabit(this)">
                         <span class="habit-icon">💧</span> 2L Water
@@ -240,13 +240,28 @@
             <div id="remindersList"></div>
         </div>
 
-        <!-- ================= VAULT ================= -->
+        <!-- ================= VAULT / OTHER ================= -->
         <div id="vaultPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="vaultBackButton">←</button>
                 <h2 id="vaultPageTitle">📁 Vault</h2>
                 <button type="button" class="btn-icon-add" id="addVaultItemButton">+</button>
             </div>
+
+            <!-- Activity tracking button inside Other section -->
+            <div id="otherActionsBar" style="padding: 0 16px 12px 16px; display: none;">
+                <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="margin-bottom: 0;">
+                    <div class="card-left">
+                        <span class="card-icon">👥</span>
+                        <div>
+                            <div class="card-title">User Activity</div>
+                            <div class="card-desc">View users who accessed Kuya B</div>
+                        </div>
+                    </div>
+                    <div class="card-arrow">›</div>
+                </button>
+            </div>
+
             <div id="vaultFolderBar"></div>
             <div class="form-box" id="vaultItemForm" style="display: none;">
                 <input type="text" class="neu-input" id="vaultItemTitle" placeholder="Item caption or description">
@@ -258,6 +273,18 @@
                 </div>
             </div>
             <div id="vaultItemsList"></div>
+        </div>
+
+        <!-- ================= USER ACTIVITY TRACKING PAGE ================= -->
+        <div id="userTrackingPage" style="display: none;">
+            <div class="top-bar">
+                <button type="button" class="btn-icon-back" id="userTrackingBackButton">←</button>
+                <h2>👥 User Activity</h2>
+                <div style="width: 40px;"></div>
+            </div>
+            <div id="usersListContainer" style="padding: 16px;">
+                <p class="empty-state">Loading user activity...</p>
+            </div>
         </div>
     </div>
 
