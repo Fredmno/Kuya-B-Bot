@@ -22,7 +22,7 @@ from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 
-# Clean import matching your exact existing repository exports
+# Match exact repository structure
 from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
@@ -35,7 +35,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.5.3"
+APP_VERSION = "2.5.4"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -99,7 +99,6 @@ async def serve_index(request: Request):
 # ---------------------------------------------------------
 # DAILY LOGS API (TELEGRAM VAULT STORAGE)
 # ---------------------------------------------------------
-
 async def api_save_daily_log(request: Request):
     try:
         data = await request.json()
@@ -151,6 +150,31 @@ async def api_save_daily_log(request: Request):
         logging.error(f"Error posting daily log to vault channel: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
 
+
+async def api_get_daily_logs(request: Request):
+    return JSONResponse({"success": True, "logs": VAULT_LOGS_CACHE})
+
+
+async def api_delete_daily_log(request: Request):
+    global VAULT_LOGS_CACHE
+    try:
+        data = await request.json()
+        msg_id = data.get("id")
+        if not msg_id:
+            return JSONResponse({"error": "Missing message id"}, status_code=400)
+
+        channel_id = get_vault_chat_id()
+
+        try:
+            await application.bot.delete_message(chat_id=channel_id, message_id=int(msg_id))
+        except Exception as bot_err:
+            logging.warning(f"Message {msg_id} already removed or not found: {bot_err}")
+
+        VAULT_LOGS_CACHE = [item for item in VAULT_LOGS_CACHE if str(item.get("id")) != str(msg_id)]
+        return JSONResponse({"success": True})
+    except Exception as e:
+        logging.error(f"Error deleting daily log from vault channel: {e}", exc_info=True)
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 # ---------------------------------------------------------
