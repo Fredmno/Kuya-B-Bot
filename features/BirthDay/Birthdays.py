@@ -4,8 +4,6 @@ import logging
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-VAULT_BIRTHDAYS_CACHE = []
-
 def get_vault_chat_id():
     vault_id = os.getenv("VAULT_CHANNEL_ID", "")
     if vault_id.startswith("-") or vault_id.isdigit():
@@ -13,10 +11,11 @@ def get_vault_chat_id():
     return vault_id
 
 async def api_get_birthdays(request: Request):
-    return JSONResponse({"success": True, "birthdays": VAULT_BIRTHDAYS_CACHE})
+    from bot import get_or_create_registry
+    reg, _ = await get_or_create_registry()
+    return JSONResponse({"success": True, "birthdays": reg.get("birthdays", [])})
 
 async def api_add_birthday(request: Request):
-    global VAULT_BIRTHDAYS_CACHE
     try:
         data = await request.json()
         name = data.get("name", "").strip()
@@ -37,7 +36,7 @@ async def api_add_birthday(request: Request):
             f"`#BIRTHDAY:{metadata_json}`"
         )
 
-        from bot import application
+        from bot import application, get_or_create_registry, save_registry
         sent_msg = await application.bot.send_message(
             chat_id=channel_id,
             text=message_text,
@@ -49,22 +48,25 @@ async def api_add_birthday(request: Request):
             "name": name,
             "date": date_str
         }
-        VAULT_BIRTHDAYS_CACHE.append(item)
+
+        # Persist to registry
+        reg, msg_id = await get_or_create_registry()
+        b_list = reg.get("birthdays", [])
+        b_list.append(item)
+        reg["birthdays"] = b_list
+        await save_registry(reg, msg_id)
+
         return JSONResponse({"success": True, "birthday": item})
     except Exception as e:
-        logging.error(f"Error saving birthday to vault channel: {e}", exc_info=True)
+        logging.error(f"Error saving birthday to vault: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
 
 async def api_edit_birthday(request: Request):
-    global VAULT_BIRTHDAYS_CACHE
     try:
         data = await request.json()
         msg_id = data.get("id")
         name = data.get("name", "").strip()
         date_str = data.get("date", "").strip()
-
-        if not msg_id or not name or not date_str:
-            return JSONResponse({"error": "Missing parameters"}, status_code=400)
 
         channel_id = get_vault_chat_id()
         metadata_json = json.dumps({"name": name, "date": date_str})
@@ -75,7 +77,7 @@ async def api_edit_birthday(request: Request):
             f"`#BIRTHDAY:{metadata_json}`"
         )
 
-        from bot import application
+        from bot import application, get_or_create_registry, save_registry
         await application.bot.edit_message_text(
             chat_id=channel_id,
             message_id=int(msg_id),
@@ -83,11 +85,13 @@ async def api_edit_birthday(request: Request):
             parse_mode="Markdown"
         )
 
-        for b in VAULT_BIRTHDAYS_CACHE:
+        reg, p_msg_id = await get_or_create_registry()
+        for b in reg.get("birthdays", []):
             if str(b.get("id")) == str(msg_id):
                 b["name"] = name
                 b["date"] = date_str
                 break
+        await save_registry(reg, p_msg_id)
 
         return JSONResponse({"success": True})
     except Exception as e:
@@ -95,7 +99,6 @@ async def api_edit_birthday(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 async def api_delete_birthday(request: Request):
-    global VAULT_BIRTHDAYS_CACHE
     try:
         data = await request.json()
         msg_id = data.get("id")
@@ -103,13 +106,16 @@ async def api_delete_birthday(request: Request):
             return JSONResponse({"error": "Missing birthday ID"}, status_code=400)
 
         channel_id = get_vault_chat_id()
-        from bot import application
+        from bot import application, get_or_create_registry, save_registry
         try:
             await application.bot.delete_message(chat_id=channel_id, message_id=int(msg_id))
         except Exception as bot_err:
-            logging.warning(f"Could not delete birthday message {msg_id}: {bot_err}")
+            logging.warning(f"Could not delete message {msg_id}: {bot_err}")
 
-        VAULT_BIRTHDAYS_CACHE = [b for b in VAULT_BIRTHDAYS_CACHE if str(b.get("id")) != str(msg_id)]
+        reg, p_msg_id = await get_or_create_registry()
+        reg["birthdays"] = [b for b in reg.get("birthdays", []) if str(b.get("id")) != str(msg_id)]
+        await save_registry(reg, p_msg_id)
+
         return JSONResponse({"success": True})
     except Exception as e:
         logging.error(f"Error deleting birthday from vault: {e}", exc_info=True)
