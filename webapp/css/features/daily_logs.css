@@ -1,5 +1,5 @@
 /* =========================================================
-   FEATURE: DAILY LOGS (EMOJI PILLS, CARDS & DETAIL MODAL)
+   FEATURE: DAILY LOGS & HABIT TRACKER (NEUMORPHIC)
    ========================================================= */
 
 /* Emotion Selector */
@@ -17,7 +17,7 @@
     gap: 10px;
     overflow-x: auto;
     padding: 6px 4px 14px 4px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .mood-pill {
@@ -60,7 +60,42 @@
     color: var(--text-muted);
 }
 
-/* Compact Saved Row Card: Date + Emoji + Trash */
+/* Habit Chips Grid */
+.habit-chips-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.habit-chip {
+    background: var(--surface-card);
+    border: none;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    box-shadow: var(--neu-flat-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.habit-chip:active {
+    transform: scale(0.96);
+}
+
+.habit-chip.selected {
+    box-shadow: var(--neu-pressed);
+    color: var(--primary-blue);
+    font-weight: 700;
+    background: var(--surface-hover);
+}
+
+/* Saved Cards */
 .daily-log-card {
     background: var(--surface-card);
     border-radius: 20px;
@@ -114,7 +149,7 @@
     color: var(--text-muted);
 }
 
-/* Detail Modal View */
+/* Detail Modal */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -136,10 +171,10 @@
     border-radius: 24px;
     width: 100%;
     max-width: 380px;
-    padding: 24px 20px;
+    padding: 22px 20px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
 }
 
 .modal-header {
@@ -158,15 +193,45 @@
     color: var(--text-primary);
 }
 
+.modal-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.modal-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.modal-habits-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.modal-habit-tag {
+    background: var(--surface-card);
+    box-shadow: var(--neu-inset);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
 .modal-body {
     background: var(--surface-card);
     box-shadow: var(--neu-inset);
     border-radius: 16px;
-    padding: 14px 16px;
+    padding: 12px 14px;
     color: var(--text-muted);
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     line-height: 1.5;
-    max-height: 240px;
+    max-height: 180px;
     overflow-y: auto;
     white-space: pre-wrap;
     word-break: break-word;
