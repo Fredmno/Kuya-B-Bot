@@ -96,39 +96,74 @@
             <div id="birthdaysList"></div>
         </div>
 
-<!-- ================= DAILY LOGS ================= -->
-<div id="dailyLogsPage" style="display: none;">
-    <div class="top-bar">
-        <button class="btn-icon-back" id="dailyLogsBackButton">←</button>
-        <h2>📅 Daily Logs</h2>
-        <button class="btn-icon-add" id="addLogButton">+</button>
-    </div>
-    <div class="form-box" id="logForm" style="display: none;">
-        <div class="mood-selector-label">How are you feeling?</div>
-        <div class="mood-selector" id="moodSelectorContainer"></div>
+        <!-- ================= DAILY LOGS ================= -->
+        <div id="dailyLogsPage" style="display: none;">
+            <div class="top-bar">
+                <button class="btn-icon-back" id="dailyLogsBackButton">←</button>
+                <h2>📅 Daily Logs</h2>
+                <button class="btn-icon-add" id="addLogButton">+</button>
+            </div>
 
-        <textarea class="neu-input" id="logContent" placeholder="Write any notes or thoughts (optional)..." rows="3"></textarea>
-        <div class="form-actions">
-            <button class="btn-soft cancel" id="cancelLogButton">Cancel</button>
-            <button class="btn-soft save" id="saveLogButton">Save</button>
-        </div>
-    </div>
-    <div id="dailyLogsList"></div>
-</div>
+            <div class="form-box" id="logForm" style="display: none;">
+                <div class="mood-selector-label">How are you feeling?</div>
+                
+                <!-- Static Emoji Selector (Guaranteed to display) -->
+                <div class="mood-selector" id="moodSelectorContainer">
+                    <button type="button" class="mood-pill selected" data-mood="😊">
+                        <span class="mood-emoji">😊</span>
+                        <span class="mood-label">Happy</span>
+                    </button>
+                    <button type="button" class="mood-pill" data-mood="😔">
+                        <span class="mood-emoji">😔</span>
+                        <span class="mood-label">Sad</span>
+                    </button>
+                    <button type="button" class="mood-pill" data-mood="🥺">
+                        <span class="mood-emoji">🥺</span>
+                        <span class="mood-label">Lonely</span>
+                    </button>
+                    <button type="button" class="mood-pill" data-mood="😡">
+                        <span class="mood-emoji">😡</span>
+                        <span class="mood-label">Angry</span>
+                    </button>
+                    <button type="button" class="mood-pill" data-mood="😴">
+                        <span class="mood-emoji">😴</span>
+                        <span class="mood-label">Tired</span>
+                    </button>
+                    <button type="button" class="mood-pill" data-mood="✨">
+                        <span class="mood-emoji">✨</span>
+                        <span class="mood-label">Excited</span>
+                    </button>
+                    <button type="button" class="mood-pill" data-mood="🧘">
+                        <span class="mood-emoji">🧘</span>
+                        <span class="mood-label">Calm</span>
+                    </button>
+                </div>
 
-<!-- DAILY LOG DETAIL MODAL -->
-<div id="logDetailModal" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
-        <div class="modal-header">
-            <span class="modal-emoji" id="modalLogEmoji">😊</span>
-            <div class="modal-date" id="modalLogDate"></div>
+                <textarea class="neu-input" id="logContent" placeholder="Write any notes or thoughts (optional)..." rows="3"></textarea>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-soft cancel" id="cancelLogButton">Cancel</button>
+                    <button type="button" class="btn-soft save" id="saveLogButton">Save</button>
+                </div>
+            </div>
+
+            <div id="dailyLogsList"></div>
         </div>
-        <div class="modal-body" id="modalLogContent"></div>
-        <div class="form-actions">
-            <button class="btn-soft cancel" id="closeLogDetailBtn" style="width: 100%;">Close</button>
+
+        <!-- DAILY LOG DETAIL MODAL -->
+        <div id="logDetailModal" class="modal-overlay" style="display: none;">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <span class="modal-emoji" id="modalLogEmoji">😊</span>
+                    <div class="modal-date" id="modalLogDate"></div>
+                </div>
+                <div class="modal-body" id="modalLogContent"></div>
+                <div class="form-actions">
+                    <button type="button" class="btn-soft cancel" id="closeLogDetailBtn" style="width: 100%;">Close</button>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
+
 
 
         <!-- ================= TASKS ================= -->
