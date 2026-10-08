@@ -26,7 +26,7 @@
             <div class="grid-2">
                 <div class="feature-card" data-feature="daily">
                     <div class="card-header"><span class="card-icon">📅</span><span class="card-title">Daily Logs</span></div>
-                    <span class="card-desc">Your days</span>
+                    <span class="card-desc">Your days & habits</span>
                 </div>
                 <div class="feature-card" data-feature="tasks">
                     <div class="card-header"><span class="card-icon">✅</span><span class="card-title">Tasks</span></div>
@@ -96,7 +96,7 @@
             <div id="birthdaysList"></div>
         </div>
 
-        <!-- ================= DAILY LOGS (TELEGRAM VAULT) ================= -->
+        <!-- ================= DAILY LOGS & HABITS (TELEGRAM VAULT) ================= -->
         <div id="dailyLogsPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="dailyLogsBackButton">←</button>
@@ -107,7 +107,7 @@
             <div class="form-box" id="logForm" style="display: none;">
                 <div class="mood-selector-label">How are you feeling?</div>
                 
-                <!-- Static Emoji Buttons (Always visible upon adding) -->
+                <!-- Mood Emojis -->
                 <div class="mood-selector" id="moodSelectorContainer">
                     <button type="button" class="mood-pill selected" onclick="window.KuyaBDaily.selectMood(this, '😊')">
                         <span class="mood-emoji">😊</span>
@@ -139,6 +139,37 @@
                     </button>
                 </div>
 
+                <div class="mood-selector-label" style="margin-top: 14px;">Habits Completed</div>
+                
+                <!-- Default Habit Selector Chips -->
+                <div class="habit-chips-grid" id="habitsContainer">
+                    <button type="button" class="habit-chip" data-habit="💧 2L Water" onclick="window.KuyaBDaily.toggleHabit(this)">
+                        <span class="habit-icon">💧</span> 2L Water
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="🏃 Workout" onclick="window.KuyaBDaily.toggleHabit(this)">
+                        <span class="habit-icon">🏃</span> Workout
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="📖 Read" onclick="window.KuyaBDaily.toggleHabit(this)">
+                        <span class="habit-icon">📖</span> Read
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="💊 Vitamins" onclick="window.KuyaBDaily.toggleHabit(this)">
+                        <span class="habit-icon">💊</span> Vitamins
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="💻 Deep Work" onclick="window.KuyaBDaily.toggleHabit(this)">
+                        <span class="habit-icon">💻</span> Deep Work
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="🧘 Meditation" onclick="window.KuyaBDaily.toggleHabit(this)">
+                        <span class="habit-icon">🧘</span> Meditation
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="🥗 Clean Eating" onclick="window.KuyaBDaily.toggleHabit(this)">
+                        <span class="habit-icon">🥗</span> Clean Eating
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="😴 7+ hrs Sleep" onclick="window.KuyaBDaily.toggleHabit(this)">
+                        <span class="habit-icon">😴</span> 7+ hrs Sleep
+                    </button>
+                </div>
+
+                <div class="mood-selector-label" style="margin-top: 14px;">Thoughts & Reflections</div>
                 <textarea class="neu-input" id="logContent" placeholder="Write any notes or thoughts (optional)..." rows="3"></textarea>
                 
                 <div class="form-actions">
@@ -155,9 +186,20 @@
             <div class="modal-card">
                 <div class="modal-header">
                     <span class="modal-emoji" id="modalLogEmoji">😊</span>
-                    <div class="modal-date" id="modalLogDate"></div>
+                    <div>
+                        <div class="modal-date" id="modalLogDate"></div>
+                        <div class="modal-sub" id="modalHabitsCount"></div>
+                    </div>
                 </div>
+                
+                <div id="modalHabitsSection" style="display: none;">
+                    <div class="modal-section-title">Completed Habits:</div>
+                    <div class="modal-habits-list" id="modalHabitsList"></div>
+                </div>
+
+                <div class="modal-section-title" style="margin-top: 8px;">Reflection:</div>
                 <div class="modal-body" id="modalLogContent"></div>
+                
                 <div class="form-actions">
                     <button type="button" class="btn-soft cancel" style="width: 100%;" onclick="window.KuyaBDaily.closeModal()">Close</button>
                 </div>
@@ -219,10 +261,11 @@
         </div>
     </div>
 
-    <!-- DAILY LOGS TELEGRAM VAULT ENGINE -->
+    <!-- DAILY LOGS & HABIT TRACKER TELEGRAM VAULT ENGINE -->
     <script>
     window.KuyaBDaily = {
         currentMood: '😊',
+        selectedHabits: [],
         logs: [],
         selectMood: function(btn, mood) {
             var pills = document.querySelectorAll('.mood-pill');
@@ -230,6 +273,25 @@
             btn.classList.add('selected');
             this.currentMood = mood;
             if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('light');
+        },
+        toggleHabit: function(btn) {
+            var habit = btn.getAttribute('data-habit');
+            if (btn.classList.contains('selected')) {
+                btn.classList.remove('selected');
+                this.selectedHabits = this.selectedHabits.filter(function(h) { return h !== habit; });
+            } else {
+                btn.classList.add('selected');
+                this.selectedHabits.push(habit);
+            }
+            if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('light');
+        },
+        resetForm: function() {
+            var noteEl = document.getElementById('logContent');
+            if (noteEl) noteEl.value = '';
+            var chips = document.querySelectorAll('.habit-chip');
+            chips.forEach(function(c) { c.classList.remove('selected'); });
+            this.selectedHabits = [];
+            document.getElementById('logForm').style.display = 'none';
         },
         save: async function(e) {
             if (e) {
@@ -252,6 +314,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         mood: this.currentMood || '😊',
+                        habits: this.selectedHabits || [],
                         content: note,
                         date: dateStr,
                         time: timeStr
@@ -260,8 +323,7 @@
                 var data = await res.json();
                 if (data.success) {
                     if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('medium');
-                    if (noteEl) noteEl.value = '';
-                    document.getElementById('logForm').style.display = 'none';
+                    this.resetForm();
                     this.render();
                 } else {
                     alert('Could not post to Telegram: ' + (data.error || 'Server error'));
@@ -314,7 +376,24 @@
 
             document.getElementById('modalLogEmoji').innerText = item.mood || '📝';
             document.getElementById('modalLogDate').innerText = (item.date || '') + ' • ' + (item.time || '');
-            document.getElementById('modalLogContent').innerText = item.content ? item.content : '(No additional note written)';
+            
+            var habits = item.habits || [];
+            var habitsSection = document.getElementById('modalHabitsSection');
+            var habitsList = document.getElementById('modalHabitsList');
+            var habitsCount = document.getElementById('modalHabitsCount');
+
+            if (habits && habits.length > 0) {
+                habitsCount.innerText = habits.length + ' habit' + (habits.length > 1 ? 's' : '') + ' completed';
+                habitsList.innerHTML = habits.map(function(h) {
+                    return '<span class="modal-habit-tag">✓ ' + h + '</span>';
+                }).join('');
+                habitsSection.style.display = 'block';
+            } else {
+                habitsCount.innerText = 'No habits logged';
+                habitsSection.style.display = 'none';
+            }
+
+            document.getElementById('modalLogContent').innerText = item.content ? item.content : '(No additional reflection notes written)';
             document.getElementById('logDetailModal').style.display = 'flex';
             if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('light');
         },
