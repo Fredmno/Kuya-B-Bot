@@ -1,211 +1,116 @@
+import os
 import json
-import re
-
+import logging
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from features.BirthDay.bday_database import (
-    get_birthdays,
-    add_birthday,
-    delete_birthday,
-)
 
+VAULT_BIRTHDAYS_CACHE = []
 
-DEFAULT_CHAT_ID = "mini_app_default"
-
-
-def is_valid_mmdd(value):
-    return bool(re.match(r"^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$", value))
-
+def get_vault_chat_id():
+    vault_id = os.getenv("VAULT_CHANNEL_ID", "")
+    if vault_id.startswith("-") or vault_id.isdigit():
+        return int(vault_id)
+    return vault_id
 
 async def api_get_birthdays(request: Request):
-    chat_id = request.query_params.get("chat_id", DEFAULT_CHAT_ID)
-
-    birthdays = get_birthdays(chat_id)
-
-    return JSONResponse(
-        {
-            "success": True,
-            "birthdays": birthdays,
-        }
-    )
-
+    return JSONResponse({"success": True, "birthdays": VAULT_BIRTHDAYS_CACHE})
 
 async def api_add_birthday(request: Request):
+    global VAULT_BIRTHDAYS_CACHE
     try:
-        payload = await request.json()
-    except Exception:
-        return JSONResponse(
-            {
-                "success": False,
-                "error": "Invalid JSON payload.",
-            },
-            status_code=400,
+        data = await request.json()
+        name = data.get("name", "").strip()
+        date_str = data.get("date", "").strip()
+
+        if not name or not date_str:
+            return JSONResponse({"error": "Name and date are required"}, status_code=400)
+
+        channel_id = get_vault_chat_id()
+        if not channel_id:
+            return JSONResponse({"error": "VAULT_CHANNEL_ID not set"}, status_code=500)
+
+        metadata_json = json.dumps({"name": name, "date": date_str})
+        message_text = (
+            f"🎂 **BIRTHDAY ENTRY**\n"
+            f"**Name:** {name}\n"
+            f"**Date:** {date_str}\n\n"
+            f"`#BIRTHDAY:{metadata_json}`"
         )
 
-    chat_id = payload.get("chat_id", DEFAULT_CHAT_ID)
-    name = payload.get("name", "").strip()
-    birthday_mmdd = payload.get("birthday_mmdd", "").strip()
-    added_by_user_id = str(payload.get("added_by_user_id", ""))
-    added_by_name = payload.get("added_by_name", "Mini App User")
-
-    if not name:
-        return JSONResponse(
-            {
-                "success": False,
-                "error": "Name is required.",
-            },
-            status_code=400,
+        from bot import application
+        sent_msg = await application.bot.send_message(
+            chat_id=channel_id,
+            text=message_text,
+            parse_mode="Markdown"
         )
 
-    if not birthday_mmdd:
-        return JSONResponse(
-            {
-                "success": False,
-                "error": "Birthday is required.",
-            },
-            status_code=400,
-        )
-
-    if not is_valid_mmdd(birthday_mmdd):
-        return JSONResponse(
-            {
-                "success": False,
-                "error": "Birthday must use MM-DD format. Example: 06-28",
-            },
-            status_code=400,
-        )
-
-    birthday = add_birthday(
-        chat_id=chat_id,
-        name=name,
-        birthday_mmdd=birthday_mmdd,
-        added_by_user_id=added_by_user_id,
-        added_by_name=added_by_name,
-    )
-
-    return JSONResponse(
-        {
-            "success": True,
-            "birthday": birthday,
+        item = {
+            "id": str(sent_msg.message_id),
+            "name": name,
+            "date": date_str
         }
-    )
-
-
-async def api_delete_birthday(request: Request):
-    try:
-        payload = await request.json()
-    except Exception:
-        return JSONResponse(
-            {
-                "success": False,
-                "error": "Invalid JSON payload.",
-            },
-            status_code=400,
-        )
-
-    chat_id = payload.get("chat_id", DEFAULT_CHAT_ID)
-    birthday_id = payload.get("id")
-
-    if not birthday_id:
-        return JSONResponse(
-            {
-                "success": False,
-                "error": "Birthday ID is required.",
-            },
-            status_code=400,
-        )
-
-    deleted_count = delete_birthday(chat_id, birthday_id)
-
-    return JSONResponse(
-        {
-            "success": True,
-            "deleted_count": deleted_count,
-        }
-    )
+        VAULT_BIRTHDAYS_CACHE.append(item)
+        return JSONResponse({"success": True, "birthday": item})
+    except Exception as e:
+        logging.error(f"Error saving birthday to vault channel: {e}", exc_info=True)
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 async def api_edit_birthday(request: Request):
+    global VAULT_BIRTHDAYS_CACHE
     try:
-        payload = await request.json()
-    except Exception:
-        return JSONResponse(
-            {
-                "success": False,
-                "error": "Invalid JSON payload.",
-            },
-            status_code=400,
+        data = await request.json()
+        msg_id = data.get("id")
+        name = data.get("name", "").strip()
+        date_str = data.get("date", "").strip()
+
+        if not msg_id or not name or not date_str:
+            return JSONResponse({"error": "Missing parameters"}, status_code=400)
+
+        channel_id = get_vault_chat_id()
+        metadata_json = json.dumps({"name": name, "date": date_str})
+        new_text = (
+            f"🎂 **BIRTHDAY ENTRY**\n"
+            f"**Name:** {name}\n"
+            f"**Date:** {date_str}\n\n"
+            f"`#BIRTHDAY:{metadata_json}`"
         )
 
-    chat_id = payload.get(
-        "chat_id",
-        DEFAULT_CHAT_ID
-    )
-
-    birthday_id = payload.get("id")
-
-    name = payload.get(
-        "name",
-        ""
-    ).strip()
-
-    birthday_mmdd = payload.get(
-        "birthday_mmdd",
-        ""
-    ).strip()
-
-    if not birthday_id:
-        return JSONResponse(
-            {
-                "success": False,
-                "error": "Birthday ID is required.",
-            },
-            status_code=400,
+        from bot import application
+        await application.bot.edit_message_text(
+            chat_id=channel_id,
+            message_id=int(msg_id),
+            text=new_text,
+            parse_mode="Markdown"
         )
 
-    if not name:
-        return JSONResponse(
-            {
-                "success": False,
-                "error": "Name is required.",
-            },
-            status_code=400,
-        )
+        for b in VAULT_BIRTHDAYS_CACHE:
+            if str(b.get("id")) == str(msg_id):
+                b["name"] = name
+                b["date"] = date_str
+                break
 
-    if not is_valid_mmdd(
-        birthday_mmdd
-    ):
-        return JSONResponse(
-            {
-                "success": False,
-                "error":
-                    "Birthday must use MM-DD format. Example: 06-28",
-            },
-            status_code=400,
-        )
+        return JSONResponse({"success": True})
+    except Exception as e:
+        logging.error(f"Error editing birthday in vault: {e}", exc_info=True)
+        return JSONResponse({"error": str(e)}, status_code=500)
 
-    from features.BirthDay.bday_database import (
-        update_birthday
-    )
+async def api_delete_birthday(request: Request):
+    global VAULT_BIRTHDAYS_CACHE
+    try:
+        data = await request.json()
+        msg_id = data.get("id")
+        if not msg_id:
+            return JSONResponse({"error": "Missing birthday ID"}, status_code=400)
 
-    birthday = update_birthday(
-        chat_id=chat_id,
-        birthday_id=birthday_id,
-        name=name,
-        birthday_mmdd=birthday_mmdd,
-    )
+        channel_id = get_vault_chat_id()
+        from bot import application
+        try:
+            await application.bot.delete_message(chat_id=channel_id, message_id=int(msg_id))
+        except Exception as bot_err:
+            logging.warning(f"Could not delete birthday message {msg_id}: {bot_err}")
 
-    if birthday is None:
-        return JSONResponse(
-            {
-                "success": False,
-                "error": "Birthday not found.",
-            },
-            status_code=404,
-        )
-
-    return JSONResponse(
-        {
-            "success": True,
-            "birthday": birthday,
-        }
-    )
+        VAULT_BIRTHDAYS_CACHE = [b for b in VAULT_BIRTHDAYS_CACHE if str(b.get("id")) != str(msg_id)]
+        return JSONResponse({"success": True})
+    except Exception as e:
+        logging.error(f"Error deleting birthday from vault: {e}", exc_info=True)
+        return JSONResponse({"error": str(e)}, status_code=500)
