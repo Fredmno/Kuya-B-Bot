@@ -23,7 +23,7 @@ from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 
-# Clean modular Birthday imports
+# Exact repository import path
 from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
@@ -36,11 +36,12 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.7.0"
+APP_VERSION = "2.7.1"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
 VAULT_CHANNEL_ID = os.getenv("VAULT_CHANNEL_ID")
+ADMIN_USER_ID = os.getenv("ADMIN_USER_ID")  # Set in Render env or configure here
 
 WEBHOOK_PATH = "/telegram"
 WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
@@ -234,7 +235,7 @@ async def api_delete_daily_log(request: Request):
 
 
 # ---------------------------------------------------------
-# USER TRACKING APIS
+# USER TRACKING APIS (ADMIN SECURED)
 # ---------------------------------------------------------
 async def api_track_user(request: Request):
     try:
@@ -250,7 +251,7 @@ async def api_track_user(request: Request):
         reg, p_msg_id = await get_or_create_registry()
         users_list = reg.get("users", [])
 
-        # Update existing user or add new
+        # Update existing user or register new
         found = False
         for u in users_list:
             if str(u.get("id")) == user_id:
@@ -280,6 +281,11 @@ async def api_track_user(request: Request):
 
 
 async def api_get_users(request: Request):
+    req_user_id = request.query_params.get("user_id")
+    # If ADMIN_USER_ID is set in environment, enforce server-side validation
+    if ADMIN_USER_ID and str(req_user_id) != str(ADMIN_USER_ID):
+        return JSONResponse({"success": False, "error": "Unauthorized"}, status_code=403)
+
     reg, _ = await get_or_create_registry()
     return JSONResponse({"success": True, "users": reg.get("users", [])})
 
