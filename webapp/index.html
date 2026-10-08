@@ -97,7 +97,7 @@
         </div>
 
 
-        <!-- ================= DAILY LOGS ================= -->
+        <!-- ================= DAILY LOGS (TELEGRAM VAULT) ================= -->
         <div id="dailyLogsPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="dailyLogsBackButton">←</button>
@@ -108,7 +108,7 @@
             <div class="form-box" id="logForm" style="display: none;">
                 <div class="mood-selector-label">How are you feeling?</div>
                 
-                <!-- Static Emoji Selector -->
+                <!-- Static Emoji Buttons -->
                 <div class="mood-selector" id="moodSelectorContainer">
                     <button type="button" class="mood-pill selected" onclick="window.KuyaBDaily.selectMood(this, '😊')">
                         <span class="mood-emoji">😊</span>
@@ -166,9 +166,9 @@
         </div>
 
         <script>
-        /* INLINE SELF-CONTAINED DAILY LOGS ENGINE */
         window.KuyaBDaily = {
             currentMood: '😊',
+            logs: [],
             selectMood: function(btn, mood) {
                 var pills = document.querySelectorAll('.mood-pill');
                 pills.forEach(function(p) { p.classList.remove('selected'); });
@@ -176,7 +176,7 @@
                 this.currentMood = mood;
                 if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('light');
             },
-            save: function(e) {
+            save: async function(e) {
                 if (e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -188,41 +188,56 @@
                 var dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 var timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-                var logs = [];
+                var saveBtn = document.getElementById('saveLogButton');
+                if (saveBtn) saveBtn.innerText = 'Posting to Vault...';
+
                 try {
-                    logs = JSON.parse(localStorage.getItem('kuyaB_dailyLogs')) || [];
-                } catch(err) { logs = []; }
-
-                logs.unshift({
-                    id: Date.now().toString(),
-                    mood: this.currentMood || '😊',
-                    content: note,
-                    date: dateStr,
-                    time: timeStr
-                });
-
-                localStorage.setItem('kuyaB_dailyLogs', JSON.stringify(logs));
-                if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('medium');
-
-                if (noteEl) noteEl.value = '';
-                document.getElementById('logForm').style.display = 'none';
-                this.render();
+                    var res = await fetch('/api/logs', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            mood: this.currentMood || '😊',
+                            content: note,
+                            date: dateStr,
+                            time: timeStr
+                        })
+                    });
+                    var data = await res.json();
+                    if (data.success) {
+                        if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('medium');
+                        if (noteEl) noteEl.value = '';
+                        document.getElementById('logForm').style.display = 'none';
+                        this.render();
+                    } else {
+                        alert('Could not post to Telegram: ' + (data.error || 'Server error'));
+                    }
+                } catch(err) {
+                    alert('Network error communicating with Kuya B backend.');
+                } finally {
+                    if (saveBtn) saveBtn.innerText = 'Save';
+                }
             },
-            render: function() {
+            render: async function() {
                 var list = document.getElementById('dailyLogsList');
                 if (!list) return;
-                var logs = [];
-                try {
-                    logs = JSON.parse(localStorage.getItem('kuyaB_dailyLogs')) || [];
-                } catch(err) { logs = []; }
 
-                if (logs.length === 0) {
-                    list.innerHTML = '<p class="empty-state">No logs yet. Tap + to record how you feel!</p>';
+                try {
+                    var res = await fetch('/api/logs');
+                    var data = await res.json();
+                    if (data.success) {
+                        this.logs = data.logs || [];
+                    }
+                } catch(e) {
+                    this.logs = [];
+                }
+
+                if (this.logs.length === 0) {
+                    list.innerHTML = '<p class="empty-state">No logs in vault yet. Tap + to record how you feel!</p>';
                     return;
                 }
 
                 var html = '';
-                logs.forEach(function(item) {
+                this.logs.forEach(function(item) {
                     html += '<div class="daily-log-card" data-id="' + item.id + '">' +
                         '<div class="log-clickable-area" onclick="window.KuyaBDaily.view(\'' + item.id + '\')">' +
                             '<span class="log-emoji-badge">' + (item.mood || '📝') + '</span>' +
@@ -239,9 +254,7 @@
                 list.innerHTML = html;
             },
             view: function(id) {
-                var logs = [];
-                try { logs = JSON.parse(localStorage.getItem('kuyaB_dailyLogs')) || []; } catch(err) {}
-                var item = logs.find(function(x) { return x.id === id; });
+                var item = this.logs.find(function(x) { return String(x.id) === String(id); });
                 if (!item) return;
 
                 document.getElementById('modalLogEmoji').innerText = item.mood || '📝';
@@ -253,23 +266,33 @@
             closeModal: function() {
                 document.getElementById('logDetailModal').style.display = 'none';
             },
-            remove: function(id) {
-                if (confirm('Delete this log entry?')) {
-                    var logs = [];
-                    try { logs = JSON.parse(localStorage.getItem('kuyaB_dailyLogs')) || []; } catch(err) {}
-                    logs = logs.filter(function(x) { return x.id !== id; });
-                    localStorage.setItem('kuyaB_dailyLogs', JSON.stringify(logs));
-                    if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('medium');
-                    this.render();
+            remove: async function(id) {
+                if (confirm('Delete this log post from your Vault channel?')) {
+                    try {
+                        var res = await fetch('/api/logs/delete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: id })
+                        });
+                        var data = await res.json();
+                        if (data.success) {
+                            if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('medium');
+                            this.render();
+                        } else {
+                            alert('Failed to delete from Telegram: ' + (data.error || 'Server error'));
+                        }
+                    } catch(e) {
+                        alert('Network error deleting from vault.');
+                    }
                 }
             }
         };
 
-        // Render logs as soon as DOM loads
         document.addEventListener('DOMContentLoaded', function() {
             window.KuyaBDaily.render();
         });
         </script>
+
 
 
 
