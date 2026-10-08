@@ -1,3 +1,5 @@
+<script src="/app/modules/daily_logs.js"></script>
+
 /* =========================================================
    KUYA B — MODULAR APP ROUTER & SHELL ENGINE
    ========================================================= */
