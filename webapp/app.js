@@ -1,5 +1,3 @@
-<script src="/app/modules/daily_logs.js"></script>
-
 /* =========================================================
    KUYA B — MODULAR APP ROUTER & SHELL ENGINE
    ========================================================= */
@@ -8,6 +6,7 @@
     "use strict";
 
     window.KuyaB = window.KuyaB || {};
+    window.KuyaB.features = window.KuyaB.features || {};
 
     var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     if (tg) {
@@ -17,6 +16,9 @@
         } catch (e) {}
     }
 
+    // ---------------------------------------------------------
+    // HAPTICS & TOAST NOTIFICATIONS
+    // ---------------------------------------------------------
     window.KuyaB.triggerHaptic = function (style) {
         style = style || "light";
         try {
@@ -44,6 +46,9 @@
         }, 2800);
     };
 
+    // ---------------------------------------------------------
+    // PARAMETER RESOLVER (Deep Links, Telegram start_param, Query, Hash)
+    // ---------------------------------------------------------
     window.KuyaB.getParam = function (key) {
         if (key === "start" && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
             return tg.initDataUnsafe.start_param;
@@ -61,20 +66,23 @@
         return null;
     };
 
-    // Generic Data Stores for Other Views
-    var dailyLogs = [];
+    // ---------------------------------------------------------
+    // SHARED STORES
+    // ---------------------------------------------------------
     var tasks = [];
     var reminders = [];
     var vaultItems = [];
     var currentVaultType = "other";
 
     function loadSharedData() {
-        try { dailyLogs = JSON.parse(localStorage.getItem("kuyaB_dailyLogs")) || []; } catch (e) { dailyLogs = []; }
         try { tasks = JSON.parse(localStorage.getItem("kuyaB_tasks")) || []; } catch (e) { tasks = []; }
         try { reminders = JSON.parse(localStorage.getItem("kuyaB_reminders")) || []; } catch (e) { reminders = []; }
         try { vaultItems = JSON.parse(localStorage.getItem("kuyaB_vault")) || []; } catch (e) { vaultItems = []; }
     }
 
+    // ---------------------------------------------------------
+    // PAGE ROUTING
+    // ---------------------------------------------------------
     var ALL_PAGES = ["dashboardPage", "birthdaysPage", "dailyLogsPage", "tasksPage", "remindersPage", "vaultPage"];
 
     function hideAllForms() {
@@ -111,25 +119,9 @@
         }
     }
 
-    // Daily Logs Renderer
-    function displayDailyLogs() {
-        var list = document.getElementById("dailyLogsList");
-        if (!list) return;
-        if (dailyLogs.length === 0) {
-            list.innerHTML = '<p class="empty-state">No daily logs saved yet. Tap + to add one!</p>';
-            return;
-        }
-        var html = "";
-        for (var i = 0; i < dailyLogs.length; i++) {
-            var l = dailyLogs[i];
-            html += '<div class="birthday-card" data-id="' + l.id + '">' +
-                '<div class="birthday-info"><span class="birthday-name">' + l.title + '</span><span class="birthday-date">' + (l.content || "") + '</span></div>' +
-                '<div class="birthday-actions"><button class="btn-delete" data-action="delete-log" data-id="' + l.id + '">🗑️</button></div></div>';
-        }
-        list.innerHTML = html;
-    }
-
-    // Tasks Renderer
+    // ---------------------------------------------------------
+    // TASKS ENGINE
+    // ---------------------------------------------------------
     function displayTasks() {
         var list = document.getElementById("tasksList");
         if (!list) return;
@@ -150,7 +142,9 @@
         list.innerHTML = html;
     }
 
-    // Reminders Renderer
+    // ---------------------------------------------------------
+    // REMINDERS ENGINE
+    // ---------------------------------------------------------
     function displayReminders() {
         var list = document.getElementById("remindersList");
         if (!list) return;
@@ -168,7 +162,9 @@
         list.innerHTML = html;
     }
 
-    // Vault Renderer
+    // ---------------------------------------------------------
+    // VAULT ENGINE
+    // ---------------------------------------------------------
     function setVaultType(type) {
         currentVaultType = type;
         var titleEl = document.getElementById("vaultPageTitle");
@@ -202,13 +198,15 @@
         list.innerHTML = html;
     }
 
-    // Global Click Dispatcher
+    // ---------------------------------------------------------
+    // GLOBAL CLICK DISPATCHER
+    // ---------------------------------------------------------
     function attachGlobalClicks() {
         document.body.addEventListener("click", function (e) {
             var target = e.target;
             if (!target) return;
 
-            // Feature Card Navigation
+            // 1. Dashboard Feature Card Navigation
             var card = target.closest(".feature-card");
             if (card) {
                 e.preventDefault();
@@ -218,7 +216,7 @@
                 if (feature === "birthdays") {
                     showPage("birthdaysPage", window.KuyaB.features.birthdays ? window.KuyaB.features.birthdays.render : null);
                 } else if (feature === "daily") {
-                    showPage("dailyLogsPage", displayDailyLogs);
+                    showPage("dailyLogsPage", window.KuyaB.features.dailyLogs ? window.KuyaB.features.dailyLogs.render : null);
                 } else if (feature === "tasks") {
                     showPage("tasksPage", displayTasks);
                 } else if (feature === "reminders") {
@@ -233,7 +231,7 @@
                 return;
             }
 
-            // Back Buttons
+            // 2. Back Navigation
             if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton, #vaultBackButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -241,7 +239,7 @@
                 return;
             }
 
-            // Birthdays Delegation
+            // 3. Birthdays Module Delegation
             if (target.closest("#addBirthdayButton")) {
                 e.preventDefault();
                 var bForm = document.getElementById("birthdayForm");
@@ -272,51 +270,36 @@
                 return;
             }
 
-            // Daily Logs Delegation
+            // 4. Daily Logs Module Delegation
             if (target.closest("#addLogButton")) {
                 e.preventDefault();
-                document.getElementById("logForm").style.display = "block";
+                var lForm = document.getElementById("logForm");
+                if (lForm) lForm.style.display = "block";
                 return;
             }
             if (target.closest("#cancelLogButton")) {
                 e.preventDefault();
-                document.getElementById("logForm").style.display = "none";
+                var lFormCancel = document.getElementById("logForm");
+                if (lFormCancel) lFormCancel.style.display = "none";
                 return;
             }
             if (target.closest("#saveLogButton")) {
                 e.preventDefault();
-                var title = document.getElementById("logTitle").value.trim();
-                var content = document.getElementById("logContent").value.trim();
-                if (!title) return alert("Please enter title.");
-                dailyLogs.unshift({ id: Date.now().toString(), title: title, content: content });
-                localStorage.setItem("kuyaB_dailyLogs", JSON.stringify(dailyLogs));
-                window.KuyaB.triggerHaptic("medium");
-                document.getElementById("logTitle").value = "";
-                document.getElementById("logContent").value = "";
-                document.getElementById("logForm").style.display = "none";
-                displayDailyLogs();
-                return;
-            }
-            var logDel = target.closest('[data-action="delete-log"]');
-            if (logDel) {
-                e.preventDefault();
-                if (confirm("Delete log?")) {
-                    dailyLogs = dailyLogs.filter(function (x) { return x.id !== logDel.getAttribute("data-id"); });
-                    localStorage.setItem("kuyaB_dailyLogs", JSON.stringify(dailyLogs));
-                    displayDailyLogs();
-                }
+                if (window.KuyaB.features.dailyLogs) window.KuyaB.features.dailyLogs.save();
                 return;
             }
 
-            // Tasks Delegation
+            // 5. Tasks Form & Actions Delegation
             if (target.closest("#addTaskButton")) {
                 e.preventDefault();
-                document.getElementById("taskForm").style.display = "block";
+                var tForm = document.getElementById("taskForm");
+                if (tForm) tForm.style.display = "block";
                 return;
             }
             if (target.closest("#cancelTaskButton")) {
                 e.preventDefault();
-                document.getElementById("taskForm").style.display = "none";
+                var tFormCancel = document.getElementById("taskForm");
+                if (tFormCancel) tFormCancel.style.display = "none";
                 return;
             }
             if (target.closest("#saveTaskButton")) {
@@ -336,7 +319,10 @@
                 e.preventDefault();
                 var tId = taskToggle.getAttribute("data-id");
                 for (var i = 0; i < tasks.length; i++) {
-                    if (tasks[i].id === tId) { tasks[i].completed = !tasks[i].completed; break; }
+                    if (tasks[i].id === tId) {
+                        tasks[i].completed = !tasks[i].completed;
+                        break;
+                    }
                 }
                 localStorage.setItem("kuyaB_tasks", JSON.stringify(tasks));
                 displayTasks();
@@ -353,15 +339,17 @@
                 return;
             }
 
-            // Reminders Delegation
+            // 6. Reminders Form & Actions Delegation
             if (target.closest("#addReminderButton")) {
                 e.preventDefault();
-                document.getElementById("reminderForm").style.display = "block";
+                var rForm = document.getElementById("reminderForm");
+                if (rForm) rForm.style.display = "block";
                 return;
             }
             if (target.closest("#cancelReminderButton")) {
                 e.preventDefault();
-                document.getElementById("reminderForm").style.display = "none";
+                var rFormCancel = document.getElementById("reminderForm");
+                if (rFormCancel) rFormCancel.style.display = "none";
                 return;
             }
             if (target.closest("#saveReminderButton")) {
@@ -387,15 +375,17 @@
                 return;
             }
 
-            // Vault Delegation
+            // 7. Vault Form & Actions Delegation
             if (target.closest("#addVaultItemButton")) {
                 e.preventDefault();
-                document.getElementById("vaultItemForm").style.display = "block";
+                var vForm = document.getElementById("vaultItemForm");
+                if (vForm) vForm.style.display = "block";
                 return;
             }
             if (target.closest("#cancelVaultItemButton")) {
                 e.preventDefault();
-                document.getElementById("vaultItemForm").style.display = "none";
+                var vFormCancel = document.getElementById("vaultItemForm");
+                if (vFormCancel) vFormCancel.style.display = "none";
                 return;
             }
             if (target.closest("#saveVaultItemButton")) {
@@ -442,7 +432,7 @@
                 return;
             }
 
-            // Word Game Alert
+            // 8. Word Game Trigger
             if (target.closest("#gameButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -450,7 +440,7 @@
                 return;
             }
 
-            // Add Content Quick Action
+            // 9. Quick Add Content Trigger
             if (target.closest("#addContentButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -465,11 +455,18 @@
         });
     }
 
-    // Bootstrap
+    // ---------------------------------------------------------
+    // INITIALIZATION RUNNER
+    // ---------------------------------------------------------
     function init() {
         loadSharedData();
+
+        // Initialize modular feature engines if available
         if (window.KuyaB.features.birthdays) {
             window.KuyaB.features.birthdays.init();
+        }
+        if (window.KuyaB.features.dailyLogs) {
+            window.KuyaB.features.dailyLogs.init();
         }
 
         attachGlobalClicks();
@@ -486,11 +483,11 @@
             }).catch(function () {});
         }
 
-        // Direct Routing
+        // Direct Route on Launch
         if (startSection === "birthdays") {
             showPage("birthdaysPage", window.KuyaB.features.birthdays ? window.KuyaB.features.birthdays.render : null);
         } else if (startSection === "daily") {
-            showPage("dailyLogsPage", displayDailyLogs);
+            showPage("dailyLogsPage", window.KuyaB.features.dailyLogs ? window.KuyaB.features.dailyLogs.render : null);
         } else if (startSection === "tasks") {
             showPage("tasksPage", displayTasks);
         } else if (startSection === "reminders") {
