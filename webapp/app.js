@@ -5,9 +5,6 @@
 (function () {
     "use strict";
 
-    // Set your numeric Telegram User ID here to restrict User Activity access
-    var ADMIN_USER_ID = 1234567890; 
-
     window.KuyaB = window.KuyaB || {};
     window.KuyaB.features = window.KuyaB.features || {};
 
@@ -19,14 +16,7 @@
         } catch (e) {}
     }
 
-    function isCurrentUserAdmin() {
-        var currentUserId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
-        return String(currentUserId) === String(ADMIN_USER_ID);
-    }
-
-    // ---------------------------------------------------------
-    // HAPTICS & TOAST NOTIFICATIONS
-    // ---------------------------------------------------------
+    // Haptics & Toasts
     window.KuyaB.triggerHaptic = function (style) {
         style = style || "light";
         try {
@@ -54,9 +44,7 @@
         }, 2800);
     };
 
-    // ---------------------------------------------------------
-    // PARAMETER RESOLVER
-    // ---------------------------------------------------------
+    // Parameter Resolver
     window.KuyaB.getParam = function (key) {
         if (key === "start" && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
             return tg.initDataUnsafe.start_param;
@@ -74,9 +62,7 @@
         return null;
     };
 
-    // ---------------------------------------------------------
-    // SHARED STORES
-    // ---------------------------------------------------------
+    // Stores
     var tasks = [];
     var reminders = [];
     var vaultItems = [];
@@ -88,9 +74,7 @@
         try { vaultItems = JSON.parse(localStorage.getItem("kuyaB_vault")) || []; } catch (e) { vaultItems = []; }
     }
 
-    // ---------------------------------------------------------
-    // PAGE ROUTING
-    // ---------------------------------------------------------
+    // Page Routing
     var ALL_PAGES = [
         "dashboardPage", 
         "birthdaysPage", 
@@ -135,75 +119,7 @@
         }
     }
 
-    // ---------------------------------------------------------
-    // USER TRACKING ENGINE (ADMIN ONLY)
-    // ---------------------------------------------------------
-    function trackUserAccess() {
-        var user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
-        if (!user) return;
-
-        var now = new Date();
-        var dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-        var timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-
-        fetch("/api/track-user", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                id: user.id,
-                first_name: user.first_name || "",
-                username: user.username || "N/A",
-                timestamp: dateStr + " • " + timeStr
-            })
-        }).catch(function () {});
-    }
-
-    async function displayTrackedUsers() {
-        if (!isCurrentUserAdmin()) {
-            showDashboard();
-            return;
-        }
-
-        var container = document.getElementById("usersListContainer");
-        if (!container) return;
-        container.innerHTML = '<p class="empty-state">Loading user activity...</p>';
-
-        try {
-            var user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
-            var currentUserId = user ? user.id : "";
-            var res = await fetch("/api/users?user_id=" + currentUserId);
-            var data = await res.json();
-            var users = data.users || [];
-
-            if (users.length === 0) {
-                container.innerHTML = '<p class="empty-state">No users tracked yet.</p>';
-                return;
-            }
-
-            var html = "";
-            for (var i = 0; i < users.length; i++) {
-                var u = users[i];
-                var handle = u.username && u.username !== "N/A" ? "@" + u.username : "No username";
-                html += '<div class="birthday-card" style="margin-bottom: 10px;">' +
-                    '<div class="birthday-info">' +
-                        '<div class="birthday-title-row">' +
-                            '<span class="birthday-name">👤 ' + (u.first_name || "Anonymous") + '</span>' +
-                            '<span class="bday-badge-days">' + (u.visits || 1) + ' visit' + (u.visits > 1 ? 's' : '') + '</span>' +
-                        '</div>' +
-                        '<span class="birthday-date" style="font-size: 0.78rem; color: var(--text-muted);">' + handle + ' • ID: ' + u.id + '</span>' +
-                        '<span class="birthday-date" style="font-size: 0.74rem; color: var(--primary-blue); margin-top: 2px;">Last: ' + (u.last_seen || "Recent") + '</span>' +
-                    '</div>' +
-                '</div>';
-            }
-            container.innerHTML = html;
-        } catch (e) {
-            container.innerHTML = '<p class="empty-state">Error loading user logs.</p>';
-        }
-    }
-
-    // ---------------------------------------------------------
-    // TASKS ENGINE
-    // ---------------------------------------------------------
+    // Local Tasks
     function displayTasks() {
         var list = document.getElementById("tasksList");
         if (!list) return;
@@ -214,8 +130,8 @@
         var html = "";
         for (var i = 0; i < tasks.length; i++) {
             var t = tasks[i];
-            var style = t.completed ? 'text-decoration: line-through; opacity: 0.5;' : '';
-            var toggleIcon = t.completed ? '↩' : '✓';
+            var style = t.completed ? "text-decoration: line-through; opacity: 0.5;" : "";
+            var toggleIcon = t.completed ? "↩" : "✓";
             html += '<div class="birthday-card" data-id="' + t.id + '">' +
                 '<div class="birthday-info"><span class="birthday-name" style="' + style + '">' + t.title + '</span></div>' +
                 '<div class="birthday-actions"><button type="button" class="btn-greet" data-action="toggle-task" data-id="' + t.id + '">' + toggleIcon + '</button>' +
@@ -224,9 +140,7 @@
         list.innerHTML = html;
     }
 
-    // ---------------------------------------------------------
-    // REMINDERS ENGINE
-    // ---------------------------------------------------------
+    // Local Reminders
     function displayReminders() {
         var list = document.getElementById("remindersList");
         if (!list) return;
@@ -244,17 +158,15 @@
         list.innerHTML = html;
     }
 
-    // ---------------------------------------------------------
-    // VAULT ENGINE
-    // ---------------------------------------------------------
+    // Vault
     function setVaultType(type) {
         currentVaultType = type;
         var titleEl = document.getElementById("vaultPageTitle");
         var otherActions = document.getElementById("otherActionsBar");
 
         if (otherActions) {
-            // Only visible if on the "other" section AND opened by you (admin)
-            otherActions.style.display = (type === "other" && isCurrentUserAdmin()) ? "block" : "none";
+            var isAdmin = window.KuyaB.features.tracking && window.KuyaB.features.tracking.isAdmin();
+            otherActions.style.display = (type === "other" && isAdmin) ? "block" : "none";
         }
 
         if (titleEl) {
@@ -287,15 +199,13 @@
         list.innerHTML = html;
     }
 
-    // ---------------------------------------------------------
-    // GLOBAL CLICK DISPATCHER
-    // ---------------------------------------------------------
+    // Global Click Dispatcher
     function attachGlobalClicks() {
         document.body.addEventListener("click", function (e) {
             var target = e.target;
             if (!target) return;
 
-            // 1. Dashboard Feature Card Navigation
+            // Dashboard Card Navigation
             var card = target.closest(".feature-card");
             if (card) {
                 e.preventDefault();
@@ -304,15 +214,11 @@
 
                 if (feature === "birthdays") {
                     showPage("birthdaysPage", function () {
-                        if (window.KuyaB.features.birthdays) {
-                            window.KuyaB.features.birthdays.render();
-                        }
+                        if (window.KuyaB.features.birthdays) window.KuyaB.features.birthdays.render();
                     });
                 } else if (feature === "daily") {
                     showPage("dailyLogsPage", function () {
-                        if (window.KuyaBDaily) {
-                            window.KuyaBDaily.render();
-                        }
+                        if (window.KuyaB.features.dailyLogs) window.KuyaB.features.dailyLogs.render();
                     });
                 } else if (feature === "tasks") {
                     showPage("tasksPage", displayTasks);
@@ -328,7 +234,7 @@
                 return;
             }
 
-            // 2. Back Navigation
+            // Back Navigation
             if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton, #vaultBackButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -336,13 +242,15 @@
                 return;
             }
 
-            // 3. User Activity Navigation (Restricted to Admin)
-            var trackingBtn = target.closest("#btnOpenUserTracking");
-            if (trackingBtn) {
+            // Tracking Navigation
+            if (target.closest("#btnOpenUserTracking")) {
                 e.preventDefault();
-                if (!isCurrentUserAdmin()) return;
-                window.KuyaB.triggerHaptic("light");
-                showPage("userTrackingPage", displayTrackedUsers);
+                if (window.KuyaB.features.tracking && window.KuyaB.features.tracking.isAdmin()) {
+                    window.KuyaB.triggerHaptic("light");
+                    showPage("userTrackingPage", function () {
+                        window.KuyaB.features.tracking.render();
+                    });
+                }
                 return;
             }
 
@@ -354,7 +262,7 @@
                 return;
             }
 
-            // 4. Birthdays Module Delegation
+            // Birthdays Delegation
             if (target.closest("#addBirthdayButton")) {
                 e.preventDefault();
                 var bForm = document.getElementById("birthdayForm");
@@ -385,7 +293,7 @@
                 return;
             }
 
-            // 5. Daily Logs Open Form Handler
+            // Daily Logs Delegation
             if (target.closest("#addLogButton")) {
                 e.preventDefault();
                 var lForm = document.getElementById("logForm");
@@ -393,7 +301,7 @@
                 return;
             }
 
-            // 6. Tasks Form & Actions Delegation
+            // Tasks Delegation
             if (target.closest("#addTaskButton")) {
                 e.preventDefault();
                 var tForm = document.getElementById("taskForm");
@@ -443,7 +351,7 @@
                 return;
             }
 
-            // 7. Reminders Form & Actions Delegation
+            // Reminders Delegation
             if (target.closest("#addReminderButton")) {
                 e.preventDefault();
                 var rForm = document.getElementById("reminderForm");
@@ -479,7 +387,7 @@
                 return;
             }
 
-            // 8. Vault Form & Actions Delegation
+            // Vault Delegation
             if (target.closest("#addVaultItemButton")) {
                 e.preventDefault();
                 var vForm = document.getElementById("vaultItemForm");
@@ -536,7 +444,7 @@
                 return;
             }
 
-            // 9. Word Game Trigger
+            // Word Game
             if (target.closest("#gameButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -544,7 +452,7 @@
                 return;
             }
 
-            // 10. Quick Add Content Trigger
+            // Add Content Shortcut
             if (target.closest("#addContentButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -559,13 +467,14 @@
         });
     }
 
-    // ---------------------------------------------------------
-    // INITIALIZATION RUNNER
-    // ---------------------------------------------------------
     function init() {
         loadSharedData();
         attachGlobalClicks();
-        trackUserAccess();
+
+        // Trigger user tracking module
+        if (window.KuyaB.features.tracking) {
+            window.KuyaB.features.tracking.track();
+        }
 
         var msgId = window.KuyaB.getParam("msg_id");
         var chatId = window.KuyaB.getParam("chat_id");
@@ -579,14 +488,13 @@
             }).catch(function () {});
         }
 
-        // Direct Route on Launch
         if (startSection === "birthdays") {
             showPage("birthdaysPage", function () {
                 if (window.KuyaB.features.birthdays) window.KuyaB.features.birthdays.render();
             });
         } else if (startSection === "daily") {
             showPage("dailyLogsPage", function () {
-                if (window.KuyaBDaily) window.KuyaBDaily.render();
+                if (window.KuyaB.features.dailyLogs) window.KuyaB.features.dailyLogs.render();
             });
         } else if (startSection === "tasks") {
             showPage("tasksPage", displayTasks);
