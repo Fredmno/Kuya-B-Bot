@@ -96,44 +96,45 @@
             <div id="birthdaysList"></div>
         </div>
 
+
         <!-- ================= DAILY LOGS ================= -->
         <div id="dailyLogsPage" style="display: none;">
             <div class="top-bar">
-                <button class="btn-icon-back" id="dailyLogsBackButton">←</button>
+                <button type="button" class="btn-icon-back" id="dailyLogsBackButton">←</button>
                 <h2>📅 Daily Logs</h2>
-                <button class="btn-icon-add" id="addLogButton">+</button>
+                <button type="button" class="btn-icon-add" id="addLogButton">+</button>
             </div>
 
             <div class="form-box" id="logForm" style="display: none;">
                 <div class="mood-selector-label">How are you feeling?</div>
                 
-                <!-- Static Emoji Selector (Guaranteed to display) -->
+                <!-- Static Emoji Selector -->
                 <div class="mood-selector" id="moodSelectorContainer">
-                    <button type="button" class="mood-pill selected" data-mood="😊">
+                    <button type="button" class="mood-pill selected" onclick="window.KuyaBDaily.selectMood(this, '😊')">
                         <span class="mood-emoji">😊</span>
                         <span class="mood-label">Happy</span>
                     </button>
-                    <button type="button" class="mood-pill" data-mood="😔">
+                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '😔')">
                         <span class="mood-emoji">😔</span>
                         <span class="mood-label">Sad</span>
                     </button>
-                    <button type="button" class="mood-pill" data-mood="🥺">
+                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '🥺')">
                         <span class="mood-emoji">🥺</span>
                         <span class="mood-label">Lonely</span>
                     </button>
-                    <button type="button" class="mood-pill" data-mood="😡">
+                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '😡')">
                         <span class="mood-emoji">😡</span>
                         <span class="mood-label">Angry</span>
                     </button>
-                    <button type="button" class="mood-pill" data-mood="😴">
+                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '😴')">
                         <span class="mood-emoji">😴</span>
                         <span class="mood-label">Tired</span>
                     </button>
-                    <button type="button" class="mood-pill" data-mood="✨">
+                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '✨')">
                         <span class="mood-emoji">✨</span>
                         <span class="mood-label">Excited</span>
                     </button>
-                    <button type="button" class="mood-pill" data-mood="🧘">
+                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '🧘')">
                         <span class="mood-emoji">🧘</span>
                         <span class="mood-label">Calm</span>
                     </button>
@@ -142,8 +143,8 @@
                 <textarea class="neu-input" id="logContent" placeholder="Write any notes or thoughts (optional)..." rows="3"></textarea>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn-soft cancel" id="cancelLogButton">Cancel</button>
-                    <button type="button" class="btn-soft save" id="saveLogButton">Save</button>
+                    <button type="button" class="btn-soft cancel" onclick="document.getElementById('logForm').style.display='none'">Cancel</button>
+                    <button type="button" class="btn-soft save" id="saveLogButton" onclick="window.KuyaBDaily.save(event)">Save</button>
                 </div>
             </div>
 
@@ -151,7 +152,7 @@
         </div>
 
         <!-- DAILY LOG DETAIL MODAL -->
-        <div id="logDetailModal" class="modal-overlay" style="display: none;">
+        <div id="logDetailModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) window.KuyaBDaily.closeModal()">
             <div class="modal-card">
                 <div class="modal-header">
                     <span class="modal-emoji" id="modalLogEmoji">😊</span>
@@ -159,10 +160,117 @@
                 </div>
                 <div class="modal-body" id="modalLogContent"></div>
                 <div class="form-actions">
-                    <button type="button" class="btn-soft cancel" id="closeLogDetailBtn" style="width: 100%;">Close</button>
+                    <button type="button" class="btn-soft cancel" style="width: 100%;" onclick="window.KuyaBDaily.closeModal()">Close</button>
                 </div>
             </div>
         </div>
+
+        <script>
+        /* INLINE SELF-CONTAINED DAILY LOGS ENGINE */
+        window.KuyaBDaily = {
+            currentMood: '😊',
+            selectMood: function(btn, mood) {
+                var pills = document.querySelectorAll('.mood-pill');
+                pills.forEach(function(p) { p.classList.remove('selected'); });
+                btn.classList.add('selected');
+                this.currentMood = mood;
+                if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('light');
+            },
+            save: function(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
+                var noteEl = document.getElementById('logContent');
+                var note = noteEl ? noteEl.value.trim() : '';
+                var now = new Date();
+                var dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                var timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                var logs = [];
+                try {
+                    logs = JSON.parse(localStorage.getItem('kuyaB_dailyLogs')) || [];
+                } catch(err) { logs = []; }
+
+                logs.unshift({
+                    id: Date.now().toString(),
+                    mood: this.currentMood || '😊',
+                    content: note,
+                    date: dateStr,
+                    time: timeStr
+                });
+
+                localStorage.setItem('kuyaB_dailyLogs', JSON.stringify(logs));
+                if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('medium');
+
+                if (noteEl) noteEl.value = '';
+                document.getElementById('logForm').style.display = 'none';
+                this.render();
+            },
+            render: function() {
+                var list = document.getElementById('dailyLogsList');
+                if (!list) return;
+                var logs = [];
+                try {
+                    logs = JSON.parse(localStorage.getItem('kuyaB_dailyLogs')) || [];
+                } catch(err) { logs = []; }
+
+                if (logs.length === 0) {
+                    list.innerHTML = '<p class="empty-state">No logs yet. Tap + to record how you feel!</p>';
+                    return;
+                }
+
+                var html = '';
+                logs.forEach(function(item) {
+                    html += '<div class="daily-log-card" data-id="' + item.id + '">' +
+                        '<div class="log-clickable-area" onclick="window.KuyaBDaily.view(\'' + item.id + '\')">' +
+                            '<span class="log-emoji-badge">' + (item.mood || '📝') + '</span>' +
+                            '<div class="log-date-column">' +
+                                '<span class="log-date">' + (item.date || '') + '</span>' +
+                                '<span class="log-time">' + (item.time || '') + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="log-actions">' +
+                            '<button type="button" class="btn-delete" onclick="window.KuyaBDaily.remove(\'' + item.id + '\')">🗑️</button>' +
+                        '</div>' +
+                    '</div>';
+                });
+                list.innerHTML = html;
+            },
+            view: function(id) {
+                var logs = [];
+                try { logs = JSON.parse(localStorage.getItem('kuyaB_dailyLogs')) || []; } catch(err) {}
+                var item = logs.find(function(x) { return x.id === id; });
+                if (!item) return;
+
+                document.getElementById('modalLogEmoji').innerText = item.mood || '📝';
+                document.getElementById('modalLogDate').innerText = (item.date || '') + ' • ' + (item.time || '');
+                document.getElementById('modalLogContent').innerText = item.content ? item.content : '(No additional note written)';
+                document.getElementById('logDetailModal').style.display = 'flex';
+                if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('light');
+            },
+            closeModal: function() {
+                document.getElementById('logDetailModal').style.display = 'none';
+            },
+            remove: function(id) {
+                if (confirm('Delete this log entry?')) {
+                    var logs = [];
+                    try { logs = JSON.parse(localStorage.getItem('kuyaB_dailyLogs')) || []; } catch(err) {}
+                    logs = logs.filter(function(x) { return x.id !== id; });
+                    localStorage.setItem('kuyaB_dailyLogs', JSON.stringify(logs));
+                    if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('medium');
+                    this.render();
+                }
+            }
+        };
+
+        // Render logs as soon as DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            window.KuyaBDaily.render();
+        });
+        </script>
+
 
 
 
