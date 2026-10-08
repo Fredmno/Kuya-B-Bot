@@ -23,12 +23,21 @@ from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 
-# Exact repository import path
+# Modular Feature Imports
 from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
     api_delete_birthday,
     api_edit_birthday,
+)
+from features.daily_logs.daily_logs import (
+    api_get_daily_logs,
+    api_save_daily_log,
+    api_delete_daily_log,
+)
+from features.tracking.tracking import (
+    api_track_user,
+    api_get_users,
 )
 
 logging.basicConfig(
@@ -36,12 +45,11 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.7.1"
+APP_VERSION = "2.8.0"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
 VAULT_CHANNEL_ID = os.getenv("VAULT_CHANNEL_ID")
-ADMIN_USER_ID = os.getenv("ADMIN_USER_ID")  # Set in Render env or configure here
 
 WEBHOOK_PATH = "/telegram"
 WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
@@ -56,48 +64,6 @@ def get_vault_chat_id():
     return vault_id
 
 
-# ---------------------------------------------------------
-# BOT COMMANDS & WEBHOOK
-# ---------------------------------------------------------
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "🤖 Kuya B is online!\n"
-        "Use /kuyab to open your personal hub menu.\n"
-        "Use /game to start Word Scramble."
-    )
-
-
-async def telegram_webhook(request: Request):
-    data = await request.json()
-    update = Update.de_json(data, application.bot)
-    await application.process_update(update)
-    return PlainTextResponse("OK")
-
-
-async def health_check(request: Request):
-    return PlainTextResponse(f"Kuya B Bot v{APP_VERSION} is operational.")
-
-
-async def serve_index(request: Request):
-    index_path = os.path.join("webapp", "index.html")
-    if not os.path.exists(index_path):
-        return PlainTextResponse("index.html not found", status_code=404)
-
-    with open(index_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    rendered = content.replace("{{ v }}", APP_VERSION)
-    headers = {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0",
-    }
-    return HTMLResponse(rendered, headers=headers)
-
-
-# ---------------------------------------------------------
-# PERSISTENT TELEGRAM CHANNEL REGISTRY (PINNED MESSAGE INDEX)
-# ---------------------------------------------------------
 async def get_or_create_registry():
     channel_id = get_vault_chat_id()
     if not channel_id:
@@ -145,154 +111,44 @@ async def save_registry(registry_data, existing_msg_id=None):
         logging.warning(f"Could not pin registry: {e}")
 
 
-# ---------------------------------------------------------
-# DAILY LOGS API (PERMANENT VAULT STORAGE)
-# ---------------------------------------------------------
-async def api_save_daily_log(request: Request):
-    try:
-        data = await request.json()
-        mood = data.get("mood", "😊")
-        habits = data.get("habits", [])
-        content = data.get("content", "").strip()
-        date_str = data.get("date", "")
-        time_str = data.get("time", "")
-
-        channel_id = get_vault_chat_id()
-        if not channel_id:
-            return JSONResponse({"error": "VAULT_CHANNEL_ID not set"}, status_code=500)
-
-        metadata_json = json.dumps({"mood": mood, "habits": habits, "date": date_str, "time": time_str})
-
-        habits_formatted = ""
-        if habits:
-            habits_formatted = "\n\n**✅ Habits Completed:**\n" + "\n".join([f"• {h}" for h in habits])
-
-        message_text = (
-            f"📅 **DAILY LOG**\n"
-            f"**Date:** {date_str} • {time_str}\n"
-            f"**Mood:** {mood}"
-            f"{habits_formatted}\n\n"
-            f"**Notes:**\n{content if content else '_(No notes added)_'}\n\n"
-            f"`#DAILY_LOG:{metadata_json}`"
-        )
-
-        sent_msg = await application.bot.send_message(
-            chat_id=channel_id,
-            text=message_text,
-            parse_mode="Markdown"
-        )
-
-        log_entry = {
-            "id": str(sent_msg.message_id),
-            "message_id": sent_msg.message_id,
-            "mood": mood,
-            "habits": habits,
-            "content": content,
-            "date": date_str,
-            "time": time_str
-        }
-
-        # Save to permanent channel registry
-        reg, msg_id = await get_or_create_registry()
-        reg_logs = reg.get("logs", [])
-        reg_logs.insert(0, log_entry)
-        reg["logs"] = reg_logs
-        await save_registry(reg, msg_id)
-
-        return JSONResponse({"success": True, "log": log_entry})
-    except Exception as e:
-        logging.error(f"Error posting daily log: {e}", exc_info=True)
-        return JSONResponse({"error": str(e)}, status_code=500)
+# Commands & Webhook
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "🤖 Kuya B is online!\n"
+        "Use /kuyab to open your personal hub menu.\n"
+        "Use /game to start Word Scramble."
+    )
 
 
-async def api_get_daily_logs(request: Request):
-    reg, _ = await get_or_create_registry()
-    return JSONResponse({"success": True, "logs": reg.get("logs", [])})
+async def telegram_webhook(request: Request):
+    data = await request.json()
+    update = Update.de_json(data, application.bot)
+    await application.process_update(update)
+    return PlainTextResponse("OK")
 
 
-async def api_delete_daily_log(request: Request):
-    try:
-        data = await request.json()
-        msg_id = data.get("id")
-        if not msg_id:
-            return JSONResponse({"error": "Missing message id"}, status_code=400)
-
-        channel_id = get_vault_chat_id()
-
-        try:
-            await application.bot.delete_message(chat_id=channel_id, message_id=int(msg_id))
-        except Exception as bot_err:
-            logging.warning(f"Could not delete message {msg_id}: {bot_err}")
-
-        reg, p_msg_id = await get_or_create_registry()
-        reg["logs"] = [item for item in reg.get("logs", []) if str(item.get("id")) != str(msg_id)]
-        await save_registry(reg, p_msg_id)
-
-        return JSONResponse({"success": True})
-    except Exception as e:
-        logging.error(f"Error deleting daily log: {e}", exc_info=True)
-        return JSONResponse({"error": str(e)}, status_code=500)
+async def health_check(request: Request):
+    return PlainTextResponse(f"Kuya B Bot v{APP_VERSION} is operational.")
 
 
-# ---------------------------------------------------------
-# USER TRACKING APIS (ADMIN SECURED)
-# ---------------------------------------------------------
-async def api_track_user(request: Request):
-    try:
-        data = await request.json()
-        user_id = str(data.get("id"))
-        first_name = data.get("first_name", "Unknown")
-        username = data.get("username", "N/A")
-        timestamp = data.get("timestamp", "")
+async def serve_index(request: Request):
+    index_path = os.path.join("webapp", "index.html")
+    if not os.path.exists(index_path):
+        return PlainTextResponse("index.html not found", status_code=404)
 
-        if not user_id:
-            return JSONResponse({"error": "No user ID"}, status_code=400)
+    with open(index_path, "r", encoding="utf-8") as f:
+        content = f.read()
 
-        reg, p_msg_id = await get_or_create_registry()
-        users_list = reg.get("users", [])
-
-        # Update existing user or register new
-        found = False
-        for u in users_list:
-            if str(u.get("id")) == user_id:
-                u["first_name"] = first_name
-                u["username"] = username
-                u["last_seen"] = timestamp
-                u["visits"] = u.get("visits", 1) + 1
-                found = True
-                break
-
-        if not found:
-            users_list.insert(0, {
-                "id": user_id,
-                "first_name": first_name,
-                "username": username,
-                "last_seen": timestamp,
-                "visits": 1
-            })
-
-        reg["users"] = users_list
-        await save_registry(reg, p_msg_id)
-
-        return JSONResponse({"success": True})
-    except Exception as e:
-        logging.error(f"Error tracking user: {e}", exc_info=True)
-        return JSONResponse({"error": str(e)}, status_code=500)
+    rendered = content.replace("{{ v }}", APP_VERSION)
+    headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    }
+    return HTMLResponse(rendered, headers=headers)
 
 
-async def api_get_users(request: Request):
-    req_user_id = request.query_params.get("user_id")
-    # If ADMIN_USER_ID is set in environment, enforce server-side validation
-    if ADMIN_USER_ID and str(req_user_id) != str(ADMIN_USER_ID):
-        return JSONResponse({"success": False, "error": "Unauthorized"}, status_code=403)
-
-    reg, _ = await get_or_create_registry()
-    return JSONResponse({"success": True, "users": reg.get("users", [])})
-
-
-# ---------------------------------------------------------
-# VAULT ITEM FORWARDING & UTILITY APIS
-# ---------------------------------------------------------
+# Vault Forward & Cleanup Helpers
 async def api_forward_vault_item(request: Request):
     try:
         data = await request.json()
@@ -360,9 +216,6 @@ async def api_send_birthday_greeting(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-# ---------------------------------------------------------
-# LIFESPAN & APPLICATION STARTUP
-# ---------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app):
     init_db()
@@ -385,36 +238,34 @@ async def lifespan(app):
     await application.shutdown()
 
 
-# Handlers
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("kuyab", kuya_b_menu))
 application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
 application.add_handler(CallbackQueryHandler(menu_callback_handler))
 register_word_game_handlers(application)
 
-# Routes
 starlette_app = Starlette(
     routes=[
         Route("/", health_check, methods=["GET", "HEAD"]),
         Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
         
-        # Birthday Routes
+        # Modular: Birthdays
         Route("/api/birthdays", api_get_birthdays, methods=["GET"]),
         Route("/api/birthdays", api_add_birthday, methods=["POST"]),
         Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
         Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
         Route("/api/birthdays/greet", api_send_birthday_greeting, methods=["POST"]),
         
-        # Vault Channel Daily Logs Routes
+        # Modular: Daily Logs
         Route("/api/logs", api_get_daily_logs, methods=["GET"]),
         Route("/api/logs", api_save_daily_log, methods=["POST"]),
         Route("/api/logs/delete", api_delete_daily_log, methods=["POST"]),
 
-        # User Tracking Routes
+        # Modular: Tracking
         Route("/api/track-user", api_track_user, methods=["POST"]),
         Route("/api/users", api_get_users, methods=["GET"]),
 
-        # Vault Forward & Utility Routes
+        # Vault & Utilities
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
         
