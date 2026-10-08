@@ -67,7 +67,7 @@
     };
 
     // ---------------------------------------------------------
-    // SHARED STORES
+    // SHARED STORES (LOCAL FALLBACKS)
     // ---------------------------------------------------------
     var tasks = [];
     var reminders = [];
@@ -83,7 +83,15 @@
     // ---------------------------------------------------------
     // PAGE ROUTING
     // ---------------------------------------------------------
-    var ALL_PAGES = ["dashboardPage", "birthdaysPage", "dailyLogsPage", "tasksPage", "remindersPage", "vaultPage"];
+    var ALL_PAGES = [
+        "dashboardPage", 
+        "birthdaysPage", 
+        "dailyLogsPage", 
+        "tasksPage", 
+        "remindersPage", 
+        "vaultPage", 
+        "userTrackingPage"
+    ];
 
     function hideAllForms() {
         var formIds = ["birthdayForm", "logForm", "taskForm", "reminderForm", "vaultItemForm"];
@@ -120,6 +128,65 @@
     }
 
     // ---------------------------------------------------------
+    // USER TRACKING ENGINE
+    // ---------------------------------------------------------
+    function trackUserAccess() {
+        var user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+        if (!user) return;
+
+        var now = new Date();
+        var dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        var timeStr = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+
+        fetch("/api/track-user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                id: user.id,
+                first_name: user.first_name || "",
+                username: user.username || "N/A",
+                timestamp: dateStr + " • " + timeStr
+            })
+        }).catch(function () {});
+    }
+
+    async function displayTrackedUsers() {
+        var container = document.getElementById("usersListContainer");
+        if (!container) return;
+        container.innerHTML = '<p class="empty-state">Loading user activity...</p>';
+
+        try {
+            var res = await fetch("/api/users");
+            var data = await res.json();
+            var users = data.users || [];
+
+            if (users.length === 0) {
+                container.innerHTML = '<p class="empty-state">No users tracked yet.</p>';
+                return;
+            }
+
+            var html = "";
+            for (var i = 0; i < users.length; i++) {
+                var u = users[i];
+                var handle = u.username && u.username !== "N/A" ? "@" + u.username : "No username";
+                html += '<div class="birthday-card" style="margin-bottom: 10px;">' +
+                    '<div class="birthday-info">' +
+                        '<div class="birthday-title-row">' +
+                            '<span class="birthday-name">👤 ' + (u.first_name || "Anonymous") + '</span>' +
+                            '<span class="bday-badge-days">' + (u.visits || 1) + ' visit' + (u.visits > 1 ? 's' : '') + '</span>' +
+                        '</div>' +
+                        '<span class="birthday-date" style="font-size: 0.78rem; color: var(--text-muted);">' + handle + ' • ID: ' + u.id + '</span>' +
+                        '<span class="birthday-date" style="font-size: 0.74rem; color: var(--primary-blue); margin-top: 2px;">Last: ' + (u.last_seen || "Recent") + '</span>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = '<p class="empty-state">Error loading user logs.</p>';
+        }
+    }
+
+    // ---------------------------------------------------------
     // TASKS ENGINE
     // ---------------------------------------------------------
     function displayTasks() {
@@ -136,8 +203,8 @@
             var toggleIcon = t.completed ? '↩' : '✓';
             html += '<div class="birthday-card" data-id="' + t.id + '">' +
                 '<div class="birthday-info"><span class="birthday-name" style="' + style + '">' + t.title + '</span></div>' +
-                '<div class="birthday-actions"><button class="btn-greet" data-action="toggle-task" data-id="' + t.id + '">' + toggleIcon + '</button>' +
-                '<button class="btn-delete" data-action="delete-task" data-id="' + t.id + '">🗑️</button></div></div>';
+                '<div class="birthday-actions"><button type="button" class="btn-greet" data-action="toggle-task" data-id="' + t.id + '">' + toggleIcon + '</button>' +
+                '<button type="button" class="btn-delete" data-action="delete-task" data-id="' + t.id + '">🗑️</button></div></div>';
         }
         list.innerHTML = html;
     }
@@ -157,7 +224,7 @@
             var r = reminders[i];
             html += '<div class="birthday-card" data-id="' + r.id + '">' +
                 '<div class="birthday-info"><span class="birthday-name">' + r.title + '</span></div>' +
-                '<div class="birthday-actions"><button class="btn-delete" data-action="delete-rem" data-id="' + r.id + '">🗑️</button></div></div>';
+                '<div class="birthday-actions"><button type="button" class="btn-delete" data-action="delete-rem" data-id="' + r.id + '">🗑️</button></div></div>';
         }
         list.innerHTML = html;
     }
@@ -168,10 +235,16 @@
     function setVaultType(type) {
         currentVaultType = type;
         var titleEl = document.getElementById("vaultPageTitle");
+        var otherActions = document.getElementById("otherActionsBar");
+
+        if (otherActions) {
+            otherActions.style.display = (type === "other") ? "block" : "none";
+        }
+
         if (titleEl) {
             if (type === "videos") titleEl.innerText = "🎥 Videos";
             else if (type === "pictures") titleEl.innerText = "🖼️ Pictures";
-            else titleEl.innerText = "📁 Vault";
+            else titleEl.innerText = "📁 Other";
         }
     }
 
@@ -192,8 +265,8 @@
             html += '<div class="birthday-card" data-id="' + item.id + '">' +
                 '<div class="birthday-info"><div class="birthday-title-row"><span class="birthday-name">' + item.title + '</span>' +
                 '<span class="bday-badge">' + (item.folder || "General") + '</span></div><span class="birthday-date">Msg ID: ' + item.messageId + '</span></div>' +
-                '<div class="birthday-actions"><button class="btn-greet" data-action="forward-vault" data-msg="' + item.messageId + '">Forward</button>' +
-                '<button class="btn-delete" data-action="delete-vault" data-id="' + item.id + '">🗑️</button></div></div>';
+                '<div class="birthday-actions"><button type="button" class="btn-greet" data-action="forward-vault" data-msg="' + item.messageId + '">Forward</button>' +
+                '<button type="button" class="btn-delete" data-action="delete-vault" data-id="' + item.id + '">🗑️</button></div></div>';
         }
         list.innerHTML = html;
     }
@@ -247,7 +320,24 @@
                 return;
             }
 
-            // 3. Birthdays Module Delegation
+            // 3. User Activity Navigation
+            var trackingBtn = target.closest("#btnOpenUserTracking");
+            if (trackingBtn) {
+                e.preventDefault();
+                window.KuyaB.triggerHaptic("light");
+                showPage("userTrackingPage", displayTrackedUsers);
+                return;
+            }
+
+            if (target.closest("#userTrackingBackButton")) {
+                e.preventDefault();
+                window.KuyaB.triggerHaptic("light");
+                setVaultType("other");
+                showPage("vaultPage", displayVaultItems);
+                return;
+            }
+
+            // 4. Birthdays Module Delegation
             if (target.closest("#addBirthdayButton")) {
                 e.preventDefault();
                 var bForm = document.getElementById("birthdayForm");
@@ -278,7 +368,7 @@
                 return;
             }
 
-            // 4. Daily Logs Open Form Handler
+            // 5. Daily Logs Open Form Handler
             if (target.closest("#addLogButton")) {
                 e.preventDefault();
                 var lForm = document.getElementById("logForm");
@@ -286,7 +376,7 @@
                 return;
             }
 
-            // 5. Tasks Form & Actions Delegation
+            // 6. Tasks Form & Actions Delegation
             if (target.closest("#addTaskButton")) {
                 e.preventDefault();
                 var tForm = document.getElementById("taskForm");
@@ -336,7 +426,7 @@
                 return;
             }
 
-            // 6. Reminders Form & Actions Delegation
+            // 7. Reminders Form & Actions Delegation
             if (target.closest("#addReminderButton")) {
                 e.preventDefault();
                 var rForm = document.getElementById("reminderForm");
@@ -372,7 +462,7 @@
                 return;
             }
 
-            // 7. Vault Form & Actions Delegation
+            // 8. Vault Form & Actions Delegation
             if (target.closest("#addVaultItemButton")) {
                 e.preventDefault();
                 var vForm = document.getElementById("vaultItemForm");
@@ -429,7 +519,7 @@
                 return;
             }
 
-            // 8. Word Game Trigger
+            // 9. Word Game Trigger
             if (target.closest("#gameButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -437,7 +527,7 @@
                 return;
             }
 
-            // 9. Quick Add Content Trigger
+            // 10. Quick Add Content Trigger
             if (target.closest("#addContentButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -458,6 +548,7 @@
     function init() {
         loadSharedData();
         attachGlobalClicks();
+        trackUserAccess();
 
         var msgId = window.KuyaB.getParam("msg_id");
         var chatId = window.KuyaB.getParam("chat_id");
