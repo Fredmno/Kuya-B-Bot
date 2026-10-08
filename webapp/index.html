@@ -9,7 +9,7 @@
 </head>
 <body>
     <div id="app">
-        <!-- ================= DASHBOARD ================= -->
+        <!-- DASHBOARD -->
         <div id="dashboardPage">
             <header class="dashboard-header">
                 <div class="greeting">Welcome Back 👋</div>
@@ -74,11 +74,10 @@
             </div>
 
             <button class="full-btn" id="addContentButton">+ Add Content</button>
-
             <footer class="dashboard-footer">Kuya B Personal Hub</footer>
         </div>
 
-        <!-- ================= BIRTHDAYS ================= -->
+        <!-- BIRTHDAYS -->
         <div id="birthdaysPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="birthdayBackButton">←</button>
@@ -96,7 +95,7 @@
             <div id="birthdaysList"></div>
         </div>
 
-        <!-- ================= DAILY LOGS & HABITS (TELEGRAM VAULT) ================= -->
+        <!-- DAILY LOGS & HABITS -->
         <div id="dailyLogsPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="dailyLogsBackButton">←</button>
@@ -106,65 +105,54 @@
 
             <div class="form-box" id="logForm" style="display: none;">
                 <div class="mood-selector-label">How are you feeling?</div>
-                
-                <!-- Mood Emojis -->
                 <div class="mood-selector" id="moodSelectorContainer">
-                    <button type="button" class="mood-pill selected" onclick="window.KuyaBDaily.selectMood(this, '😊')">
-                        <span class="mood-emoji">😊</span>
-                        <span class="mood-label">Happy</span>
+                    <button type="button" class="mood-pill selected" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😊')">
+                        <span class="mood-emoji">😊</span><span class="mood-label">Happy</span>
                     </button>
-                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '😔')">
-                        <span class="mood-emoji">😔</span>
-                        <span class="mood-label">Sad</span>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😔')">
+                        <span class="mood-emoji">😔</span><span class="mood-label">Sad</span>
                     </button>
-                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '🥺')">
-                        <span class="mood-emoji">🥺</span>
-                        <span class="mood-label">Lonely</span>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '🥺')">
+                        <span class="mood-emoji">🥺</span><span class="mood-label">Lonely</span>
                     </button>
-                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '😡')">
-                        <span class="mood-emoji">😡</span>
-                        <span class="mood-label">Angry</span>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😡')">
+                        <span class="mood-emoji">😡</span><span class="mood-label">Angry</span>
                     </button>
-                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '😴')">
-                        <span class="mood-emoji">😴</span>
-                        <span class="mood-label">Tired</span>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😴')">
+                        <span class="mood-emoji">😴</span><span class="mood-label">Tired</span>
                     </button>
-                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '✨')">
-                        <span class="mood-emoji">✨</span>
-                        <span class="mood-label">Excited</span>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '✨')">
+                        <span class="mood-emoji">✨</span><span class="mood-label">Excited</span>
                     </button>
-                    <button type="button" class="mood-pill" onclick="window.KuyaBDaily.selectMood(this, '🧘')">
-                        <span class="mood-emoji">🧘</span>
-                        <span class="mood-label">Calm</span>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '🧘')">
+                        <span class="mood-emoji">🧘</span><span class="mood-label">Calm</span>
                     </button>
                 </div>
 
                 <div class="mood-selector-label" style="margin-top: 14px;">Habits Completed</div>
-                
-                <!-- Core 8 Habit Selector Chips -->
                 <div class="habit-chips-grid" id="habitsContainer">
-                    <button type="button" class="habit-chip" data-habit="💧 2L Water" onclick="window.KuyaBDaily.toggleHabit(this)">
+                    <button type="button" class="habit-chip" data-habit="💧 2L Water" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
                         <span class="habit-icon">💧</span> 2L Water
                     </button>
-                    <button type="button" class="habit-chip" data-habit="🏃 Workout" onclick="window.KuyaBDaily.toggleHabit(this)">
+                    <button type="button" class="habit-chip" data-habit="🏃 Workout" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
                         <span class="habit-icon">🏃</span> Workout
                     </button>
-                    <button type="button" class="habit-chip" data-habit="📖 Read" onclick="window.KuyaBDaily.toggleHabit(this)">
+                    <button type="button" class="habit-chip" data-habit="📖 Read" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
                         <span class="habit-icon">📖</span> Read
                     </button>
-                    <button type="button" class="habit-chip" data-habit="💊 Vitamins" onclick="window.KuyaBDaily.toggleHabit(this)">
+                    <button type="button" class="habit-chip" data-habit="💊 Vitamins" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
                         <span class="habit-icon">💊</span> Vitamins
                     </button>
-                    <button type="button" class="habit-chip" data-habit="💻 Deep Work" onclick="window.KuyaBDaily.toggleHabit(this)">
+                    <button type="button" class="habit-chip" data-habit="💻 Deep Work" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
                         <span class="habit-icon">💻</span> Deep Work
                     </button>
-                    <button type="button" class="habit-chip" data-habit="🧘 Meditation" onclick="window.KuyaBDaily.toggleHabit(this)">
+                    <button type="button" class="habit-chip" data-habit="🧘 Meditation" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
                         <span class="habit-icon">🧘</span> Meditation
                     </button>
-                    <button type="button" class="habit-chip" data-habit="🥗 Clean Eating" onclick="window.KuyaBDaily.toggleHabit(this)">
+                    <button type="button" class="habit-chip" data-habit="🥗 Clean Eating" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
                         <span class="habit-icon">🥗</span> Clean Eating
                     </button>
-                    <button type="button" class="habit-chip" data-habit="😴 7+ hrs Sleep" onclick="window.KuyaBDaily.toggleHabit(this)">
+                    <button type="button" class="habit-chip" data-habit="😴 7+ hrs Sleep" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
                         <span class="habit-icon">😴</span> 7+ hrs Sleep
                     </button>
                 </div>
@@ -174,15 +162,15 @@
                 
                 <div class="form-actions">
                     <button type="button" class="btn-soft cancel" onclick="document.getElementById('logForm').style.display='none'">Cancel</button>
-                    <button type="button" class="btn-soft save" id="saveLogButton" onclick="window.KuyaBDaily.save(event)">Save</button>
+                    <button type="button" class="btn-soft save" id="saveLogButton" onclick="window.KuyaB.features.dailyLogs.save(event)">Save</button>
                 </div>
             </div>
 
             <div id="dailyLogsList"></div>
         </div>
 
-        <!-- DAILY LOG DETAIL MODAL -->
-        <div id="logDetailModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) window.KuyaBDaily.closeModal()">
+        <!-- DETAIL MODAL -->
+        <div id="logDetailModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) window.KuyaB.features.dailyLogs.closeModal()">
             <div class="modal-card">
                 <div class="modal-header">
                     <span class="modal-emoji" id="modalLogEmoji">😊</span>
@@ -191,22 +179,19 @@
                         <div class="modal-sub" id="modalHabitsCount"></div>
                     </div>
                 </div>
-                
                 <div id="modalHabitsSection" style="display: none;">
                     <div class="modal-section-title">Completed Habits:</div>
                     <div class="modal-habits-list" id="modalHabitsList"></div>
                 </div>
-
                 <div class="modal-section-title" style="margin-top: 8px;">Reflection:</div>
                 <div class="modal-body" id="modalLogContent"></div>
-                
                 <div class="form-actions">
-                    <button type="button" class="btn-soft cancel" style="width: 100%;" onclick="window.KuyaBDaily.closeModal()">Close</button>
+                    <button type="button" class="btn-soft cancel" style="width: 100%;" onclick="window.KuyaB.features.dailyLogs.closeModal()">Close</button>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TASKS ================= -->
+        <!-- TASKS -->
         <div id="tasksPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="tasksBackButton">←</button>
@@ -223,7 +208,7 @@
             <div id="tasksList"></div>
         </div>
 
-        <!-- ================= REMINDERS ================= -->
+        <!-- REMINDERS -->
         <div id="remindersPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="remindersBackButton">←</button>
@@ -240,7 +225,7 @@
             <div id="remindersList"></div>
         </div>
 
-        <!-- ================= VAULT / OTHER ================= -->
+        <!-- VAULT / OTHER -->
         <div id="vaultPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="vaultBackButton">←</button>
@@ -248,7 +233,6 @@
                 <button type="button" class="btn-icon-add" id="addVaultItemButton">+</button>
             </div>
 
-            <!-- Activity tracking button inside Other section -->
             <div id="otherActionsBar" style="padding: 0 16px 12px 16px; display: none;">
                 <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="margin-bottom: 0;">
                     <div class="card-left">
@@ -275,7 +259,7 @@
             <div id="vaultItemsList"></div>
         </div>
 
-        <!-- ================= USER ACTIVITY TRACKING PAGE ================= -->
+        <!-- USER ACTIVITY PAGE -->
         <div id="userTrackingPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="userTrackingBackButton">←</button>
@@ -288,174 +272,12 @@
         </div>
     </div>
 
-    <!-- DAILY LOGS & HABIT TRACKER TELEGRAM VAULT ENGINE -->
-    <script>
-    window.KuyaBDaily = {
-        currentMood: '😊',
-        selectedHabits: [],
-        logs: [],
-        selectMood: function(btn, mood) {
-            var pills = document.querySelectorAll('.mood-pill');
-            pills.forEach(function(p) { p.classList.remove('selected'); });
-            btn.classList.add('selected');
-            this.currentMood = mood;
-            if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('light');
-        },
-        toggleHabit: function(btn) {
-            var habit = btn.getAttribute('data-habit');
-            if (btn.classList.contains('selected')) {
-                btn.classList.remove('selected');
-                this.selectedHabits = this.selectedHabits.filter(function(h) { return h !== habit; });
-            } else {
-                btn.classList.add('selected');
-                this.selectedHabits.push(habit);
-            }
-            if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('light');
-        },
-        resetForm: function() {
-            var noteEl = document.getElementById('logContent');
-            if (noteEl) noteEl.value = '';
-            var chips = document.querySelectorAll('.habit-chip');
-            chips.forEach(function(c) { c.classList.remove('selected'); });
-            this.selectedHabits = [];
-            document.getElementById('logForm').style.display = 'none';
-        },
-        save: async function(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-            }
-            var noteEl = document.getElementById('logContent');
-            var note = noteEl ? noteEl.value.trim() : '';
-            var now = new Date();
-            var dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            var timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-            var saveBtn = document.getElementById('saveLogButton');
-            if (saveBtn) saveBtn.innerText = 'Posting to Vault...';
-
-            try {
-                var res = await fetch('/api/logs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        mood: this.currentMood || '😊',
-                        habits: this.selectedHabits || [],
-                        content: note,
-                        date: dateStr,
-                        time: timeStr
-                    })
-                });
-                var data = await res.json();
-                if (data.success) {
-                    if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('medium');
-                    this.resetForm();
-                    this.render();
-                } else {
-                    alert('Could not post to Telegram: ' + (data.error || 'Server error'));
-                }
-            } catch(err) {
-                alert('Network error communicating with Kuya B backend.');
-            } finally {
-                if (saveBtn) saveBtn.innerText = 'Save';
-            }
-        },
-        render: async function() {
-            var list = document.getElementById('dailyLogsList');
-            if (!list) return;
-
-            try {
-                var res = await fetch('/api/logs');
-                var data = await res.json();
-                if (data.success) {
-                    this.logs = data.logs || [];
-                }
-            } catch(e) {
-                this.logs = [];
-            }
-
-            if (this.logs.length === 0) {
-                list.innerHTML = '<p class="empty-state">No logs in vault yet. Tap + to record how you feel!</p>';
-                return;
-            }
-
-            var html = '';
-            this.logs.forEach(function(item) {
-                html += '<div class="daily-log-card" data-id="' + item.id + '">' +
-                    '<div class="log-clickable-area" onclick="window.KuyaBDaily.view(\'' + item.id + '\')">' +
-                        '<span class="log-emoji-badge">' + (item.mood || '📝') + '</span>' +
-                        '<div class="log-date-column">' +
-                            '<span class="log-date">' + (item.date || '') + '</span>' +
-                            '<span class="log-time">' + (item.time || '') + '</span>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="log-actions">' +
-                        '<button type="button" class="btn-delete" onclick="window.KuyaBDaily.remove(\'' + item.id + '\')">🗑️</button>' +
-                    '</div>' +
-                '</div>';
-            });
-            list.innerHTML = html;
-        },
-        view: function(id) {
-            var item = this.logs.find(function(x) { return String(x.id) === String(id); });
-            if (!item) return;
-
-            document.getElementById('modalLogEmoji').innerText = item.mood || '📝';
-            document.getElementById('modalLogDate').innerText = (item.date || '') + ' • ' + (item.time || '');
-            
-            var habits = item.habits || [];
-            var habitsSection = document.getElementById('modalHabitsSection');
-            var habitsList = document.getElementById('modalHabitsList');
-            var habitsCount = document.getElementById('modalHabitsCount');
-
-            if (habits && habits.length > 0) {
-                habitsCount.innerText = habits.length + ' habit' + (habits.length > 1 ? 's' : '') + ' completed';
-                habitsList.innerHTML = habits.map(function(h) {
-                    return '<span class="modal-habit-tag">✓ ' + h + '</span>';
-                }).join('');
-                habitsSection.style.display = 'block';
-            } else {
-                habitsCount.innerText = 'No habits logged';
-                habitsSection.style.display = 'none';
-            }
-
-            document.getElementById('modalLogContent').innerText = item.content ? item.content : '(No additional reflection notes written)';
-            document.getElementById('logDetailModal').style.display = 'flex';
-            if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('light');
-        },
-        closeModal: function() {
-            document.getElementById('logDetailModal').style.display = 'none';
-        },
-        remove: async function(id) {
-            if (confirm('Delete this log post from your Vault channel?')) {
-                try {
-                    var res = await fetch('/api/logs/delete', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: id })
-                    });
-                    var data = await res.json();
-                    if (data.success) {
-                        if (window.KuyaB && window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic('medium');
-                        this.render();
-                    } else {
-                        alert('Failed to delete from Telegram: ' + (data.error || 'Server error'));
-                    }
-                } catch(e) {
-                    alert('Network error deleting from vault.');
-                }
-            }
-        }
-    };
-
-    document.addEventListener('DOMContentLoaded', function() {
-        window.KuyaBDaily.render();
-    });
-    </script>
-
-    <!-- App Engine & Birthday Feature Module -->
+    <!-- Independent Modular Scripts -->
     <script src="/app/modules/birthdays.js?v={{ v }}"></script>
+    <script src="/app/modules/daily_logs.js?v={{ v }}"></script>
+    <script src="/app/modules/tracking.js?v={{ v }}"></script>
+
+    <!-- Core Shell & Routing Engine -->
     <script src="/app/app.js?v={{ v }}"></script>
 </body>
 </html>
