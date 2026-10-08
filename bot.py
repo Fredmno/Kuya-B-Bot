@@ -1,7 +1,6 @@
 import os
 import json
 import logging
-import re
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -23,9 +22,9 @@ from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 
-# Modular Birthday Imports
-from features.birthdays.database import init_birthday_db
-from features.birthdays.router import (
+# Match exact existing repository path
+from features.BirthDay.Birthdays import (
+    init_birthday_db,
     api_get_birthdays,
     api_add_birthday,
     api_delete_birthday,
@@ -37,7 +36,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.5.1"
+APP_VERSION = "2.5.2"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
