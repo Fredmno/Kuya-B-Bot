@@ -1,5 +1,5 @@
 /* =========================================================
-   KUYA B — BIRTHDAYS FEATURE MODULE
+   KUYA B — BIRTHDAYS MODULE (TELEGRAM VAULT STORAGE)
    ========================================================= */
 
 window.KuyaB = window.KuyaB || {};
@@ -10,146 +10,130 @@ window.KuyaB.features.birthdays = (function () {
 
     var birthdays = [];
 
-    function load() {
+    async function fetchBirthdays() {
         try {
-            birthdays = JSON.parse(localStorage.getItem("kuyaB_birthdays")) || [];
+            var res = await fetch("/api/birthdays");
+            var data = await res.json();
+            if (data.success) {
+                birthdays = data.birthdays || [];
+            }
         } catch (e) {
             birthdays = [];
         }
     }
 
-    function calculateDaysLeft(dateStr) {
-        if (!dateStr || dateStr.indexOf("-") === -1) return 999;
-        var parts = dateStr.split("-");
-        var month = parseInt(parts[0], 10);
-        var day = parseInt(parts[1], 10);
-        var today = new Date();
-        var currentYear = today.getFullYear();
-
-        var next = new Date(currentYear, month - 1, day);
-        var todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        if (next < todayMidnight) {
-            next = new Date(currentYear + 1, month - 1, day);
-        }
-
-        var diff = next - todayMidnight;
-        return Math.ceil(diff / (1000 * 60 * 60 * 24));
-    }
-
-    function render() {
+    async function render() {
         var list = document.getElementById("birthdaysList");
         if (!list) return;
 
+        await fetchBirthdays();
+
         if (birthdays.length === 0) {
-            list.innerHTML = '<p class="empty-state">No birthdays saved yet. Tap + to add one!</p>';
+            list.innerHTML = '<p class="empty-state">No birthdays in vault yet. Tap + to add one!</p>';
             return;
         }
 
-        var sorted = birthdays.slice().sort(function (a, b) {
-            return calculateDaysLeft(a.date) - calculateDaysLeft(b.date);
-        });
-
         var html = "";
-        for (var i = 0; i < sorted.length; i++) {
-            var b = sorted[i];
-            var daysLeft = calculateDaysLeft(b.date);
-            var badge = '<span class="bday-badge">' + daysLeft + ' days left</span>';
-            var greetButtonHtml = "";
-
-            // The Greet button ONLY shows when the birthday is TODAY
-            if (daysLeft === 0) {
-                badge = '<span class="bday-badge today">🎉 Today!</span>';
-                greetButtonHtml = '<button class="btn-greet" data-action="greet-bday" data-name="' + b.name + '">📢 Greet</button>';
-            } else if (daysLeft === 1) {
-                badge = '<span class="bday-badge">Tomorrow</span>';
-            }
-
+        for (var i = 0; i < birthdays.length; i++) {
+            var b = birthdays[i];
             html += '<div class="birthday-card" data-id="' + b.id + '">' +
                 '<div class="birthday-info">' +
-                    '<div class="birthday-title-row">' +
-                        '<span class="birthday-name">' + b.name + '</span>' +
-                        badge +
-                    '</div>' +
+                    '<span class="birthday-name">' + b.name + '</span>' +
                     '<span class="birthday-date">📅 ' + b.date + '</span>' +
                 '</div>' +
                 '<div class="birthday-actions">' +
-                    greetButtonHtml +
-                    '<button class="btn-delete" data-action="delete-bday" data-id="' + b.id + '">🗑️</button>' +
+                    '<button type="button" class="btn-greet" data-action="greet-bday" data-name="' + b.name + '">Greet</button>' +
+                    '<button type="button" class="btn-delete" data-action="delete-bday" data-id="' + b.id + '">🗑️</button>' +
                 '</div>' +
             '</div>';
         }
         list.innerHTML = html;
     }
 
-    function save() {
+    async function save() {
         var nameEl = document.getElementById("birthdayName");
         var dateEl = document.getElementById("birthdayDate");
         var name = nameEl ? nameEl.value.trim() : "";
         var date = dateEl ? dateEl.value.trim() : "";
 
         if (!name || !date) {
-            alert("Please enter both a name and date (MM-DD).");
-            return;
+            return alert("Please enter both name and date (MM-DD).");
         }
 
-        birthdays.push({ id: Date.now().toString(), name: name, date: date });
-        localStorage.setItem("kuyaB_birthdays", JSON.stringify(birthdays));
-        if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("medium");
+        var saveBtn = document.getElementById("saveBirthdayButton");
+        if (saveBtn) saveBtn.innerText = "Saving...";
 
-        if (nameEl) nameEl.value = "";
-        if (dateEl) dateEl.value = "";
-        var form = document.getElementById("birthdayForm");
-        if (form) form.style.display = "none";
-        render();
+        try {
+            var res = await fetch("/api/birthdays", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: name, date: date })
+            });
+            var data = await res.json();
+            if (data.success) {
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("medium");
+                if (nameEl) nameEl.value = "";
+                if (dateEl) dateEl.value = "";
+                var form = document.getElementById("birthdayForm");
+                if (form) form.style.display = "none";
+                render();
+            } else {
+                alert("Could not save to vault: " + (data.error || "Server error"));
+            }
+        } catch (e) {
+            alert("Network error connecting to vault.");
+        } finally {
+            if (saveBtn) saveBtn.innerText = "Save";
+        }
     }
 
-    function remove(id) {
-        if (confirm("Delete this birthday?")) {
-            birthdays = birthdays.filter(function (x) { return x.id !== id; });
-            localStorage.setItem("kuyaB_birthdays", JSON.stringify(birthdays));
-            if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("medium");
-            render();
+    async function remove(id) {
+        if (confirm("Delete this birthday from your Vault channel?")) {
+            try {
+                var res = await fetch("/api/birthdays/delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: id })
+                });
+                var data = await res.json();
+                if (data.success) {
+                    if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("medium");
+                    render();
+                } else {
+                    alert("Failed to delete: " + (data.error || "Server error"));
+                }
+            } catch (e) {
+                alert("Network error connecting to vault.");
+            }
         }
     }
 
     function greet(name) {
-        var chatId = window.KuyaB.getParam("chat_id");
+        var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        var chatId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+
         if (!chatId) {
-            window.KuyaB.showToast("Open via /kuyab in a group chat to send greetings!");
-            return;
+            return alert("Could not resolve Telegram chat ID.");
         }
 
-        if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("medium");
         fetch("/api/birthdays/greet", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ chat_id: chatId, name: name })
-        }).then(function (res) {
-            return res.json();
-        }).then(function (data) {
-            if (data.success) {
-                window.KuyaB.showToast("Greeting sent for " + name + "! 🎉");
-            } else {
-                window.KuyaB.showToast("Failed to send greeting.");
-            }
+        }).then(function () {
+            if (window.KuyaB.showToast) window.KuyaB.showToast("Birthday greeting sent! 🎂🎉");
+            if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("success");
         }).catch(function () {
-            window.KuyaB.showToast("Network error.");
+            alert("Failed to send greeting.");
         });
     }
 
+    function init() {
+        render();
+    }
+
     return {
-        init: function () {
-            load();
-            var bdayDateInput = document.getElementById("birthdayDate");
-            if (bdayDateInput) {
-                bdayDateInput.addEventListener("input", function () {
-                    var val = this.value.replace(/\D/g, "");
-                    if (val.length > 4) val = val.substring(0, 4);
-                    if (val.length >= 3) val = val.substring(0, 2) + "-" + val.substring(2);
-                    this.value = val;
-                });
-            }
-        },
+        init: init,
         render: render,
         save: save,
         remove: remove,
