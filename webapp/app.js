@@ -5,6 +5,9 @@
 (function () {
     "use strict";
 
+    // Set your numeric Telegram User ID here to restrict User Activity access
+    var ADMIN_USER_ID = 1234567890; 
+
     window.KuyaB = window.KuyaB || {};
     window.KuyaB.features = window.KuyaB.features || {};
 
@@ -14,6 +17,11 @@
             tg.ready();
             tg.expand();
         } catch (e) {}
+    }
+
+    function isCurrentUserAdmin() {
+        var currentUserId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+        return String(currentUserId) === String(ADMIN_USER_ID);
     }
 
     // ---------------------------------------------------------
@@ -47,7 +55,7 @@
     };
 
     // ---------------------------------------------------------
-    // PARAMETER RESOLVER (Deep Links, Telegram start_param, Query, Hash)
+    // PARAMETER RESOLVER
     // ---------------------------------------------------------
     window.KuyaB.getParam = function (key) {
         if (key === "start" && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
@@ -67,7 +75,7 @@
     };
 
     // ---------------------------------------------------------
-    // SHARED STORES (LOCAL FALLBACKS)
+    // SHARED STORES
     // ---------------------------------------------------------
     var tasks = [];
     var reminders = [];
@@ -128,7 +136,7 @@
     }
 
     // ---------------------------------------------------------
-    // USER TRACKING ENGINE
+    // USER TRACKING ENGINE (ADMIN ONLY)
     // ---------------------------------------------------------
     function trackUserAccess() {
         var user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
@@ -151,12 +159,19 @@
     }
 
     async function displayTrackedUsers() {
+        if (!isCurrentUserAdmin()) {
+            showDashboard();
+            return;
+        }
+
         var container = document.getElementById("usersListContainer");
         if (!container) return;
         container.innerHTML = '<p class="empty-state">Loading user activity...</p>';
 
         try {
-            var res = await fetch("/api/users");
+            var user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
+            var currentUserId = user ? user.id : "";
+            var res = await fetch("/api/users?user_id=" + currentUserId);
             var data = await res.json();
             var users = data.users || [];
 
@@ -238,7 +253,8 @@
         var otherActions = document.getElementById("otherActionsBar");
 
         if (otherActions) {
-            otherActions.style.display = (type === "other") ? "block" : "none";
+            // Only visible if on the "other" section AND opened by you (admin)
+            otherActions.style.display = (type === "other" && isCurrentUserAdmin()) ? "block" : "none";
         }
 
         if (titleEl) {
@@ -279,7 +295,7 @@
             var target = e.target;
             if (!target) return;
 
-            // 1. Dashboard Feature Card Navigation (Fresh fetch from Vault every click)
+            // 1. Dashboard Feature Card Navigation
             var card = target.closest(".feature-card");
             if (card) {
                 e.preventDefault();
@@ -320,10 +336,11 @@
                 return;
             }
 
-            // 3. User Activity Navigation
+            // 3. User Activity Navigation (Restricted to Admin)
             var trackingBtn = target.closest("#btnOpenUserTracking");
             if (trackingBtn) {
                 e.preventDefault();
+                if (!isCurrentUserAdmin()) return;
                 window.KuyaB.triggerHaptic("light");
                 showPage("userTrackingPage", displayTrackedUsers);
                 return;
