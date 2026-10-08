@@ -99,10 +99,12 @@ async def serve_index(request: Request):
 # ---------------------------------------------------------
 # DAILY LOGS API (TELEGRAM VAULT STORAGE)
 # ---------------------------------------------------------
+
 async def api_save_daily_log(request: Request):
     try:
         data = await request.json()
         mood = data.get("mood", "😊")
+        habits = data.get("habits", [])
         content = data.get("content", "").strip()
         date_str = data.get("date", "")
         time_str = data.get("time", "")
@@ -111,13 +113,19 @@ async def api_save_daily_log(request: Request):
         if not channel_id:
             return JSONResponse({"error": "VAULT_CHANNEL_ID not set in environment"}, status_code=500)
 
-        metadata_json = json.dumps({"mood": mood, "date": date_str, "time": time_str})
+        # Store complete structured metadata in Telegram tag
+        metadata_json = json.dumps({"mood": mood, "habits": habits, "date": date_str, "time": time_str})
+
+        habits_formatted = ""
+        if habits:
+            habits_formatted = "\n\n**✅ Habits Completed:**\n" + "\n".join([f"• {h}" for h in habits])
 
         message_text = (
             f"📅 **DAILY LOG**\n"
             f"**Date:** {date_str} • {time_str}\n"
-            f"**Mood:** {mood}\n\n"
-            f"{content if content else '_(No notes added)_'}\n\n"
+            f"**Mood:** {mood}"
+            f"{habits_formatted}\n\n"
+            f"**Notes:**\n{content if content else '_(No notes added)_'}\n\n"
             f"`#DAILY_LOG:{metadata_json}`"
         )
 
@@ -131,6 +139,7 @@ async def api_save_daily_log(request: Request):
             "id": str(sent_msg.message_id),
             "message_id": sent_msg.message_id,
             "mood": mood,
+            "habits": habits,
             "content": content,
             "date": date_str,
             "time": time_str
@@ -142,31 +151,6 @@ async def api_save_daily_log(request: Request):
         logging.error(f"Error posting daily log to vault channel: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
 
-
-async def api_get_daily_logs(request: Request):
-    return JSONResponse({"success": True, "logs": VAULT_LOGS_CACHE})
-
-
-async def api_delete_daily_log(request: Request):
-    global VAULT_LOGS_CACHE
-    try:
-        data = await request.json()
-        msg_id = data.get("id")
-        if not msg_id:
-            return JSONResponse({"error": "Missing message id"}, status_code=400)
-
-        channel_id = get_vault_chat_id()
-
-        try:
-            await application.bot.delete_message(chat_id=channel_id, message_id=int(msg_id))
-        except Exception as bot_err:
-            logging.warning(f"Message {msg_id} already removed or not found: {bot_err}")
-
-        VAULT_LOGS_CACHE = [item for item in VAULT_LOGS_CACHE if str(item.get("id")) != str(msg_id)]
-        return JSONResponse({"success": True})
-    except Exception as e:
-        logging.error(f"Error deleting daily log from vault channel: {e}", exc_info=True)
-        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 # ---------------------------------------------------------
