@@ -9,7 +9,7 @@ window.KuyaB.features.tracking = (function () {
     "use strict";
 
     // Set to your numeric Telegram user ID
-    var ADMIN_USER_ID = 1234567890;
+    var ADMIN_USER_ID = 7698531657;
 
     function isAdmin() {
         var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
