@@ -16,7 +16,9 @@
         } catch (e) {}
     }
 
-    // Haptics & Toasts
+    // ---------------------------------------------------------
+    // HAPTICS & TOAST NOTIFICATIONS
+    // ---------------------------------------------------------
     window.KuyaB.triggerHaptic = function (style) {
         style = style || "light";
         try {
@@ -44,7 +46,9 @@
         }, 2800);
     };
 
-    // Parameter Resolver
+    // ---------------------------------------------------------
+    // PARAMETER RESOLVER
+    // ---------------------------------------------------------
     window.KuyaB.getParam = function (key) {
         if (key === "start" && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
             return tg.initDataUnsafe.start_param;
@@ -62,7 +66,9 @@
         return null;
     };
 
-    // Stores
+    // ---------------------------------------------------------
+    // LOCAL STORAGE STORES
+    // ---------------------------------------------------------
     var tasks = [];
     var reminders = [];
     var vaultItems = [];
@@ -74,7 +80,9 @@
         try { vaultItems = JSON.parse(localStorage.getItem("kuyaB_vault")) || []; } catch (e) { vaultItems = []; }
     }
 
-    // Page Routing
+    // ---------------------------------------------------------
+    // PAGE ROUTING
+    // ---------------------------------------------------------
     var ALL_PAGES = [
         "dashboardPage", 
         "birthdaysPage", 
@@ -82,7 +90,8 @@
         "tasksPage", 
         "remindersPage", 
         "vaultPage", 
-        "userTrackingPage"
+        "userTrackingPage",
+        "addBirthdayStandalonePage"
     ];
 
     function hideAllForms() {
@@ -119,7 +128,9 @@
         }
     }
 
-    // Local Tasks
+    // ---------------------------------------------------------
+    // TASKS ENGINE
+    // ---------------------------------------------------------
     function displayTasks() {
         var list = document.getElementById("tasksList");
         if (!list) return;
@@ -140,7 +151,9 @@
         list.innerHTML = html;
     }
 
-    // Local Reminders
+    // ---------------------------------------------------------
+    // REMINDERS ENGINE
+    // ---------------------------------------------------------
     function displayReminders() {
         var list = document.getElementById("remindersList");
         if (!list) return;
@@ -158,7 +171,9 @@
         list.innerHTML = html;
     }
 
-    // Vault
+    // ---------------------------------------------------------
+    // VAULT ENGINE
+    // ---------------------------------------------------------
     function setVaultType(type) {
         currentVaultType = type;
         var titleEl = document.getElementById("vaultPageTitle");
@@ -199,13 +214,15 @@
         list.innerHTML = html;
     }
 
-    // Global Click Dispatcher
+    // ---------------------------------------------------------
+    // GLOBAL CLICK DISPATCHER
+    // ---------------------------------------------------------
     function attachGlobalClicks() {
         document.body.addEventListener("click", function (e) {
             var target = e.target;
             if (!target) return;
 
-            // Dashboard Card Navigation
+            // 1. Dashboard Navigation
             var card = target.closest(".feature-card");
             if (card) {
                 e.preventDefault();
@@ -234,7 +251,7 @@
                 return;
             }
 
-            // Back Navigation
+            // 2. Back Navigation
             if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton, #vaultBackButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -242,7 +259,7 @@
                 return;
             }
 
-            // Tracking Navigation
+            // 3. User Tracking Navigation
             if (target.closest("#btnOpenUserTracking")) {
                 e.preventDefault();
                 if (window.KuyaB.features.tracking && window.KuyaB.features.tracking.isAdmin()) {
@@ -262,7 +279,7 @@
                 return;
             }
 
-            // Birthdays Delegation
+            // 4. Birthdays Page Delegation
             if (target.closest("#addBirthdayButton")) {
                 e.preventDefault();
                 var bForm = document.getElementById("birthdayForm");
@@ -293,7 +310,7 @@
                 return;
             }
 
-            // Daily Logs Delegation
+            // 5. Daily Logs Open Form
             if (target.closest("#addLogButton")) {
                 e.preventDefault();
                 var lForm = document.getElementById("logForm");
@@ -301,7 +318,7 @@
                 return;
             }
 
-            // Tasks Delegation
+            // 6. Tasks Delegation
             if (target.closest("#addTaskButton")) {
                 e.preventDefault();
                 var tForm = document.getElementById("taskForm");
@@ -351,7 +368,7 @@
                 return;
             }
 
-            // Reminders Delegation
+            // 7. Reminders Delegation
             if (target.closest("#addReminderButton")) {
                 e.preventDefault();
                 var rForm = document.getElementById("reminderForm");
@@ -387,7 +404,7 @@
                 return;
             }
 
-            // Vault Delegation
+            // 8. Vault Delegation
             if (target.closest("#addVaultItemButton")) {
                 e.preventDefault();
                 var vForm = document.getElementById("vaultItemForm");
@@ -444,7 +461,7 @@
                 return;
             }
 
-            // Word Game
+            // 9. Word Game
             if (target.closest("#gameButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -452,7 +469,7 @@
                 return;
             }
 
-            // Add Content Shortcut
+            // 10. Quick Add Content
             if (target.closest("#addContentButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -467,11 +484,13 @@
         });
     }
 
+    // ---------------------------------------------------------
+    // INITIALIZATION & ROUTING
+    // ---------------------------------------------------------
     function init() {
         loadSharedData();
         attachGlobalClicks();
 
-        // Trigger user tracking module
         if (window.KuyaB.features.tracking) {
             window.KuyaB.features.tracking.track();
         }
@@ -486,6 +505,14 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ chat_id: chatId, message_id: msgId })
             }).catch(function () {});
+        }
+
+        // Dedicated popup route directly from chat ➕ Add button
+        if (startSection === "add_bday") {
+            hideAllPages();
+            var popupPage = document.getElementById("addBirthdayStandalonePage");
+            if (popupPage) popupPage.style.display = "block";
+            return;
         }
 
         if (startSection === "birthdays") {
