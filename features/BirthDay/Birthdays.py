@@ -19,6 +19,80 @@ def _get_bot_from_request(request: Request):
     return request.app.state.telegram_app.bot
 
 
+# ---------------------------------------------------------
+# CHAT MENU HELPER (Imported by features/menu.py)
+# ---------------------------------------------------------
+async def render_birthdays_table(bot):
+    """
+    Renders a formatted text table/list of upcoming birthdays
+    for the Telegram chat /kuyab menu.
+    """
+    try:
+        _, registry = await get_or_create_registry(bot)
+        birthdays = registry.get("birthdays", [])
+
+        if not birthdays:
+            return "🎂 *Birthdays*\n\nNo birthdays registered yet."
+
+        try:
+            tz = ZoneInfo("Asia/Manila")
+            today = datetime.now(tz)
+        except Exception:
+            today = datetime.now()
+
+        current_year = today.year
+        items = []
+
+        for b in birthdays:
+            name = b.get("name", "Unknown")
+            date_str = b.get("date", "").strip()
+            try:
+                parts = date_str.split("-")
+                month = int(parts[0])
+                day = int(parts[1])
+                bday_date = datetime(current_year, month, day)
+
+                # If birthday has already occurred this year, calculate for next year
+                if bday_date.date() < today.date():
+                    bday_date = datetime(current_year + 1, month, day)
+
+                days_left = (bday_date.date() - today.date()).days
+                items.append({
+                    "name": name,
+                    "date": date_str,
+                    "days_left": days_left
+                })
+            except Exception:
+                items.append({
+                    "name": name,
+                    "date": date_str,
+                    "days_left": 9999
+                })
+
+        # Sort by upcoming days
+        items.sort(key=lambda x: x["days_left"])
+
+        lines = ["🎂 *Upcoming Birthdays*\n"]
+        for it in items[:10]:
+            if it["days_left"] == 0:
+                badge = "🎉 *TODAY!*"
+            elif it["days_left"] == 1:
+                badge = "*(Tomorrow)*"
+            elif it["days_left"] < 9999:
+                badge = f"*(in {it['days_left']} days)*"
+            else:
+                badge = ""
+            lines.append(f"• `{it['date']}` — *{it['name']}* {badge}")
+
+        return "\n".join(lines)
+    except Exception as e:
+        logger.error(f"Error rendering birthdays table: {e}", exc_info=True)
+        return "🎂 *Birthdays*\n\nCould not load birthdays."
+
+
+# ---------------------------------------------------------
+# WEBAPP REST API ENDPOINTS
+# ---------------------------------------------------------
 async def api_get_birthdays(request: Request):
     try:
         bot = _get_bot_from_request(request)
