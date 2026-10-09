@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import PlainTextResponse, JSONResponse, HTMLResponse
+from starlette.responses import PlainTextResponse, JSONResponse, HTMLResponse, Response
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 from starlette.datastructures import UploadFile
@@ -29,7 +29,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.9.0"
+APP_VERSION = "2.9.1"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -171,7 +171,7 @@ async def serve_index(request: Request):
 
 
 # ---------------------------------------------------------
-# VAULT ITEM FORWARDING & FILE UPLOAD ROUTINES
+# VAULT MANAGEMENT & DIRECT MEDIA STREAMING
 # ---------------------------------------------------------
 async def api_upload_vault_media(request: Request):
     """Receives file upload from Mini App and forwards to Vault Channel."""
@@ -192,6 +192,7 @@ async def api_upload_vault_media(request: Request):
         file_bytes = await file.read()
         caption = f"📁 **VAULT MEDIA**\n🏷️ **Title:** {title}\n📂 **Folder:** #{folder}"
 
+        saved_file_id = None
         if media_type == "pictures":
             sent = await application.bot.send_photo(
                 chat_id=channel_id,
@@ -199,6 +200,7 @@ async def api_upload_vault_media(request: Request):
                 caption=caption,
                 parse_mode="Markdown"
             )
+            saved_file_id = sent.photo[-1].file_id
         else:
             sent = await application.bot.send_video(
                 chat_id=channel_id,
@@ -206,9 +208,7 @@ async def api_upload_vault_media(request: Request):
                 caption=caption,
                 parse_mode="Markdown"
             )
-
-        raw_channel_id = str(channel_id).replace("-100", "")
-        t_me_link = f"https://t.me/c/{raw_channel_id}/{sent.message_id}"
+            saved_file_id = sent.video.file_id
 
         reg, p_id = await get_or_create_registry()
         vault_list = reg.get("vault", [])
@@ -218,7 +218,7 @@ async def api_upload_vault_media(request: Request):
             "title": title,
             "folder": folder,
             "messageId": str(sent.message_id),
-            "link": t_me_link
+            "fileId": saved_file_id
         }
         vault_list.append(entry)
         reg["vault"] = vault_list
@@ -228,6 +228,49 @@ async def api_upload_vault_media(request: Request):
     except Exception as e:
         logging.error(f"Error handling media upload to vault: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def api_get_vault_media_file(request: Request):
+    """Streams media file directly to the Mini App, keeping channel links hidden."""
+    item_id = request.query_params.get("id")
+    if not item_id:
+        return PlainTextResponse("Missing item id", status_code=400)
+
+    channel_id = get_vault_chat_id()
+    if not channel_id:
+        return PlainTextResponse("Channel ID not configured", status_code=500)
+
+    try:
+        reg, _ = await get_or_create_registry()
+        vault_list = reg.get("vault", [])
+        matched = next((v for v in vault_list if str(v.get("id")) == str(item_id)), None)
+
+        file_id = None
+        if matched and matched.get("fileId"):
+            file_id = matched["fileId"]
+        else:
+            msg = await application.bot.forward_message(
+                chat_id=channel_id,
+                from_chat_id=channel_id,
+                message_id=int(item_id)
+            )
+            await application.bot.delete_message(chat_id=channel_id, message_id=msg.message_id)
+
+            if msg.photo:
+                file_id = msg.photo[-1].file_id
+            elif msg.video:
+                file_id = msg.video.file_id
+
+        if not file_id:
+            return PlainTextResponse("Media file not found", status_code=404)
+
+        tg_file = await application.bot.get_file(file_id)
+        file_bytes = await tg_file.download_as_bytearray()
+
+        return Response(content=bytes(file_bytes), media_type="image/jpeg")
+    except Exception as e:
+        logging.error(f"Error streaming vault media: {e}", exc_info=True)
+        return PlainTextResponse(f"Error: {e}", status_code=500)
 
 
 async def api_get_vault_items(request: Request):
@@ -254,30 +297,6 @@ async def api_delete_vault_item(request: Request):
 
         return JSONResponse({"success": True})
     except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-
-async def api_forward_vault_item(request: Request):
-    try:
-        data = await request.json()
-        raw_msg_id = data.get("messageId")
-        user_id = data.get("userId")
-
-        if not user_id or not raw_msg_id:
-            return JSONResponse({"error": "Missing user_id or messageId"}, status_code=400)
-
-        channel_id = get_vault_chat_id()
-        if not channel_id:
-            return JSONResponse({"error": "VAULT_CHANNEL_ID not configured"}, status_code=500)
-
-        await application.bot.copy_message(
-            chat_id=int(user_id),
-            from_chat_id=channel_id,
-            message_id=int(raw_msg_id),
-        )
-        return JSONResponse({"success": True})
-    except Exception as e:
-        logging.error(f"Error copying message from vault: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
@@ -418,11 +437,11 @@ starlette_app = Starlette(
         Route("/api/track-user", api_track_user, methods=["POST"]),
         Route("/api/users", api_get_users, methods=["GET"]),
 
-        # Vault Media Uploads & Management
+        # Vault Media Uploads & In-App Streaming
         Route("/api/vault/items", api_get_vault_items, methods=["GET"]),
         Route("/api/vault/upload", api_upload_vault_media, methods=["POST"]),
+        Route("/api/vault/media-file", api_get_vault_media_file, methods=["GET"]),
         Route("/api/vault/delete", api_delete_vault_item, methods=["POST"]),
-        Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
 
         # WebApp Static Assets & Mounting
