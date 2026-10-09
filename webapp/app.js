@@ -1,350 +1,19 @@
 /* =========================================================
-   KUYA B — MODULAR APP ROUTER & SHELL ENGINE
+   KUYA B — MASTER SHELL & EVENT DISPATCHER
    ========================================================= */
 
 (function () {
     "use strict";
 
-    window.KuyaB = window.KuyaB || {};
-    window.KuyaB.features = window.KuyaB.features || {};
+    var router = window.KuyaB.router;
+    var features = window.KuyaB.features;
 
-    var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-    if (tg) {
-        try {
-            tg.ready();
-            tg.expand();
-        } catch (e) {}
-    }
-
-    // ---------------------------------------------------------
-    // HAPTICS & TOAST NOTIFICATIONS
-    // ---------------------------------------------------------
-    window.KuyaB.triggerHaptic = function (style) {
-        style = style || "light";
-        try {
-            if (tg && tg.HapticFeedback) {
-                if (style === "light" || style === "medium" || style === "heavy") {
-                    tg.HapticFeedback.impactOccurred(style);
-                } else if (style === "success" || style === "error" || style === "warning") {
-                    tg.HapticFeedback.notificationOccurred(style);
-                }
-            }
-        } catch (e) {}
-    };
-
-    window.KuyaB.showToast = function (message) {
-        var toast = document.getElementById("toastNotification");
-        if (!toast) {
-            toast = document.createElement("div");
-            toast.id = "toastNotification";
-            document.body.appendChild(toast);
-        }
-        toast.innerText = message;
-        toast.style.display = "block";
-        setTimeout(function () {
-            toast.style.display = "none";
-        }, 2800);
-    };
-
-    // ---------------------------------------------------------
-    // PARAMETER RESOLVER
-    // ---------------------------------------------------------
-    window.KuyaB.getParam = function (key) {
-        if (key === "start" && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
-            return tg.initDataUnsafe.start_param;
-        }
-        var urlParams = new URLSearchParams(window.location.search);
-        var val = urlParams.get(key);
-        if (val) return val;
-
-        if (window.location.hash) {
-            var hashQuery = window.location.hash.substring(1);
-            var hashParams = new URLSearchParams(hashQuery);
-            var hashVal = hashParams.get(key);
-            if (hashVal) return hashVal;
-        }
-        return null;
-    };
-
-    // ---------------------------------------------------------
-    // DATA STORES
-    // ---------------------------------------------------------
-    var tasks = [];
-    var reminders = [];
-    var vaultItems = [];
-    var currentVaultType = "other";
-
-    function loadSharedData() {
-        try { tasks = JSON.parse(localStorage.getItem("kuyaB_tasks")) || []; } catch (e) { tasks = []; }
-        try { reminders = JSON.parse(localStorage.getItem("kuyaB_reminders")) || []; } catch (e) { reminders = []; }
-    }
-
-    // ---------------------------------------------------------
-    // PAGE ROUTING
-    // ---------------------------------------------------------
-    var ALL_PAGES = [
-        "dashboardPage", 
-        "birthdaysPage", 
-        "dailyLogsPage", 
-        "tasksPage", 
-        "remindersPage", 
-        "vaultPage", 
-        "userTrackingPage",
-        "addBirthdayStandalonePage"
-    ];
-
-    function hideAllForms() {
-        var formIds = ["birthdayForm", "logForm", "taskForm", "reminderForm", "vaultUploadForm"];
-        for (var i = 0; i < formIds.length; i++) {
-            var el = document.getElementById(formIds[i]);
-            if (el) el.style.display = "none";
-        }
-    }
-
-    function hideAllPages() {
-        for (var i = 0; i < ALL_PAGES.length; i++) {
-            var page = document.getElementById(ALL_PAGES[i]);
-            if (page) page.style.display = "none";
-        }
-        hideAllForms();
-    }
-
-    function showDashboard() {
-        hideAllPages();
-        var dashboard = document.getElementById("dashboardPage");
-        if (dashboard) dashboard.style.display = "block";
-        if (tg && tg.BackButton) tg.BackButton.hide();
-    }
-
-    function showPage(pageId, renderFn) {
-        hideAllPages();
-        var page = document.getElementById(pageId);
-        if (page) page.style.display = "block";
-        if (typeof renderFn === "function") renderFn();
-        if (tg && tg.BackButton) {
-            tg.BackButton.show();
-            tg.BackButton.onClick(showDashboard);
-        }
-    }
-
-    // ---------------------------------------------------------
-    // TASKS ENGINE
-    // ---------------------------------------------------------
-    function displayTasks() {
-        var list = document.getElementById("tasksList");
-        if (!list) return;
-        if (tasks.length === 0) {
-            list.innerHTML = '<p class="empty-state">No tasks pending. Tap + to add one!</p>';
-            return;
-        }
-        var html = "";
-        for (var i = 0; i < tasks.length; i++) {
-            var t = tasks[i];
-            var style = t.completed ? "text-decoration: line-through; opacity: 0.5;" : "";
-            var toggleIcon = t.completed ? "↩" : "✓";
-            html += '<div class="birthday-card" data-id="' + t.id + '">' +
-                '<div class="birthday-info"><span class="birthday-name" style="' + style + '">' + t.title + '</span></div>' +
-                '<div class="birthday-actions"><button type="button" class="btn-greet" data-action="toggle-task" data-id="' + t.id + '">' + toggleIcon + '</button>' +
-                '<button type="button" class="btn-delete" data-action="delete-task" data-id="' + t.id + '">🗑️</button></div></div>';
-        }
-        list.innerHTML = html;
-    }
-
-    // ---------------------------------------------------------
-    // REMINDERS ENGINE
-    // ---------------------------------------------------------
-    function displayReminders() {
-        var list = document.getElementById("remindersList");
-        if (!list) return;
-        if (reminders.length === 0) {
-            list.innerHTML = '<p class="empty-state">No reminders saved. Tap + to add one!</p>';
-            return;
-        }
-        var html = "";
-        for (var i = 0; i < reminders.length; i++) {
-            var r = reminders[i];
-            html += '<div class="birthday-card" data-id="' + r.id + '">' +
-                '<div class="birthday-info"><span class="birthday-name">' + r.title + '</span></div>' +
-                '<div class="birthday-actions"><button type="button" class="btn-delete" data-action="delete-rem" data-id="' + r.id + '">🗑️</button></div></div>';
-        }
-        list.innerHTML = html;
-    }
-
-    // ---------------------------------------------------------
-    // VAULT ENGINE & MEDIA LIGHTBOX (VIDEO + PHOTO)
-    // ---------------------------------------------------------
-    function setVaultType(type) {
-        currentVaultType = type;
-        var titleEl = document.getElementById("vaultPageTitle");
-        var otherActions = document.getElementById("otherActionsBar");
-
-        if (otherActions) {
-            var isAdmin = window.KuyaB.features.tracking && window.KuyaB.features.tracking.isAdmin();
-            otherActions.style.display = (type === "other" && isAdmin) ? "block" : "none";
-        }
-
-        if (titleEl) {
-            if (type === "videos") titleEl.innerText = "🎥 Videos";
-            else if (type === "pictures") titleEl.innerText = "🖼️ Pictures";
-            else titleEl.innerText = "📁 Other";
-        }
-    }
-
-    async function fetchVaultItems() {
-        try {
-            var res = await fetch("/api/vault/items");
-            var data = await res.json();
-            vaultItems = data.vault || [];
-        } catch (e) {
-            vaultItems = [];
-        }
-    }
-
-    async function displayVaultItems() {
-        var list = document.getElementById("vaultItemsList");
-        if (!list) return;
-
-        await fetchVaultItems();
-
-        var filtered = [];
-        for (var i = 0; i < vaultItems.length; i++) {
-            if ((vaultItems[i].type || "other") === currentVaultType) filtered.push(vaultItems[i]);
-        }
-
-        if (filtered.length === 0) {
-            list.innerHTML = '<p class="empty-state">No items saved in this section yet. Tap + to upload!</p>';
-            return;
-        }
-
-        var html = "";
-        for (var j = 0; j < filtered.length; j++) {
-            var item = filtered[j];
-
-            html += '<div class="birthday-card" data-id="' + item.id + '">' +
-                '<div class="birthday-info">' +
-                    '<div class="birthday-title-row">' +
-                        '<span class="birthday-name">' + (item.title || "Untitled") + '</span>' +
-                        '<span class="bday-badge-days">' + (item.folder || "General") + '</span>' +
-                    '</div>' +
-                    '<span class="birthday-date">📁 ' + (item.type === "videos" ? "Video" : "Photo") + '</span>' +
-                '</div>' +
-                '<div class="birthday-actions">' +
-                    '<button type="button" class="btn-greet" data-action="view-vault" data-id="' + item.id + '" data-type="' + (item.type || "pictures") + '" data-title="' + (item.title || "Media") + '">View 👁️</button>' +
-                    '<button type="button" class="btn-delete" data-action="delete-vault" data-id="' + item.id + '">🗑️</button>' +
-                '</div>' +
-            '</div>';
-        }
-        list.innerHTML = html;
-    }
-
-    window.KuyaB.openMediaModal = function (itemId, title, mediaType) {
-        var modal = document.getElementById("mediaViewerModal");
-        var img = document.getElementById("mediaModalImage");
-        var vid = document.getElementById("mediaModalVideo");
-        var spinner = document.getElementById("mediaLoadingSpinner");
-        var titleEl = document.getElementById("mediaModalTitle");
-
-        if (!modal) return;
-
-        titleEl.innerText = title || "View Media";
-        img.style.display = "none";
-        vid.style.display = "none";
-        vid.pause();
-        spinner.style.display = "block";
-        spinner.innerText = "Loading media...";
-        modal.style.display = "flex";
-
-        var streamUrl = "/api/vault/media-file?id=" + encodeURIComponent(itemId);
-
-        if (mediaType === "videos") {
-            vid.src = streamUrl;
-            vid.oncanplay = function () {
-                spinner.style.display = "none";
-                vid.style.display = "block";
-            };
-            vid.onerror = function () {
-                spinner.innerText = "Could not preview this video in Mini App.";
-            };
-        } else {
-            img.src = streamUrl;
-            img.onload = function () {
-                spinner.style.display = "none";
-                img.style.display = "block";
-            };
-            img.onerror = function () {
-                spinner.innerText = "Could not preview this image in Mini App.";
-            };
-        }
-    };
-
-    window.KuyaB.closeMediaModal = function () {
-        var modal = document.getElementById("mediaViewerModal");
-        var img = document.getElementById("mediaModalImage");
-        var vid = document.getElementById("mediaModalVideo");
-        if (modal) modal.style.display = "none";
-        if (img) img.src = "";
-        if (vid) {
-            vid.pause();
-            vid.src = "";
-        }
-    };
-
-    window.KuyaB.uploadMediaToVault = async function () {
-        var fileInput = document.getElementById("vaultItemFile");
-        var titleInput = document.getElementById("vaultItemTitle");
-        var folderInput = document.getElementById("vaultItemFolder");
-
-        if (!fileInput || !fileInput.files.length) {
-            alert("Please select a photo or video to upload.");
-            return;
-        }
-
-        var file = fileInput.files[0];
-        var isVideo = file.type.startsWith("video/");
-        var determinedType = currentVaultType === "other" ? (isVideo ? "videos" : "pictures") : currentVaultType;
-
-        var formData = new FormData();
-        formData.append("file", file);
-        formData.append("title", titleInput.value.trim() || "Untitled");
-        formData.append("folder", folderInput.value.trim() || "General");
-        formData.append("type", determinedType);
-
-        var btn = document.getElementById("btnUploadMedia");
-        if (btn) btn.innerText = "Uploading...";
-
-        try {
-            var res = await fetch("/api/vault/upload", {
-                method: "POST",
-                body: formData
-            });
-            var data = await res.json();
-            if (data.success) {
-                window.KuyaB.triggerHaptic("success");
-                window.KuyaB.showToast("Uploaded to Vault Channel! 📁");
-                if (titleInput) titleInput.value = "";
-                if (folderInput) folderInput.value = "";
-                if (fileInput) fileInput.value = "";
-                document.getElementById("vaultUploadForm").style.display = "none";
-                displayVaultItems();
-            } else {
-                alert("Upload failed: " + (data.error || "Server error"));
-            }
-        } catch (err) {
-            alert("Network error communicating with Kuya B backend.");
-        } finally {
-            if (btn) btn.innerText = "Upload";
-        }
-    };
-
-    // ---------------------------------------------------------
-    // GLOBAL CLICK DISPATCHER
-    // ---------------------------------------------------------
-    function attachGlobalClicks() {
+    function attachGlobalEvents() {
         document.body.addEventListener("click", function (e) {
             var target = e.target;
             if (!target) return;
 
-            // 1. Dashboard Navigation
+            // 1. Dashboard Feature Cards
             var card = target.closest(".feature-card");
             if (card) {
                 e.preventDefault();
@@ -352,20 +21,20 @@
                 window.KuyaB.triggerHaptic("light");
 
                 if (feature === "birthdays") {
-                    showPage("birthdaysPage", function () {
-                        if (window.KuyaB.features.birthdays) window.KuyaB.features.birthdays.render();
+                    router.showPage("birthdaysPage", function () {
+                        if (features.birthdays) features.birthdays.render();
                     });
                 } else if (feature === "daily") {
-                    showPage("dailyLogsPage", function () {
-                        if (window.KuyaB.features.dailyLogs) window.KuyaB.features.dailyLogs.render();
+                    router.showPage("dailyLogsPage", function () {
+                        if (features.dailyLogs) features.dailyLogs.render();
                     });
                 } else if (feature === "tasks") {
-                    showPage("tasksPage", displayTasks);
+                    router.showPage("tasksPage", features.tasks.render);
                 } else if (feature === "reminders") {
-                    showPage("remindersPage", displayReminders);
+                    router.showPage("remindersPage", features.reminders.render);
                 } else if (feature === "videos" || feature === "pictures" || feature === "other") {
-                    setVaultType(feature);
-                    showPage("vaultPage", displayVaultItems);
+                    features.vault.setVaultType(feature);
+                    router.showPage("vaultPage", features.vault.render);
                 } else if (feature === "search") {
                     var searchInput = document.getElementById("dashboardSearchInput");
                     if (searchInput) searchInput.focus();
@@ -373,171 +42,41 @@
                 return;
             }
 
-            // 2. Back Navigation
+            // 2. Navigation Back Buttons
             if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton, #vaultBackButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
-                showDashboard();
+                router.showDashboard();
                 return;
             }
 
-            // 3. User Tracking Navigation
+            // 3. User Tracking View
             if (target.closest("#btnOpenUserTracking")) {
                 e.preventDefault();
-                if (window.KuyaB.features.tracking && window.KuyaB.features.tracking.isAdmin()) {
+                if (features.tracking && features.tracking.isAdmin()) {
                     window.KuyaB.triggerHaptic("light");
-                    showPage("userTrackingPage", function () {
-                        window.KuyaB.features.tracking.render();
-                    });
+                    router.showPage("userTrackingPage", features.tracking.render);
                 }
                 return;
             }
-
             if (target.closest("#userTrackingBackButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
-                setVaultType("other");
-                showPage("vaultPage", displayVaultItems);
+                features.vault.setVaultType("other");
+                router.showPage("vaultPage", features.vault.render);
                 return;
             }
 
-            // 4. In-App Media Viewer
+            // 4. Vault Media Lightbox & Actions
             var vaultView = target.closest('[data-action="view-vault"]');
             if (vaultView) {
                 e.preventDefault();
                 var vId = vaultView.getAttribute("data-id");
                 var vTitle = vaultView.getAttribute("data-title");
                 var vType = vaultView.getAttribute("data-type") || "pictures";
-                window.KuyaB.openMediaModal(vId, vTitle, vType);
+                features.vault.openMediaModal(vId, vTitle, vType);
                 return;
             }
-
-            // 5. Birthdays Page Delegation
-            if (target.closest("#addBirthdayButton")) {
-                e.preventDefault();
-                var bForm = document.getElementById("birthdayForm");
-                if (bForm) bForm.style.display = "block";
-                return;
-            }
-            if (target.closest("#cancelBirthdayButton")) {
-                e.preventDefault();
-                var bFormCancel = document.getElementById("birthdayForm");
-                if (bFormCancel) bFormCancel.style.display = "none";
-                return;
-            }
-            if (target.closest("#saveBirthdayButton")) {
-                e.preventDefault();
-                if (window.KuyaB.features.birthdays) window.KuyaB.features.birthdays.save();
-                return;
-            }
-            var bdayGreetBtn = target.closest('[data-action="greet-bday"]');
-            if (bdayGreetBtn) {
-                e.preventDefault();
-                if (window.KuyaB.features.birthdays) window.KuyaB.features.birthdays.greet(bdayGreetBtn.getAttribute("data-name"));
-                return;
-            }
-            var bdayDelBtn = target.closest('[data-action="delete-bday"]');
-            if (bdayDelBtn) {
-                e.preventDefault();
-                if (window.KuyaB.features.birthdays) window.KuyaB.features.birthdays.remove(bdayDelBtn.getAttribute("data-id"));
-                return;
-            }
-
-            // 6. Daily Logs Open Form
-            if (target.closest("#addLogButton")) {
-                e.preventDefault();
-                var lForm = document.getElementById("logForm");
-                if (lForm) lForm.style.display = "block";
-                return;
-            }
-
-            // 7. Tasks Delegation
-            if (target.closest("#addTaskButton")) {
-                e.preventDefault();
-                var tForm = document.getElementById("taskForm");
-                if (tForm) tForm.style.display = "block";
-                return;
-            }
-            if (target.closest("#cancelTaskButton")) {
-                e.preventDefault();
-                var tFormCancel = document.getElementById("taskForm");
-                if (tFormCancel) tFormCancel.style.display = "none";
-                return;
-            }
-            if (target.closest("#saveTaskButton")) {
-                e.preventDefault();
-                var taskTitle = document.getElementById("taskTitle").value.trim();
-                if (!taskTitle) return alert("Please enter task.");
-                tasks.push({ id: Date.now().toString(), title: taskTitle, completed: false });
-                localStorage.setItem("kuyaB_tasks", JSON.stringify(tasks));
-                window.KuyaB.triggerHaptic("medium");
-                document.getElementById("taskTitle").value = "";
-                document.getElementById("taskForm").style.display = "none";
-                displayTasks();
-                return;
-            }
-            var taskToggle = target.closest('[data-action="toggle-task"]');
-            if (taskToggle) {
-                e.preventDefault();
-                var tId = taskToggle.getAttribute("data-id");
-                for (var i = 0; i < tasks.length; i++) {
-                    if (tasks[i].id === tId) {
-                        tasks[i].completed = !tasks[i].completed;
-                        break;
-                    }
-                }
-                localStorage.setItem("kuyaB_tasks", JSON.stringify(tasks));
-                displayTasks();
-                return;
-            }
-            var taskDel = target.closest('[data-action="delete-task"]');
-            if (taskDel) {
-                e.preventDefault();
-                if (confirm("Delete task?")) {
-                    tasks = tasks.filter(function (x) { return x.id !== taskDel.getAttribute("data-id"); });
-                    localStorage.setItem("kuyaB_tasks", JSON.stringify(tasks));
-                    displayTasks();
-                }
-                return;
-            }
-
-            // 8. Reminders Delegation
-            if (target.closest("#addReminderButton")) {
-                e.preventDefault();
-                var rForm = document.getElementById("reminderForm");
-                if (rForm) rForm.style.display = "block";
-                return;
-            }
-            if (target.closest("#cancelReminderButton")) {
-                e.preventDefault();
-                var rFormCancel = document.getElementById("reminderForm");
-                if (rFormCancel) rFormCancel.style.display = "none";
-                return;
-            }
-            if (target.closest("#saveReminderButton")) {
-                e.preventDefault();
-                var remTitle = document.getElementById("reminderTitle").value.trim();
-                if (!remTitle) return alert("Please enter reminder.");
-                reminders.push({ id: Date.now().toString(), title: remTitle });
-                localStorage.setItem("kuyaB_reminders", JSON.stringify(reminders));
-                window.KuyaB.triggerHaptic("medium");
-                document.getElementById("reminderTitle").value = "";
-                document.getElementById("reminderForm").style.display = "none";
-                displayReminders();
-                return;
-            }
-            var remDel = target.closest('[data-action="delete-rem"]');
-            if (remDel) {
-                e.preventDefault();
-                if (confirm("Delete reminder?")) {
-                    reminders = reminders.filter(function (x) { return x.id !== remDel.getAttribute("data-id"); });
-                    localStorage.setItem("kuyaB_reminders", JSON.stringify(reminders));
-                    displayReminders();
-                }
-                return;
-            }
-
-            // 9. Vault Upload Toggle & Deletion
             if (target.closest("#addVaultItemButton")) {
                 e.preventDefault();
                 var vf = document.getElementById("vaultUploadForm");
@@ -553,34 +92,118 @@
             var vaultDel = target.closest('[data-action="delete-vault"]');
             if (vaultDel) {
                 e.preventDefault();
-                var dId = vaultDel.getAttribute("data-id");
-                if (confirm("Delete media from vault and channel?")) {
-                    fetch("/api/vault/delete", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ id: dId })
-                    }).then(function () {
-                        displayVaultItems();
-                    });
-                }
+                features.vault.deleteItem(vaultDel.getAttribute("data-id"));
                 return;
             }
 
-            // 10. Word Game
+            // 5. Tasks Actions
+            if (target.closest("#addTaskButton")) {
+                e.preventDefault();
+                var tf = document.getElementById("taskForm");
+                if (tf) tf.style.display = "block";
+                return;
+            }
+            if (target.closest("#cancelTaskButton")) {
+                e.preventDefault();
+                var tfc = document.getElementById("taskForm");
+                if (tfc) tfc.style.display = "none";
+                return;
+            }
+            if (target.closest("#saveTaskButton")) {
+                e.preventDefault();
+                features.tasks.add();
+                return;
+            }
+            var taskToggle = target.closest('[data-action="toggle-task"]');
+            if (taskToggle) {
+                e.preventDefault();
+                features.tasks.toggle(taskToggle.getAttribute("data-id"));
+                return;
+            }
+            var taskDel = target.closest('[data-action="delete-task"]');
+            if (taskDel) {
+                e.preventDefault();
+                features.tasks.remove(taskDel.getAttribute("data-id"));
+                return;
+            }
+
+            // 6. Reminders Actions
+            if (target.closest("#addReminderButton")) {
+                e.preventDefault();
+                var rf = document.getElementById("reminderForm");
+                if (rf) rf.style.display = "block";
+                return;
+            }
+            if (target.closest("#cancelReminderButton")) {
+                e.preventDefault();
+                var rfc = document.getElementById("reminderForm");
+                if (rfc) rfc.style.display = "none";
+                return;
+            }
+            if (target.closest("#saveReminderButton")) {
+                e.preventDefault();
+                features.reminders.add();
+                return;
+            }
+            var remDel = target.closest('[data-action="delete-rem"]');
+            if (remDel) {
+                e.preventDefault();
+                features.reminders.remove(remDel.getAttribute("data-id"));
+                return;
+            }
+
+            // 7. Birthdays Actions
+            if (target.closest("#addBirthdayButton")) {
+                e.preventDefault();
+                var bf = document.getElementById("birthdayForm");
+                if (bf) bf.style.display = "block";
+                return;
+            }
+            if (target.closest("#cancelBirthdayButton")) {
+                e.preventDefault();
+                var bfc = document.getElementById("birthdayForm");
+                if (bfc) bfc.style.display = "none";
+                return;
+            }
+            if (target.closest("#saveBirthdayButton")) {
+                e.preventDefault();
+                if (features.birthdays) features.birthdays.save();
+                return;
+            }
+            var bdayGreetBtn = target.closest('[data-action="greet-bday"]');
+            if (bdayGreetBtn) {
+                e.preventDefault();
+                if (features.birthdays) features.birthdays.greet(bdayGreetBtn.getAttribute("data-name"));
+                return;
+            }
+            var bdayDelBtn = target.closest('[data-action="delete-bday"]');
+            if (bdayDelBtn) {
+                e.preventDefault();
+                if (features.birthdays) features.birthdays.remove(bdayDelBtn.getAttribute("data-id"));
+                return;
+            }
+
+            // 8. Daily Logs Open
+            if (target.closest("#addLogButton")) {
+                e.preventDefault();
+                var lf = document.getElementById("logForm");
+                if (lf) lf.style.display = "block";
+                return;
+            }
+
+            // 9. Word Game & Quick Add
             if (target.closest("#gameButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
                 alert("Use /game in chat to play Word Scramble!");
                 return;
             }
-
-            // 11. Quick Add Content
             if (target.closest("#addContentButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
-                setVaultType("other");
-                showPage("vaultPage", function () {
-                    displayVaultItems();
+                features.vault.setVaultType("other");
+                router.showPage("vaultPage", function () {
+                    features.vault.render();
                     var vf = document.getElementById("vaultUploadForm");
                     if (vf) vf.style.display = "block";
                 });
@@ -589,16 +212,11 @@
         });
     }
 
-    // ---------------------------------------------------------
-    // INITIALIZATION & ROUTING
-    // ---------------------------------------------------------
     function init() {
-        loadSharedData();
-        attachGlobalClicks();
+        features.vault.initFileInput();
+        attachGlobalEvents();
 
-        if (window.KuyaB.features.tracking) {
-            window.KuyaB.features.tracking.track();
-        }
+        if (features.tracking) features.tracking.track();
 
         var msgId = window.KuyaB.getParam("msg_id");
         var chatId = window.KuyaB.getParam("chat_id");
@@ -613,29 +231,29 @@
         }
 
         if (startSection === "add_bday") {
-            hideAllPages();
+            router.hideAllPages();
             var popupPage = document.getElementById("addBirthdayStandalonePage");
             if (popupPage) popupPage.style.display = "block";
             return;
         }
 
         if (startSection === "birthdays") {
-            showPage("birthdaysPage", function () {
-                if (window.KuyaB.features.birthdays) window.KuyaB.features.birthdays.render();
+            router.showPage("birthdaysPage", function () {
+                if (features.birthdays) features.birthdays.render();
             });
         } else if (startSection === "daily") {
-            showPage("dailyLogsPage", function () {
-                if (window.KuyaB.features.dailyLogs) window.KuyaB.features.dailyLogs.render();
+            router.showPage("dailyLogsPage", function () {
+                if (features.dailyLogs) features.dailyLogs.render();
             });
         } else if (startSection === "tasks") {
-            showPage("tasksPage", displayTasks);
+            router.showPage("tasksPage", features.tasks.render);
         } else if (startSection === "reminders") {
-            showPage("remindersPage", displayReminders);
+            router.showPage("remindersPage", features.reminders.render);
         } else if (startSection === "videos" || startSection === "pictures" || startSection === "other") {
-            setVaultType(startSection);
-            showPage("vaultPage", displayVaultItems);
+            features.vault.setVaultType(startSection);
+            router.showPage("vaultPage", features.vault.render);
         } else {
-            showDashboard();
+            router.showDashboard();
         }
     }
 
