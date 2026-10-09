@@ -51,14 +51,17 @@ from features.vault import (
     api_get_vault_items,
     api_delete_vault_item,
 )
-from features.admin.github_sync import api_admin_commit_file
+from features.admin.github_sync import (
+    api_admin_commit_file,
+    api_admin_get_repo_tree,
+    api_admin_get_file_content,
+)
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
 )
 
-# Telegram Application Instance
 application = Application.builder().token(BOT_TOKEN).build()
 
 
@@ -230,7 +233,9 @@ starlette_app = Starlette(
         Route("/api/vault/media-file", api_get_vault_media_file, methods=["GET"]),
         Route("/api/vault/delete", api_delete_vault_item, methods=["POST"]),
 
-        # GitHub Automated File Updater / Committer
+        # GitHub Automated File Manager
+        Route("/api/admin/repo-tree", api_admin_get_repo_tree, methods=["GET"]),
+        Route("/api/admin/get-file", api_admin_get_file_content, methods=["GET"]),
         Route("/api/admin/commit-file", api_admin_commit_file, methods=["POST"]),
 
         # Helpers & WebApp Static
