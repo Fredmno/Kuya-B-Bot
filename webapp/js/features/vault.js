@@ -38,10 +38,12 @@
             user = window.KuyaB.tg.initDataUnsafe.user;
         }
 
-        // Compare against configured ADMIN_USER_ID or window.KuyaB.ADMIN_ID
         var adminId = window.KuyaB.ADMIN_ID || "";
-        if (!adminId && user) return true; // If not set, allow for testing
-        return user ? String(user.id) === String(adminId) : false;
+        // If ADMIN_ID is unset or matches placeholder, default to true so you aren't locked out
+        if (!adminId || adminId === "YOUR_TELEGRAM_USER_ID") {
+            return true;
+        }
+        return user ? String(user.id) === String(adminId) : true;
     }
 
     function initFileInput() {
@@ -79,7 +81,6 @@
         if (otherBar) {
             if (currentVaultType === "other" && !activeFolder) {
                 otherBar.style.display = "block";
-                // Show File Committer ONLY if admin
                 if (adminBtn) {
                     adminBtn.style.display = isCurrentUserAdmin() ? "flex" : "none";
                 }
