@@ -4,7 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-VAULT_CHAT_ID = os.getenv("-1004362748092")
+VAULT_CHAT_ID = os.getenv("VAULT_CHAT_ID")
 REGISTRY_TAG = "#KUYA_B_REGISTRY:"
 
 
