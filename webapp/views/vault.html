@@ -14,7 +14,7 @@
         <span id="activeFolderHeader" style="font-weight: 700; font-size: 0.95rem; color: var(--primary, #2563eb);"></span>
     </div>
 
-    <!-- Actions Bar (Buttons centered with narrower width; labels aligned to the left) -->
+    <!-- Actions Bar (Other section only) -->
     <div id="otherActionsBar" style="padding: 0 0 16px 0; display: none; width: 100%;">
         <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; width: 86%; margin: 0 auto;">
             <!-- 1. User Activity -->
@@ -127,8 +127,8 @@
     <!-- Folders Directory List -->
     <div id="vaultFoldersContainer"></div>
 
-    <!-- Inside-Folder Items List -->
-    <div id="vaultItemsContainer" style="display: none;"></div>
+    <!-- Inside-Folder Items List: Centered, full-width container matching header width -->
+    <div id="vaultItemsContainer" style="display: none; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box;"></div>
 </div>
 
 <!-- USER ACTIVITY PAGE -->
