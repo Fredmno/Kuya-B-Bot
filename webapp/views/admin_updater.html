@@ -48,10 +48,38 @@
         <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Commit Message</label>
         <input type="text" class="neu-input" id="commitMsgInput" placeholder="e.g. Fix user activity counter" style="margin-bottom: 14px;">
 
+        <!-- Textarea Header Row with Tiny Action Buttons -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label style="font-size: 0.82rem; font-weight: 600; color: #64748b;">New File Content</label>
-            <span id="fileLoadStatus" style="font-size: 0.75rem; color: #2563eb; font-weight: 600;"></span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-size: 0.82rem; font-weight: 600; color: #64748b;">New File Content</label>
+                <span id="fileLoadStatus" style="font-size: 0.72rem; color: #2563eb; font-weight: 600;"></span>
+            </div>
+            <div style="display: flex; gap: 6px;">
+                <button type="button" onclick="window.KuyaB.clearCommitterContent()" style="
+                    border: none;
+                    background: #e2e8f0;
+                    color: #475569;
+                    font-size: 0.72rem;
+                    font-weight: 600;
+                    padding: 3px 8px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    box-shadow: 1px 1px 3px rgba(0,0,0,0.08);
+                ">🗑️ Clear</button>
+                <button type="button" onclick="window.KuyaB.pasteCommitterContent()" style="
+                    border: none;
+                    background: #2563eb;
+                    color: #ffffff;
+                    font-size: 0.72rem;
+                    font-weight: 600;
+                    padding: 3px 8px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    box-shadow: 1px 1px 3px rgba(37,99,235,0.3);
+                ">📋 Paste</button>
+            </div>
         </div>
+
         <textarea class="neu-input" id="commitContentInput" placeholder="Select a file above or paste new code here..." rows="13" style="font-family: monospace; font-size: 0.8rem; line-height: 1.4; white-space: pre;"></textarea>
 
         <div class="form-actions" style="margin-top: 16px;">
