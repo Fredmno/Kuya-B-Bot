@@ -16,6 +16,10 @@
         activeFolder = null;
     }
 
+    function getCurrentVaultType() {
+        return currentVaultType;
+    }
+
     function getActiveFolder() {
         return activeFolder;
     }
@@ -76,7 +80,6 @@
             else titleEl.innerText = "📁 Other";
         }
 
-        // Show 'Other' extra tools ONLY on root view of Other section
         if (otherBar) {
             if (currentVaultType === "other" && !activeFolder) {
                 otherBar.style.display = "block";
@@ -88,7 +91,6 @@
             }
         }
 
-        // Folder drilldown view setup
         if (activeFolder) {
             if (breadcrumbBar) breadcrumbBar.style.display = "flex";
             if (activeHeader) activeHeader.innerText = "📂 " + activeFolder;
@@ -125,7 +127,6 @@
                 foldersMap[f].push(it);
             });
 
-            // STATE 1: Folders Directory View
             if (!activeFolder) {
                 var folderNames = Object.keys(foldersMap);
                 if (folderNames.length === 0) {
@@ -149,7 +150,6 @@
                 return;
             }
 
-            // STATE 2: Inside Folder View
             var folderItems = foldersMap[activeFolder] || [];
             if (folderItems.length === 0) {
                 itemsContainer.innerHTML = '<p class="empty-state">Folder is empty.</p>';
@@ -230,6 +230,7 @@
 
     window.KuyaB.features.vault = {
         setVaultType: setVaultType,
+        getCurrentVaultType: getCurrentVaultType,
         getActiveFolder: getActiveFolder,
         openFolder: openFolder,
         backToFolders: backToFolders,
