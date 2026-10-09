@@ -1,0 +1,63 @@
+<div id="addContentPage" style="display: none;">
+    <div class="top-bar">
+        <button type="button" class="btn-icon-back" id="addContentBackButton">←</button>
+        <h2>➕ Add Content</h2>
+        <div style="width: 40px;"></div>
+    </div>
+
+    <div class="form-box" style="display: block; margin-top: 14px;">
+        <!-- Media Category Selector -->
+        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted, #64748b); margin-bottom: 6px;">Select Destination Section</label>
+        <select class="neu-input" id="newContentSection" style="margin-bottom: 14px; width: 100%; height: 44px; padding: 0 12px; cursor: pointer;">
+            <option value="pictures">🖼️ Pictures Vault</option>
+            <option value="videos">🎥 Videos Vault</option>
+            <option value="other" selected>📁 Other Files</option>
+        </select>
+
+        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted, #64748b); margin-bottom: 6px;">Title / Caption</label>
+        <input type="text" class="neu-input" id="newContentTitle" placeholder="Title or brief description..." style="margin-bottom: 14px;">
+
+        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted, #64748b); margin-bottom: 6px;">Folder Name</label>
+        <input type="text" class="neu-input" id="newContentFolder" placeholder="Folder (e.g. Work, Receipts, Trips)" style="margin-bottom: 16px;">
+
+        <!-- Styled File Chooser -->
+        <div style="position: relative; margin-bottom: 20px;">
+            <input type="file" id="newContentFile" accept="image/*,video/*" style="opacity: 0; position: absolute; z-index: -1; width: 0.1px; height: 0.1px; overflow: hidden;">
+            <label for="newContentFile" style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                width: 100%;
+                padding: 8px 10px;
+                border-radius: 14px;
+                background: #e6ecf5;
+                box-shadow: inset 3px 3px 6px #cad5e2, inset -3px -3px 6px #ffffff;
+                cursor: pointer;
+                box-sizing: border-box;
+            ">
+                <span style="
+                    background: #2563eb;
+                    color: #ffffff;
+                    font-size: 0.82rem;
+                    font-weight: 600;
+                    padding: 8px 14px;
+                    border-radius: 10px;
+                    box-shadow: 2px 2px 5px rgba(37, 99, 235, 0.35);
+                    white-space: nowrap;
+                ">Choose File</span>
+                <span id="newContentFileName" style="
+                    font-size: 0.88rem;
+                    color: #64748b;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                ">No file chosen</span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-soft cancel" id="cancelAddContentButton">Cancel</button>
+            <button type="button" class="btn-soft save" id="btnSubmitAddContent" onclick="window.KuyaB.submitNewContent()">Upload Content</button>
+        </div>
+    </div>
+</div>
