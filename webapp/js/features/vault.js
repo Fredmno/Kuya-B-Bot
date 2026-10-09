@@ -95,7 +95,7 @@
             if (breadcrumbBar) breadcrumbBar.style.display = "flex";
             if (activeHeader) activeHeader.innerText = "📂 " + activeFolder;
             if (foldersContainer) foldersContainer.style.display = "none";
-            if (itemsContainer) itemsContainer.style.display = "grid";
+            if (itemsContainer) itemsContainer.style.display = "flex";
         } else {
             if (breadcrumbBar) breadcrumbBar.style.display = "none";
             if (foldersContainer) foldersContainer.style.display = "block";
@@ -127,6 +127,7 @@
                 foldersMap[f].push(it);
             });
 
+            // STATE 1: Folders Directory View
             if (!activeFolder) {
                 var folderNames = Object.keys(foldersMap);
                 if (folderNames.length === 0) {
@@ -150,22 +151,44 @@
                 return;
             }
 
+            // STATE 2: Inside Folder View (Structured and Left-Aligned Cards)
             var folderItems = foldersMap[activeFolder] || [];
             if (folderItems.length === 0) {
-                itemsContainer.innerHTML = '<p class="empty-state">Folder is empty.</p>';
+                itemsContainer.innerHTML = '<p class="empty-state">Folder is empty. Tap + above to add files!</p>';
                 return;
             }
 
             var iHtml = "";
             folderItems.forEach(function (it) {
                 var icon = it.type === "videos" ? "🎥" : (it.type === "pictures" ? "🖼️" : "📁");
-                iHtml += '<div class="vault-card" data-action="view-vault" data-id="' + it.id + '" data-title="' + encodeURIComponent(it.title || "Media") + '" data-type="' + it.type + '" style="cursor: pointer;">' +
-                    '<div class="vault-icon-preview">' + icon + '</div>' +
-                    '<div class="vault-info">' +
-                        '<div class="vault-title">' + (it.title || "Untitled") + '</div>' +
-                        '<div class="vault-meta">' + (it.type || "file") + '</div>' +
+                var displayTitle = it.title || "Untitled";
+                var typeLabel = it.type === "videos" ? "Video file" : (it.type === "pictures" ? "Image file" : "File");
+
+                iHtml += '<div class="feature-card-full" data-action="view-vault" data-id="' + it.id + '" data-title="' + encodeURIComponent(displayTitle) + '" data-type="' + it.type + '" style="' +
+                    'width: 100%; ' +
+                    'margin: 0; ' +
+                    'box-sizing: border-box; ' +
+                    'display: flex; ' +
+                    'align-items: center; ' +
+                    'justify-content: space-between; ' +
+                    'cursor: pointer; ' +
+                    'padding: 12px 16px;' +
+                '">' +
+                    '<div class="card-left" style="display: flex; align-items: center; gap: 14px; text-align: left; overflow: hidden;">' +
+                        '<span class="card-icon" style="font-size: 1.5rem; flex-shrink: 0;">' + icon + '</span>' +
+                        '<div style="text-align: left; overflow: hidden;">' +
+                            '<div class="card-title" style="font-weight: 700; font-size: 0.95rem; color: #1e293b; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + displayTitle + '</div>' +
+                            '<div class="card-desc" style="font-size: 0.8rem; color: #64748b; text-align: left; margin-top: 2px;">' + typeLabel + '</div>' +
+                        '</div>' +
                     '</div>' +
-                    '<button type="button" class="btn-delete-card" data-action="delete-vault" data-id="' + it.id + '" onclick="event.stopPropagation();">🗑️</button>' +
+                    '<button type="button" class="btn-icon-back" data-action="delete-vault" data-id="' + it.id + '" title="Delete item" style="' +
+                        'width: 36px; ' +
+                        'height: 36px; ' +
+                        'flex-shrink: 0; ' +
+                        'font-size: 0.9rem; ' +
+                        'border-radius: 10px; ' +
+                        'box-shadow: 2px 2px 5px #cad5e2, -2px -2px 5px #ffffff;' +
+                    '" onclick="event.stopPropagation();">🗑️</button>' +
                 '</div>';
             });
             itemsContainer.innerHTML = iHtml;
