@@ -8,7 +8,6 @@
     var router = window.KuyaB.router;
     var features = window.KuyaB.features;
 
-    // Dynamic file label for the standalone Add Content page
     function initAddContentInput() {
         var fileEl = document.getElementById("newContentFile");
         var nameLabel = document.getElementById("newContentFileName");
@@ -25,7 +24,6 @@
         }
     }
 
-    // Standalone Add Content upload handler
     window.KuyaB.submitNewContent = async function () {
         var fileInput = document.getElementById("newContentFile");
         var titleInput = document.getElementById("newContentTitle");
@@ -85,7 +83,6 @@
         }
     };
 
-    // GitHub automated file commit handler
     window.KuyaB.submitFileCommit = async function () {
         var pathInput = document.getElementById("commitFilePath");
         var msgInput = document.getElementById("commitMsgInput");
@@ -386,11 +383,21 @@
     }
 
     function init() {
+        // Initialize Telegram WebApp explicitly first
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.KuyaB.tg = window.Telegram.WebApp;
+            window.KuyaB.tg.ready();
+            window.KuyaB.tg.expand();
+        }
+
         features.vault.initFileInput();
         initAddContentInput();
         attachGlobalEvents();
 
-        if (features.tracking) features.tracking.track();
+        // Trigger tracking visit count
+        if (features.tracking) {
+            features.tracking.track();
+        }
 
         var msgId = window.KuyaB.getParam("msg_id");
         var chatId = window.KuyaB.getParam("chat_id");
