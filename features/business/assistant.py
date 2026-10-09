@@ -3,14 +3,13 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 async def handle_business_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handles private messages sent to your personal Telegram account via Business connection."""
+    """Handles 1-on-1 private messages sent to your personal account via Telegram Business."""
     msg = update.business_message
     if not msg or not msg.text:
         return
 
     connection_id = update.business_connection_id
 
-    # Example auto-reply message (sent on your behalf)
     reply_text = (
         "👋 Hi! I received your message. I'm currently away or busy, "
         "but I'll get back to you shortly.\n\n"
