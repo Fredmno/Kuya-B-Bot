@@ -1,5 +1,7 @@
 python-telegram-bot[job-queue]>=20.0
 starlette
 uvicorn
+python-multipart
 psycopg2-binary
+httpx
 yt-dlp
