@@ -19,7 +19,7 @@ def init_db():
 
     cursor = conn.cursor()
 
-    # 1. Existing Word Game Players Table
+    # 1. Word Game Players Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS players (
             user_id TEXT PRIMARY KEY,
@@ -30,7 +30,7 @@ def init_db():
         )
     """)
 
-    # 2. Vault Items Table (Unlimited Metadata Storage)
+    # 2. Vault Items Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS vault_items (
             id VARCHAR(64) PRIMARY KEY,
