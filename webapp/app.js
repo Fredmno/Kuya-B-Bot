@@ -8,7 +8,10 @@
     var router = window.KuyaB.router;
     var features = window.KuyaB.features;
 
-    // --- Dynamic file label for Add Content ---
+    // Define Telegram Admin ID (Leave empty or set to your Telegram ID)
+    window.KuyaB.ADMIN_ID = "YOUR_TELEGRAM_USER_ID"; // e.g. "123456789"
+
+    // Dynamic file label for Add Content
     function initAddContentInput() {
         var fileEl = document.getElementById("newContentFile");
         var nameLabel = document.getElementById("newContentFileName");
@@ -25,7 +28,7 @@
         }
     }
 
-    // --- Standalone Add Content submission handler ---
+    // Add Content upload handler
     window.KuyaB.submitNewContent = async function () {
         var fileInput = document.getElementById("newContentFile");
         var titleInput = document.getElementById("newContentTitle");
@@ -85,7 +88,7 @@
         }
     };
 
-    // --- Dynamic Repository Tree Loader ---
+    // Dynamic Repository Tree Loader
     window.KuyaB.loadRepoTree = async function () {
         var select = document.getElementById("quickFileSelect");
         if (!select) return;
@@ -108,7 +111,7 @@
         }
     };
 
-    // --- Live File Content Loader ---
+    // Live File Content Loader
     window.KuyaB.onSelectRepoFile = async function (filePath) {
         var pathInput = document.getElementById("commitFilePath");
         var contentInput = document.getElementById("commitContentInput");
@@ -135,7 +138,7 @@
         }, 3000);
     };
 
-    // --- GitHub Committer Submission ---
+    // GitHub Committer Submission
     window.KuyaB.submitFileCommit = async function () {
         var pathInput = document.getElementById("commitFilePath");
         var msgInput = document.getElementById("commitMsgInput");
@@ -175,7 +178,8 @@
                 window.KuyaB.triggerHaptic("success");
                 alert(data.message);
                 contentInput.value = "";
-                router.showDashboard();
+                features.vault.setVaultType("other");
+                router.showPage("vaultPage", features.vault.render);
             } else {
                 alert("Commit failed: " + (data.error || "Unknown error"));
             }
@@ -269,7 +273,7 @@
                 return;
             }
 
-            // 5. Admin File Committer Navigation
+            // 5. Admin File Committer Navigation (Inside Other)
             if (target.closest("#btnAdminUpdater")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -280,17 +284,16 @@
             if (target.closest("#adminUpdaterBackButton, #cancelAdminUpdaterButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
-                router.showDashboard();
+                features.vault.setVaultType("other");
+                router.showPage("vaultPage", features.vault.render);
                 return;
             }
 
             // 6. User Tracking View
             if (target.closest("#btnOpenUserTracking")) {
                 e.preventDefault();
-                if (features.tracking && features.tracking.isAdmin()) {
-                    window.KuyaB.triggerHaptic("light");
-                    router.showPage("userTrackingPage", features.tracking.render);
-                }
+                window.KuyaB.triggerHaptic("light");
+                router.showPage("userTrackingPage", features.tracking.render);
                 return;
             }
             if (target.closest("#userTrackingBackButton")) {
@@ -301,7 +304,15 @@
                 return;
             }
 
-            // 7. Vault Media Lightbox & Inline Upload Form
+            // 7. Word Game (Inside Other)
+            if (target.closest("#gameButton")) {
+                e.preventDefault();
+                window.KuyaB.triggerHaptic("light");
+                alert("Use /game in chat to play Word Scramble!");
+                return;
+            }
+
+            // 8. Vault Media Lightbox & Inline Upload Form
             var vaultView = target.closest('[data-action="view-vault"]');
             if (vaultView) {
                 e.preventDefault();
@@ -330,7 +341,7 @@
                 return;
             }
 
-            // 8. Tasks Actions
+            // 9. Tasks Actions
             if (target.closest("#addTaskButton")) {
                 e.preventDefault();
                 var tf = document.getElementById("taskForm");
@@ -361,7 +372,7 @@
                 return;
             }
 
-            // 9. Reminders Actions
+            // 10. Reminders Actions
             if (target.closest("#addReminderButton")) {
                 e.preventDefault();
                 var rf = document.getElementById("reminderForm");
@@ -386,7 +397,7 @@
                 return;
             }
 
-            // 10. Birthdays Actions
+            // 11. Birthdays Actions
             if (target.closest("#addBirthdayButton")) {
                 e.preventDefault();
                 var bf = document.getElementById("birthdayForm");
@@ -417,19 +428,11 @@
                 return;
             }
 
-            // 11. Daily Logs Open
+            // 12. Daily Logs Open
             if (target.closest("#addLogButton")) {
                 e.preventDefault();
                 var lf = document.getElementById("logForm");
                 if (lf) lf.style.display = "block";
-                return;
-            }
-
-            // 12. Word Game
-            if (target.closest("#gameButton")) {
-                e.preventDefault();
-                window.KuyaB.triggerHaptic("light");
-                alert("Use /game in chat to play Word Scramble!");
                 return;
             }
         });
