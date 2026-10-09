@@ -21,6 +21,16 @@ from telegram.ext import (
     ContextTypes,
 )
 
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    CallbackQueryHandler,
+    BusinessMessageHandler,  # <-- Add this import
+    ContextTypes,
+)
+
+from features.business.assistant import handle_business_message  # <-- Import your feature function
+
 from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
@@ -278,7 +288,12 @@ application.add_handler(CommandHandler("kuyab", kuya_b_menu))
 application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
 application.add_handler(CommandHandler("bday", command_add_birthday))
 application.add_handler(CallbackQueryHandler(menu_callback_handler))
+
+# Register Business Bot handler
+application.add_handler(BusinessMessageHandler(handle_business_message))
+
 register_word_game_handlers(application)
+
 
 # ---------------------------------------------------------
 # STARLETTE APPLICATION ROUTES
