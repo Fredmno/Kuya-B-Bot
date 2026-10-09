@@ -16,7 +16,8 @@
         "remindersPage",
         "vaultPage",
         "userTrackingPage",
-        "addBirthdayStandalonePage"
+        "addBirthdayStandalonePage",
+        "addContentPage"
     ];
 
     function hideAllForms() {
