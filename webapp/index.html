@@ -9,7 +9,23 @@
 </head>
 <body>
     <div id="app">
-        <!-- DASHBOARD -->
+        <!-- STANDALONE ADD BIRTHDAY POPUP VIEW (Triggered from Chat Menu) -->
+        <div id="addBirthdayStandalonePage" style="display: none; padding: 24px 16px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;">🎂 Add Birthday</h2>
+                <p style="color: var(--text-muted); font-size: 0.88rem;">Save directly to your permanent registry</p>
+            </div>
+            <div class="form-box" style="display: block; padding: 20px;">
+                <input type="text" class="neu-input" id="popupBirthdayName" placeholder="Full Name" style="margin-bottom: 14px;">
+                <input type="text" class="neu-input" id="popupBirthdayDate" placeholder="Date (MM-DD, e.g. 10-25)" maxlength="5" style="margin-bottom: 20px;">
+                <div class="form-actions" style="display: flex; gap: 12px;">
+                    <button type="button" class="btn-soft cancel" style="flex: 1;" onclick="if(window.Telegram && Telegram.WebApp) Telegram.WebApp.close();">Cancel</button>
+                    <button type="button" class="btn-soft save" id="btnPopupSaveBirthday" style="flex: 1;" onclick="window.saveBirthdayFromPopup()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN DASHBOARD PAGE -->
         <div id="dashboardPage">
             <header class="dashboard-header">
                 <div class="greeting">Welcome Back 👋</div>
@@ -77,7 +93,7 @@
             <footer class="dashboard-footer">Kuya B Personal Hub</footer>
         </div>
 
-        <!-- BIRTHDAYS -->
+        <!-- BIRTHDAYS FULL PAGE -->
         <div id="birthdaysPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="birthdayBackButton">←</button>
@@ -95,7 +111,7 @@
             <div id="birthdaysList"></div>
         </div>
 
-        <!-- DAILY LOGS & HABITS -->
+        <!-- DAILY LOGS PAGE -->
         <div id="dailyLogsPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="dailyLogsBackButton">←</button>
@@ -169,7 +185,7 @@
             <div id="dailyLogsList"></div>
         </div>
 
-        <!-- DETAIL MODAL -->
+        <!-- DETAIL MODAL FOR LOGS -->
         <div id="logDetailModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) window.KuyaB.features.dailyLogs.closeModal()">
             <div class="modal-card">
                 <div class="modal-header">
@@ -191,7 +207,7 @@
             </div>
         </div>
 
-        <!-- TASKS -->
+        <!-- TASKS PAGE -->
         <div id="tasksPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="tasksBackButton">←</button>
@@ -208,7 +224,7 @@
             <div id="tasksList"></div>
         </div>
 
-        <!-- REMINDERS -->
+        <!-- REMINDERS PAGE -->
         <div id="remindersPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="remindersBackButton">←</button>
@@ -225,7 +241,7 @@
             <div id="remindersList"></div>
         </div>
 
-        <!-- VAULT / OTHER -->
+        <!-- VAULT PAGE -->
         <div id="vaultPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="vaultBackButton">←</button>
@@ -272,12 +288,12 @@
         </div>
     </div>
 
-    <!-- Independent Modular Scripts -->
+    <!-- Modular Feature Modules -->
     <script src="/app/modules/birthdays.js?v={{ v }}"></script>
     <script src="/app/modules/daily_logs.js?v={{ v }}"></script>
     <script src="/app/modules/tracking.js?v={{ v }}"></script>
 
-    <!-- Core Shell & Routing Engine -->
+    <!-- Shell Router -->
     <script src="/app/app.js?v={{ v }}"></script>
 </body>
 </html>
