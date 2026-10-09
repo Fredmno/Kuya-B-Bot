@@ -31,6 +31,7 @@ from features.registry import get_or_create_registry, update_registry_data
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 from features.business.assistant import handle_business_message
+from features.downloader import api_download_link_to_vault
 from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
@@ -184,71 +185,4 @@ async def lifespan(app):
             BotCommand("kuyab", "Open Kuya B Personal Hub"),
             BotCommand("game", "Play Word Scramble"),
         ]
-        await application.bot.set_my_commands(commands, scope=BotCommandScopeDefault())
-    except Exception as e:
-        logging.warning(f"Could not register commands: {e}")
-
-    await application.start()
-    yield
-    await application.stop()
-    await application.shutdown()
-
-
-# ---------------------------------------------------------
-# HANDLER REGISTRATIONS
-# ---------------------------------------------------------
-application.add_handler(CommandHandler("start", start))
-application.add_handler(CommandHandler("kuyab", kuya_b_menu))
-application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
-application.add_handler(CommandHandler("bday", command_add_birthday))
-application.add_handler(CallbackQueryHandler(menu_callback_handler))
-application.add_handler(MessageHandler(filters.UpdateType.BUSINESS_MESSAGE, handle_business_message))
-
-register_word_game_handlers(application)
-
-# ---------------------------------------------------------
-# STARLETTE ROUTING TABLE
-# ---------------------------------------------------------
-starlette_app = Starlette(
-    routes=[
-        Route("/", health_check, methods=["GET", "HEAD"]),
-        Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
-
-        # Birthdays
-        Route("/api/birthdays", api_get_birthdays, methods=["GET"]),
-        Route("/api/birthdays", api_add_birthday, methods=["POST"]),
-        Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
-        Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
-        Route("/api/birthdays/greet", api_send_birthday_greeting, methods=["POST"]),
-
-        # Daily Logs
-        Route("/api/logs", api_get_daily_logs, methods=["GET"]),
-        Route("/api/logs", api_save_daily_log, methods=["POST"]),
-        Route("/api/logs/delete", api_delete_daily_log, methods=["POST"]),
-
-        # User Tracking
-        Route("/api/track-user", api_track_user, methods=["POST"]),
-        Route("/api/users", api_get_users, methods=["GET"]),
-
-        # Vault Media
-        Route("/api/vault/items", api_get_vault_items, methods=["GET"]),
-        Route("/api/vault/upload", api_upload_vault_media, methods=["POST"]),
-        Route("/api/vault/media-file", api_get_vault_media_file, methods=["GET"]),
-        Route("/api/vault/delete", api_delete_vault_item, methods=["POST"]),
-
-        # GitHub Automated File Manager
-        Route("/api/admin/repo-tree", api_admin_get_repo_tree, methods=["GET"]),
-        Route("/api/admin/get-file", api_admin_get_file_content, methods=["GET"]),
-        Route("/api/admin/commit-file", api_admin_commit_file, methods=["POST"]),
-
-        # Helpers & WebApp Static
-        Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
-        Route("/app", serve_index, methods=["GET"]),
-        Route("/app/", serve_index, methods=["GET"]),
-        Mount("/app", StaticFiles(directory="webapp", html=False), name="app"),
-    ],
-    lifespan=lifespan,
-)
-
-if __name__ == "__main__":
-    uvicorn.run(starlette_app, host="0.0.0.0", port=PORT)
+        await application.bot.set_my_commands(commands, scope
