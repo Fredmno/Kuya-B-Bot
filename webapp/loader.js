@@ -5,14 +5,12 @@
 (function () {
     "use strict";
 
-    // Extract current cache-busting version parameter
     var scripts = document.getElementsByTagName("script");
     var currentScript = scripts[scripts.length - 1];
     var src = currentScript ? currentScript.getAttribute("src") : "";
     var vMatch = src ? src.match(/[?&]v=([^&]+)/) : null;
     var v = vMatch ? vMatch[1] : "1.0.0";
 
-    // 1. Modular HTML Views to load into #app
     var viewList = [
         "/app/views/modals.html",
         "/app/views/dashboard.html",
@@ -20,10 +18,10 @@
         "/app/views/daily_logs.html",
         "/app/views/tasks.html",
         "/app/views/reminders.html",
-        "/app/views/vault.html"
+        "/app/views/vault.html",
+        "/app/views/add_content.html"
     ];
 
-    // 2. Sequential JavaScript files
     var scriptList = [
         "/app/js/core/utils.js",
         "/app/js/core/router.js",
@@ -75,7 +73,6 @@
         document.body.appendChild(tag);
     }
 
-    // Load all HTML templates first, then execute JS
     loadViews().then(function () {
         loadScriptSequentially(0);
     });
