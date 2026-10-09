@@ -3,6 +3,7 @@ import json
 import logging
 import re
 from datetime import time
+from zoneinfo import ZoneInfo
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -24,7 +25,7 @@ from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 
-# Clean modular feature imports
+# Clean modular imports
 from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
@@ -47,7 +48,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.8.2"
+APP_VERSION = "2.8.3"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -58,7 +59,6 @@ ADMIN_USER_ID = os.getenv("ADMIN_USER_ID")
 WEBHOOK_PATH = "/telegram"
 WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
 
-# Build application with JobQueue enabled
 application = Application.builder().token(BOT_TOKEN).build()
 
 
@@ -70,7 +70,7 @@ def get_vault_chat_id():
 
 
 # ---------------------------------------------------------
-# PERSISTENT TELEGRAM CHANNEL REGISTRY (PINNED MESSAGE INDEX)
+# PERSISTENT TELEGRAM CHANNEL REGISTRY (PINNED MANIFEST)
 # ---------------------------------------------------------
 async def get_or_create_registry():
     channel_id = get_vault_chat_id()
@@ -238,15 +238,20 @@ async def lifespan(app):
     await application.initialize()
     await application.bot.set_webhook(WEBHOOK_URL)
 
-    # Schedule Daily Birthday Check at 08:00 AM (server time)
+    # Schedule Daily Morning Bulletin (Weather, Luck, Reminders, Birthdays)
     if application.job_queue:
-        daily_time = time(hour=8, minute=0, second=0)
+        try:
+            local_tz = ZoneInfo("Asia/Manila")
+            daily_time = time(hour=8, minute=0, second=0, tzinfo=local_tz)
+        except Exception:
+            daily_time = time(hour=8, minute=0, second=0)
+
         application.job_queue.run_daily(
             check_and_send_daily_birthday_greetings,
             time=daily_time,
-            name="daily_birthday_greeting_job"
+            name="daily_morning_bulletin_job"
         )
-        logging.info("Registered daily birthday greeting job for 08:00 AM.")
+        logging.info("Registered daily morning bulletin job for 08:00 AM (Asia/Manila).")
 
     try:
         commands = [
@@ -263,40 +268,40 @@ async def lifespan(app):
     await application.shutdown()
 
 
-# Handlers
+# Telegram Command & Callback Handlers
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("kuyab", kuya_b_menu))
 application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
 application.add_handler(CallbackQueryHandler(menu_callback_handler))
 register_word_game_handlers(application)
 
-# Starlette Application Routes
+# Starlette Routes
 starlette_app = Starlette(
     routes=[
         Route("/", health_check, methods=["GET", "HEAD"]),
         Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
         
-        # Modular Birthday Routes
+        # Modular: Birthdays
         Route("/api/birthdays", api_get_birthdays, methods=["GET"]),
         Route("/api/birthdays", api_add_birthday, methods=["POST"]),
         Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
         Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
         Route("/api/birthdays/greet", api_send_birthday_greeting, methods=["POST"]),
         
-        # Modular Daily Logs Routes
+        # Modular: Daily Logs & Habit Tracker
         Route("/api/logs", api_get_daily_logs, methods=["GET"]),
         Route("/api/logs", api_save_daily_log, methods=["POST"]),
         Route("/api/logs/delete", api_delete_daily_log, methods=["POST"]),
 
-        # Modular Tracking Routes
+        # Modular: User Activity Tracking
         Route("/api/track-user", api_track_user, methods=["POST"]),
         Route("/api/users", api_get_users, methods=["GET"]),
 
-        # Vault Utilities
+        # Vault & Message Cleanup Utilities
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
         
-        # Static Mounts
+        # WebApp Static Assets & Mounting
         Route("/app", serve_index, methods=["GET"]),
         Route("/app/", serve_index, methods=["GET"]),
         Mount("/app", StaticFiles(directory="webapp", html=False), name="app"),
