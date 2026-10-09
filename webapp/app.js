@@ -171,7 +171,7 @@
     }
 
     // ---------------------------------------------------------
-    // VAULT ENGINE & MEDIA UPLOAD
+    // VAULT ENGINE & MEDIA LIGHTBOX
     // ---------------------------------------------------------
     function setVaultType(type) {
         currentVaultType = type;
@@ -219,7 +219,6 @@
         var html = "";
         for (var j = 0; j < filtered.length; j++) {
             var item = filtered[j];
-            var linkBtn = item.link ? '<a href="' + item.link + '" target="_blank" class="btn-greet" style="text-decoration:none; display:inline-flex; align-items:center;">Link 🔗</a>' : '';
 
             html += '<div class="birthday-card" data-id="' + item.id + '">' +
                 '<div class="birthday-info">' +
@@ -227,17 +226,47 @@
                         '<span class="birthday-name">' + (item.title || "Untitled") + '</span>' +
                         '<span class="bday-badge-days">' + (item.folder || "General") + '</span>' +
                     '</div>' +
-                    '<span class="birthday-date">Msg ID: ' + (item.messageId || item.id) + '</span>' +
+                    '<span class="birthday-date">📁 ' + (item.type === "videos" ? "Video" : "Photo") + '</span>' +
                 '</div>' +
                 '<div class="birthday-actions">' +
-                    linkBtn +
-                    '<button type="button" class="btn-greet" data-action="forward-vault" data-msg="' + item.messageId + '">Send</button>' +
+                    '<button type="button" class="btn-greet" data-action="view-vault" data-id="' + item.id + '" data-title="' + (item.title || "Media") + '">View 👁️</button>' +
                     '<button type="button" class="btn-delete" data-action="delete-vault" data-id="' + item.id + '">🗑️</button>' +
                 '</div>' +
             '</div>';
         }
         list.innerHTML = html;
     }
+
+    window.KuyaB.openMediaModal = function (itemId, title) {
+        var modal = document.getElementById("mediaViewerModal");
+        var img = document.getElementById("mediaModalImage");
+        var spinner = document.getElementById("mediaLoadingSpinner");
+        var titleEl = document.getElementById("mediaModalTitle");
+
+        if (!modal || !img) return;
+
+        titleEl.innerText = title || "View Media";
+        img.style.display = "none";
+        spinner.style.display = "block";
+        spinner.innerText = "Loading media...";
+        modal.style.display = "flex";
+
+        img.src = "/api/vault/media-file?id=" + encodeURIComponent(itemId);
+        img.onload = function () {
+            spinner.style.display = "none";
+            img.style.display = "block";
+        };
+        img.onerror = function () {
+            spinner.innerText = "Could not preview this media format in Mini App.";
+        };
+    };
+
+    window.KuyaB.closeMediaModal = function () {
+        var modal = document.getElementById("mediaViewerModal");
+        var img = document.getElementById("mediaModalImage");
+        if (modal) modal.style.display = "none";
+        if (img) img.src = "";
+    };
 
     window.KuyaB.uploadMediaToVault = async function () {
         var fileInput = document.getElementById("vaultItemFile");
@@ -351,7 +380,17 @@
                 return;
             }
 
-            // 4. Birthdays Page Delegation
+            // 4. In-App Media Viewer
+            var vaultView = target.closest('[data-action="view-vault"]');
+            if (vaultView) {
+                e.preventDefault();
+                var vId = vaultView.getAttribute("data-id");
+                var vTitle = vaultView.getAttribute("data-title");
+                window.KuyaB.openMediaModal(vId, vTitle);
+                return;
+            }
+
+            // 5. Birthdays Page Delegation
             if (target.closest("#addBirthdayButton")) {
                 e.preventDefault();
                 var bForm = document.getElementById("birthdayForm");
@@ -382,7 +421,7 @@
                 return;
             }
 
-            // 5. Daily Logs Open Form
+            // 6. Daily Logs Open Form
             if (target.closest("#addLogButton")) {
                 e.preventDefault();
                 var lForm = document.getElementById("logForm");
@@ -390,7 +429,7 @@
                 return;
             }
 
-            // 6. Tasks Delegation
+            // 7. Tasks Delegation
             if (target.closest("#addTaskButton")) {
                 e.preventDefault();
                 var tForm = document.getElementById("taskForm");
@@ -440,7 +479,7 @@
                 return;
             }
 
-            // 7. Reminders Delegation
+            // 8. Reminders Delegation
             if (target.closest("#addReminderButton")) {
                 e.preventDefault();
                 var rForm = document.getElementById("reminderForm");
@@ -476,7 +515,7 @@
                 return;
             }
 
-            // 8. Vault Delegation
+            // 9. Vault Upload Toggle & Deletion
             if (target.closest("#addVaultItemButton")) {
                 e.preventDefault();
                 var vf = document.getElementById("vaultUploadForm");
@@ -504,25 +543,8 @@
                 }
                 return;
             }
-            var vaultFwd = target.closest('[data-action="forward-vault"]');
-            if (vaultFwd) {
-                e.preventDefault();
-                var mId = vaultFwd.getAttribute("data-msg");
-                var uId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
-                if (!uId) return window.KuyaB.showToast("Could not determine user ID.");
-                fetch("/api/vault/forward", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ messageId: mId, userId: uId })
-                }).then(function () {
-                    window.KuyaB.showToast("Message forwarded! 🚀");
-                }).catch(function () {
-                    window.KuyaB.showToast("Failed to forward.");
-                });
-                return;
-            }
 
-            // 9. Word Game
+            // 10. Word Game
             if (target.closest("#gameButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
@@ -530,7 +552,7 @@
                 return;
             }
 
-            // 10. Quick Add Content
+            // 11. Quick Add Content
             if (target.closest("#addContentButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
