@@ -1,151 +1,169 @@
+import os
+import uuid
 import logging
+import httpx
 from starlette.requests import Request
-from starlette.responses import JSONResponse, PlainTextResponse, Response
-from starlette.datastructures import UploadFile
+from starlette.responses import JSONResponse, StreamingResponse
 
-from config import get_vault_chat_id
-from database import (
-    db_get_all_vault_items,
-    db_add_vault_item,
-    db_get_vault_item_by_id,
-    db_delete_vault_item,
-)
+from features.registry import get_or_create_registry, update_registry_data
+
+logger = logging.getLogger(__name__)
+VAULT_CHAT_ID = os.getenv("VAULT_CHAT_ID")
 
 
-async def api_upload_vault_media(request: Request):
-    """Receives file upload from Mini App, uploads to Telegram Channel, and records in PostgreSQL."""
+def _get_chat_id():
+    cid = os.getenv("VAULT_CHAT_ID")
+    if not cid:
+        return None
     try:
-        app = request.app.state.telegram_app
-        form = await request.form()
-        file: UploadFile = form.get("file")
-        title = form.get("title", "Untitled").strip() or "Untitled"
-        folder = form.get("folder", "General").strip() or "General"
-        media_type = form.get("type", "pictures").strip()
-
-        if not file:
-            return JSONResponse({"error": "No file uploaded"}, status_code=400)
-
-        channel_id = get_vault_chat_id()
-        if not channel_id:
-            return JSONResponse({"error": "VAULT_CHANNEL_ID not configured"}, status_code=500)
-
-        file_bytes = await file.read()
-        caption = f"📁 **VAULT MEDIA**\n🏷️ **Title:** {title}\n📂 **Folder:** #{folder}"
-
-        # 1. Forward to Telegram channel for unlimited storage
-        saved_file_id = None
-        if media_type == "pictures":
-            sent = await app.bot.send_photo(
-                chat_id=channel_id,
-                photo=file_bytes,
-                caption=caption,
-                parse_mode="Markdown"
-            )
-            saved_file_id = sent.photo[-1].file_id
-        else:
-            sent = await app.bot.send_video(
-                chat_id=channel_id,
-                video=file_bytes,
-                caption=caption,
-                parse_mode="Markdown"
-            )
-            saved_file_id = sent.video.file_id
-
-        # 2. Persist metadata into PostgreSQL
-        item_id = str(sent.message_id)
-        db_add_vault_item(
-            item_id=item_id,
-            media_type=media_type,
-            title=title,
-            folder=folder,
-            message_id=item_id,
-            file_id=saved_file_id
-        )
-
-        entry = {
-            "id": item_id,
-            "type": media_type,
-            "title": title,
-            "folder": folder,
-            "messageId": item_id,
-            "fileId": saved_file_id
-        }
-
-        return JSONResponse({"success": True, "item": entry})
-    except Exception as e:
-        logging.error(f"Error handling media upload to vault: {e}", exc_info=True)
-        return JSONResponse({"error": str(e)}, status_code=500)
+        return int(cid.strip())
+    except ValueError:
+        return None
 
 
 async def api_get_vault_items(request: Request):
-    """Retrieves vault items from PostgreSQL."""
-    items = db_get_all_vault_items()
-    return JSONResponse({"success": True, "vault": items})
+    try:
+        bot = request.app.state.telegram_app.bot
+        _, registry = await get_or_create_registry(bot)
+        vault_items = registry.get("vault", [])
+        return JSONResponse({"vault": vault_items})
+    except Exception as e:
+        logger.error(f"api_get_vault_items error: {e}", exc_info=True)
+        return JSONResponse({"error": str(e), "vault": []}, status_code=500)
+
+
+async def api_upload_vault_media(request: Request):
+    try:
+        form = await request.form()
+        file_obj = form.get("file")
+        title = form.get("title", "Untitled")
+        folder = form.get("folder", "General")
+        media_type = form.get("type", "pictures")
+
+        if not file_obj:
+            return JSONResponse({"error": "No file uploaded"}, status_code=400)
+
+        chat_id = _get_chat_id()
+        if not chat_id:
+            return JSONResponse({"error": "VAULT_CHAT_ID is not configured in backend."}, status_code=500)
+
+        bot = request.app.state.telegram_app.bot
+        file_bytes = await file_obj.read()
+        file_name = getattr(file_obj, "filename", "media_file")
+
+        # 1. Send file to Telegram vault channel/chat
+        caption = f"📁 #{folder}\n📌 {title}"
+        if media_type == "videos" or file_name.lower().endswith((".mp4", ".mov", ".m4v", ".webm")):
+            msg = await bot.send_video(chat_id=chat_id, video=file_bytes, caption=caption, read_timeout=120, write_timeout=120)
+            file_id = msg.video.file_id
+        elif media_type == "pictures" or file_name.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+            msg = await bot.send_photo(chat_id=chat_id, photo=file_bytes, caption=caption, read_timeout=60, write_timeout=60)
+            file_id = msg.photo[-1].file_id
+        else:
+            msg = await bot.send_document(chat_id=chat_id, document=file_bytes, filename=file_name, caption=caption, read_timeout=120, write_timeout=120)
+            file_id = msg.document.file_id
+
+        # 2. Record item in the permanent registry
+        msg_id, registry = await get_or_create_registry(bot)
+        vault_items = registry.setdefault("vault", [])
+
+        new_item = {
+            "id": str(uuid.uuid4())[:8],
+            "title": str(title),
+            "folder": str(folder),
+            "type": str(media_type),
+            "file_id": file_id,
+            "messageId": str(msg.message_id),
+            "chat_id": str(chat_id)
+        }
+        vault_items.append(new_item)
+
+        await update_registry_data(msg_id, registry, bot)
+        return JSONResponse({"success": True, "item": new_item})
+
+    except Exception as e:
+        logger.error(f"api_upload_vault_media error: {e}", exc_info=True)
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 async def api_get_vault_media_file(request: Request):
-    """Streams media bytes directly to Mini App lightbox with proper MIME type."""
     item_id = request.query_params.get("id")
     if not item_id:
-        return PlainTextResponse("Missing item id", status_code=400)
+        return JSONResponse({"error": "Missing item id"}, status_code=400)
 
-    channel_id = get_vault_chat_id()
-    if not channel_id:
-        return PlainTextResponse("Channel ID not configured", status_code=500)
+    bot = request.app.state.telegram_app.bot
+    _, registry = await get_or_create_registry(bot)
+    vault_items = registry.get("vault", [])
+
+    target_item = next((it for it in vault_items if str(it.get("id")) == str(item_id)), None)
+    if not target_item:
+        return JSONResponse({"error": "Item not found"}, status_code=404)
+
+    file_id = target_item.get("file_id")
+
+    # If the item only has messageId (from earlier manual entries), resolve file_id
+    if not file_id and target_item.get("messageId"):
+        try:
+            chat_id = _get_chat_id()
+            msg = await bot.forward_message(
+                chat_id=chat_id,
+                from_chat_id=chat_id,
+                message_id=int(target_item["messageId"])
+            )
+            if msg.video:
+                file_id = msg.video.file_id
+            elif msg.photo:
+                file_id = msg.photo[-1].file_id
+            elif msg.document:
+                file_id = msg.document.file_id
+        except Exception as resolve_err:
+            logger.warning(f"Could not forward message to resolve file_id: {resolve_err}")
+
+    if not file_id:
+        return JSONResponse({"error": "Unable to resolve media file."}, status_code=404)
 
     try:
-        app = request.app.state.telegram_app
-        matched = db_get_vault_item_by_id(item_id)
+        tg_file = await bot.get_file(file_id)
+        file_url = tg_file.file_path
 
-        file_id = None
-        is_video = False
+        client = httpx.AsyncClient(timeout=120.0)
+        req = client.build_request("GET", file_url)
+        res = await client.send(req, stream=True)
 
-        if matched and matched.get("fileId"):
-            file_id = matched["fileId"]
-            is_video = (matched.get("type") == "videos")
-        else:
-            # Fallback: Forward briefly to detect file_id if missing
-            msg = await app.bot.forward_message(
-                chat_id=channel_id,
-                from_chat_id=channel_id,
-                message_id=int(item_id)
-            )
-            await app.bot.delete_message(chat_id=channel_id, message_id=msg.message_id)
+        content_type = "video/mp4" if target_item.get("type") == "videos" else "image/jpeg"
 
-            if msg.photo:
-                file_id = msg.photo[-1].file_id
-                is_video = False
-            elif msg.video:
-                file_id = msg.video.file_id
-                is_video = True
-
-        if not file_id:
-            return PlainTextResponse("Media file not found", status_code=404)
-
-        tg_file = await app.bot.get_file(file_id)
-        file_bytes = await tg_file.download_as_bytearray()
-
-        content_type = "video/mp4" if is_video else "image/jpeg"
-        return Response(content=bytes(file_bytes), media_type=content_type)
+        return StreamingResponse(
+            res.aiter_raw(),
+            status_code=res.status_code,
+            media_type=content_type,
+            headers={
+                "Accept-Ranges": "bytes",
+                "Cache-Control": "public, max-age=3600",
+                "Content-Disposition": f"inline; filename=\"media_{item_id}.mp4\""
+            }
+        )
     except Exception as e:
-        logging.error(f"Error streaming vault media: {e}", exc_info=True)
-        return PlainTextResponse(f"Error: {e}", status_code=500)
+        logger.error(f"api_get_vault_media_file error: {e}", exc_info=True)
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 async def api_delete_vault_item(request: Request):
-    """Deletes item from PostgreSQL and removes the Telegram channel message."""
     try:
-        app = request.app.state.telegram_app
         data = await request.json()
-        item_id = str(data.get("id"))
-        channel_id = get_vault_chat_id()
+        item_id = data.get("id")
 
-        try:
-            await app.bot.delete_message(chat_id=channel_id, message_id=int(item_id))
-        except Exception as e:
-            logging.warning(f"Could not delete channel message {item_id}: {e}")
+        if not item_id:
+            return JSONResponse({"error": "Item ID is required"}, status_code=400)
 
-        db_delete_vault_item(item_id)
+        bot = request.app.state.telegram_app.bot
+        msg_id, registry = await get_or_create_registry(bot)
+        vault_items = registry.get("vault", [])
+
+        filtered = [it for it in vault_items if str(it.get("id")) != str(item_id)]
+        registry["vault"] = filtered
+
+        await update_registry_data(msg_id, registry, bot)
         return JSONResponse({"success": True})
     except Exception as e:
+        logger.error(f"api_delete_vault_item error: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
