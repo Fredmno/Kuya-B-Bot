@@ -67,7 +67,7 @@
     };
 
     // ---------------------------------------------------------
-    // LOCAL STORAGE STORES
+    // DATA STORES
     // ---------------------------------------------------------
     var tasks = [];
     var reminders = [];
@@ -77,7 +77,6 @@
     function loadSharedData() {
         try { tasks = JSON.parse(localStorage.getItem("kuyaB_tasks")) || []; } catch (e) { tasks = []; }
         try { reminders = JSON.parse(localStorage.getItem("kuyaB_reminders")) || []; } catch (e) { reminders = []; }
-        try { vaultItems = JSON.parse(localStorage.getItem("kuyaB_vault")) || []; } catch (e) { vaultItems = []; }
     }
 
     // ---------------------------------------------------------
@@ -95,7 +94,7 @@
     ];
 
     function hideAllForms() {
-        var formIds = ["birthdayForm", "logForm", "taskForm", "reminderForm", "vaultItemForm"];
+        var formIds = ["birthdayForm", "logForm", "taskForm", "reminderForm", "vaultUploadForm"];
         for (var i = 0; i < formIds.length; i++) {
             var el = document.getElementById(formIds[i]);
             if (el) el.style.display = "none";
@@ -172,7 +171,7 @@
     }
 
     // ---------------------------------------------------------
-    // VAULT ENGINE
+    // VAULT ENGINE & MEDIA UPLOAD
     // ---------------------------------------------------------
     function setVaultType(type) {
         currentVaultType = type;
@@ -191,28 +190,101 @@
         }
     }
 
-    function displayVaultItems() {
+    async function fetchVaultItems() {
+        try {
+            var res = await fetch("/api/vault/items");
+            var data = await res.json();
+            vaultItems = data.vault || [];
+        } catch (e) {
+            vaultItems = [];
+        }
+    }
+
+    async function displayVaultItems() {
         var list = document.getElementById("vaultItemsList");
         if (!list) return;
+
+        await fetchVaultItems();
+
         var filtered = [];
         for (var i = 0; i < vaultItems.length; i++) {
             if ((vaultItems[i].type || "other") === currentVaultType) filtered.push(vaultItems[i]);
         }
+
         if (filtered.length === 0) {
-            list.innerHTML = '<p class="empty-state">No files saved here yet. Tap + to add one!</p>';
+            list.innerHTML = '<p class="empty-state">No items saved in this section yet. Tap + to upload!</p>';
             return;
         }
+
         var html = "";
         for (var j = 0; j < filtered.length; j++) {
             var item = filtered[j];
+            var linkBtn = item.link ? '<a href="' + item.link + '" target="_blank" class="btn-greet" style="text-decoration:none; display:inline-flex; align-items:center;">Link 🔗</a>' : '';
+
             html += '<div class="birthday-card" data-id="' + item.id + '">' +
-                '<div class="birthday-info"><div class="birthday-title-row"><span class="birthday-name">' + item.title + '</span>' +
-                '<span class="bday-badge">' + (item.folder || "General") + '</span></div><span class="birthday-date">Msg ID: ' + item.messageId + '</span></div>' +
-                '<div class="birthday-actions"><button type="button" class="btn-greet" data-action="forward-vault" data-msg="' + item.messageId + '">Forward</button>' +
-                '<button type="button" class="btn-delete" data-action="delete-vault" data-id="' + item.id + '">🗑️</button></div></div>';
+                '<div class="birthday-info">' +
+                    '<div class="birthday-title-row">' +
+                        '<span class="birthday-name">' + (item.title || "Untitled") + '</span>' +
+                        '<span class="bday-badge-days">' + (item.folder || "General") + '</span>' +
+                    '</div>' +
+                    '<span class="birthday-date">Msg ID: ' + (item.messageId || item.id) + '</span>' +
+                '</div>' +
+                '<div class="birthday-actions">' +
+                    linkBtn +
+                    '<button type="button" class="btn-greet" data-action="forward-vault" data-msg="' + item.messageId + '">Send</button>' +
+                    '<button type="button" class="btn-delete" data-action="delete-vault" data-id="' + item.id + '">🗑️</button>' +
+                '</div>' +
+            '</div>';
         }
         list.innerHTML = html;
     }
+
+    window.KuyaB.uploadMediaToVault = async function () {
+        var fileInput = document.getElementById("vaultItemFile");
+        var titleInput = document.getElementById("vaultItemTitle");
+        var folderInput = document.getElementById("vaultItemFolder");
+
+        if (!fileInput || !fileInput.files.length) {
+            alert("Please select a photo or video to upload.");
+            return;
+        }
+
+        var file = fileInput.files[0];
+        var isVideo = file.type.startsWith("video/");
+        var determinedType = currentVaultType === "other" ? (isVideo ? "videos" : "pictures") : currentVaultType;
+
+        var formData = new FormData();
+        formData.append("file", file);
+        formData.append("title", titleInput.value.trim() || "Untitled");
+        formData.append("folder", folderInput.value.trim() || "General");
+        formData.append("type", determinedType);
+
+        var btn = document.getElementById("btnUploadMedia");
+        if (btn) btn.innerText = "Uploading...";
+
+        try {
+            var res = await fetch("/api/vault/upload", {
+                method: "POST",
+                body: formData
+            });
+            var data = await res.json();
+            if (data.success) {
+                window.KuyaB.triggerHaptic("success");
+                window.KuyaB.showToast("Uploaded to Vault Channel! 📁");
+                if (titleInput) titleInput.value = "";
+                if (folderInput) folderInput.value = "";
+                if (fileInput) fileInput.value = "";
+                document.getElementById("vaultUploadForm").style.display = "none";
+                displayVaultItems();
+            } else {
+                alert("Upload failed: " + (data.error || "Server error"));
+            }
+        } catch (err) {
+            alert("Network error communicating with Kuya B backend.");
+        } finally {
+            if (btn) btn.innerText = "Upload";
+        }
+    };
 
     // ---------------------------------------------------------
     // GLOBAL CLICK DISPATCHER
@@ -407,39 +479,28 @@
             // 8. Vault Delegation
             if (target.closest("#addVaultItemButton")) {
                 e.preventDefault();
-                var vForm = document.getElementById("vaultItemForm");
-                if (vForm) vForm.style.display = "block";
+                var vf = document.getElementById("vaultUploadForm");
+                if (vf) vf.style.display = "block";
                 return;
             }
             if (target.closest("#cancelVaultItemButton")) {
                 e.preventDefault();
-                var vFormCancel = document.getElementById("vaultItemForm");
-                if (vFormCancel) vFormCancel.style.display = "none";
-                return;
-            }
-            if (target.closest("#saveVaultItemButton")) {
-                e.preventDefault();
-                var vTitle = document.getElementById("vaultItemTitle").value.trim();
-                var vFolder = document.getElementById("vaultItemFolder").value.trim() || "General";
-                var vMsgId = document.getElementById("vaultItemMsgId").value.trim();
-                if (!vTitle || !vMsgId) return alert("Enter title and Message ID.");
-                vaultItems.push({ id: Date.now().toString(), title: vTitle, folder: vFolder, messageId: vMsgId, type: currentVaultType });
-                localStorage.setItem("kuyaB_vault", JSON.stringify(vaultItems));
-                window.KuyaB.triggerHaptic("medium");
-                document.getElementById("vaultItemTitle").value = "";
-                document.getElementById("vaultItemFolder").value = "";
-                document.getElementById("vaultItemMsgId").value = "";
-                document.getElementById("vaultItemForm").style.display = "none";
-                displayVaultItems();
+                var vfCancel = document.getElementById("vaultUploadForm");
+                if (vfCancel) vfCancel.style.display = "none";
                 return;
             }
             var vaultDel = target.closest('[data-action="delete-vault"]');
             if (vaultDel) {
                 e.preventDefault();
-                if (confirm("Delete item?")) {
-                    vaultItems = vaultItems.filter(function (x) { return x.id !== vaultDel.getAttribute("data-id"); });
-                    localStorage.setItem("kuyaB_vault", JSON.stringify(vaultItems));
-                    displayVaultItems();
+                var dId = vaultDel.getAttribute("data-id");
+                if (confirm("Delete media from vault and channel?")) {
+                    fetch("/api/vault/delete", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: dId })
+                    }).then(function () {
+                        displayVaultItems();
+                    });
                 }
                 return;
             }
@@ -476,7 +537,7 @@
                 setVaultType("other");
                 showPage("vaultPage", function () {
                     displayVaultItems();
-                    var vf = document.getElementById("vaultItemForm");
+                    var vf = document.getElementById("vaultUploadForm");
                     if (vf) vf.style.display = "block";
                 });
                 return;
@@ -507,7 +568,6 @@
             }).catch(function () {});
         }
 
-        // Dedicated popup route directly from chat ➕ Add button
         if (startSection === "add_bday") {
             hideAllPages();
             var popupPage = document.getElementById("addBirthdayStandalonePage");
