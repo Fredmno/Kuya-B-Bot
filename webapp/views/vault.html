@@ -14,7 +14,7 @@
         <span id="activeFolderHeader" style="font-weight: 700; font-size: 0.95rem; color: var(--primary, #2563eb);"></span>
     </div>
 
-    <!-- Actions Bar (Other section only) -->
+    <!-- Actions Bar (Visible only inside 'Other' section) -->
     <div id="otherActionsBar" style="padding: 0 0 16px 0; display: none; width: 100%;">
         <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; width: 86%; margin: 0 auto;">
             <!-- 1. User Activity -->
@@ -127,7 +127,7 @@
     <!-- Folders Directory List -->
     <div id="vaultFoldersContainer"></div>
 
-    <!-- Inside-Folder Items List: Centered, full-width container matching header width -->
+    <!-- Inside-Folder Items List -->
     <div id="vaultItemsContainer" style="display: none; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box;"></div>
 </div>
 
@@ -141,4 +141,68 @@
     <div id="usersListContainer" style="padding: 16px;">
         <p class="empty-state">Loading user activity...</p>
     </div>
+</div>
+
+<!-- MEDIA LIGHTBOX / VIDEO PLAYER MODAL -->
+<div id="mediaModal" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 20px;
+">
+    <div style="
+        width: 100%;
+        max-width: 440px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        padding: 0 4px;
+    ">
+        <span id="modalMediaTitle" style="
+            font-weight: 700;
+            font-size: 1rem;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 80%;
+        ">Media</span>
+        <button type="button" onclick="document.getElementById('mediaModal').style.display='none'; document.getElementById('modalMediaContainer').innerHTML='';" style="
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        ">✕</button>
+    </div>
+
+    <div id="modalMediaContainer" style="
+        width: 100%;
+        max-width: 440px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #000000;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    "></div>
 </div>
