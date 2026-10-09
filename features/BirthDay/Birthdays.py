@@ -54,9 +54,12 @@ def calculate_days_until(date_str: str) -> int:
 
 
 def render_birthdays_table(birthdays: list) -> str:
-    """Builds and returns the monochrome ASCII table for birthdays."""
+    """Builds and returns the monochrome ASCII table for birthdays with header."""
+    header = "🎂 **BIRTHDAY LIST**\n\n"
+
     if not birthdays:
         return (
+            header +
             "```\n"
             "+-------+--------------------+\n"
             "| DATE  | NAME               |\n"
@@ -82,7 +85,8 @@ def render_birthdays_table(birthdays: list) -> str:
         table_rows.append(f"| {b_date} | {name} |")
 
     table_rows.append("+-------+--------------------+")
-    return "```\n" + "\n".join(table_rows) + "\n```"
+    return header + "```\n" + "\n".join(table_rows) + "\n```"
+
 
 
 # ---------------------------------------------------------
