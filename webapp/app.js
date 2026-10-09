@@ -37,6 +37,23 @@
         }
     }
 
+    // Clear File Committer inputs
+    window.KuyaB.clearFileCommitterForm = function () {
+        var searchInput = document.getElementById("fileSearchInput");
+        var pathInput = document.getElementById("commitFilePath");
+        var msgInput = document.getElementById("commitMsgInput");
+        var contentInput = document.getElementById("commitContentInput");
+        var statusLabel = document.getElementById("fileLoadStatus");
+        var dropdown = document.getElementById("fileSuggestionsList");
+
+        if (searchInput) searchInput.value = "";
+        if (pathInput) pathInput.value = "";
+        if (msgInput) msgInput.value = "";
+        if (contentInput) contentInput.value = "";
+        if (statusLabel) statusLabel.innerText = "";
+        if (dropdown) dropdown.style.display = "none";
+    };
+
     // 1. Submit New Content with Real-time % Progress
     window.KuyaB.submitNewContent = function () {
         var fileInput = document.getElementById("newContentFile");
@@ -340,7 +357,7 @@
         }, 3000);
     };
 
-    // 6. Submit GitHub commit
+    // 6. Submit GitHub commit and clear contents afterwards
     window.KuyaB.submitFileCommit = async function () {
         var pathInput = document.getElementById("commitFilePath");
         var msgInput = document.getElementById("commitMsgInput");
@@ -379,7 +396,10 @@
             if (data.success) {
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("success");
                 alert(data.message);
-                contentInput.value = "";
+                
+                // Clear the form completely after successful submission
+                window.KuyaB.clearFileCommitterForm();
+
                 var feats = getFeatures();
                 var r = getRouter();
                 if (feats.vault) feats.vault.setVaultType("other");
@@ -482,9 +502,11 @@
                 return;
             }
 
+            // Open Admin File Committer: Clear previous values on every entry
             if (target.closest("#btnAdminUpdater")) {
                 e.preventDefault();
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                window.KuyaB.clearFileCommitterForm();
                 if (r.showPage) r.showPage("adminUpdaterPage", window.KuyaB.loadRepoTree);
                 return;
             }
@@ -492,6 +514,7 @@
             if (target.closest("#adminUpdaterBackButton, #cancelAdminUpdaterButton")) {
                 e.preventDefault();
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                window.KuyaB.clearFileCommitterForm();
                 if (feats.vault) feats.vault.setVaultType("other");
                 if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
                 return;
@@ -699,6 +722,7 @@
             if (feats.vault) feats.vault.setVaultType(startSection);
             if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
         } else if (startSection === "admin_updater") {
+            window.KuyaB.clearFileCommitterForm();
             if (r.showPage) r.showPage("adminUpdaterPage", window.KuyaB.loadRepoTree);
         } else {
             if (r.showDashboard) r.showDashboard();
