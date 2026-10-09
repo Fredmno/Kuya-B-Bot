@@ -9,7 +9,7 @@
 </head>
 <body>
     <div id="app">
-        <!-- STANDALONE ADD BIRTHDAY POPUP VIEW (Triggered from Chat Menu) -->
+        <!-- STANDALONE ADD BIRTHDAY POPUP VIEW -->
         <div id="addBirthdayStandalonePage" style="display: none; padding: 24px 16px;">
             <div style="text-align: center; margin-bottom: 24px;">
                 <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;">🎂 Add Birthday</h2>
@@ -241,7 +241,7 @@
             <div id="remindersList"></div>
         </div>
 
-        <!-- VAULT PAGE -->
+        <!-- VAULT PAGE (PICTURES, VIDEOS, OTHER) -->
         <div id="vaultPage" style="display: none;">
             <div class="top-bar">
                 <button type="button" class="btn-icon-back" id="vaultBackButton">←</button>
@@ -262,16 +262,17 @@
                 </button>
             </div>
 
-            <div id="vaultFolderBar"></div>
-            <div class="form-box" id="vaultItemForm" style="display: none;">
-                <input type="text" class="neu-input" id="vaultItemTitle" placeholder="Item caption or description">
-                <input type="text" class="neu-input" id="vaultItemFolder" placeholder="Folder (e.g. Work, Memes, Trips)">
-                <input type="text" class="neu-input" id="vaultItemMsgId" placeholder="Telegram Message ID in Vault Channel">
+            <!-- Upload Media Form -->
+            <form id="vaultUploadForm" class="form-box" style="display: none;">
+                <input type="text" class="neu-input" id="vaultItemTitle" placeholder="Title / Caption" style="margin-bottom: 12px;">
+                <input type="text" class="neu-input" id="vaultItemFolder" placeholder="Folder (e.g. Work, Trips, Receipts)" style="margin-bottom: 12px;">
+                <input type="file" class="neu-input" id="vaultItemFile" accept="image/*,video/*" style="margin-bottom: 16px;">
                 <div class="form-actions">
                     <button type="button" class="btn-soft cancel" id="cancelVaultItemButton">Cancel</button>
-                    <button type="button" class="btn-soft save" id="saveVaultItemButton">Save</button>
+                    <button type="button" class="btn-soft save" id="btnUploadMedia" onclick="window.KuyaB.uploadMediaToVault()">Upload</button>
                 </div>
-            </div>
+            </form>
+
             <div id="vaultItemsList"></div>
         </div>
 
@@ -288,12 +289,12 @@
         </div>
     </div>
 
-    <!-- Modular Feature Modules -->
+    <!-- Feature Modules -->
     <script src="/app/modules/birthdays.js?v={{ v }}"></script>
     <script src="/app/modules/daily_logs.js?v={{ v }}"></script>
     <script src="/app/modules/tracking.js?v={{ v }}"></script>
 
-    <!-- Shell Router -->
+    <!-- App Shell & Router -->
     <script src="/app/app.js?v={{ v }}"></script>
 </body>
 </html>
