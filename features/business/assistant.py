@@ -26,3 +26,4 @@ async def handle_business_message(update: Update, context: ContextTypes.DEFAULT_
         logging.info(f"Replied to business message from chat {msg.chat_id}")
     except Exception as e:
         logging.error(f"Failed to send business message reply: {e}", exc_info=True)
+
