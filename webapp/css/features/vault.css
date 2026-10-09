@@ -1,11 +1,48 @@
 /* =========================================================
-   FEATURE: VAULT (ISOLATED CSS)
+   KUYA B — VAULT MEDIA & IN-APP LIGHTBOX STYLES
    ========================================================= */
 
-#vaultFolderBar {
+/* Neumorphic Styled File Chooser Input & Button */
+input[type="file"].neu-input {
+    padding: 8px 12px;
+    font-size: 0.88rem;
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+}
+
+input[type="file"].neu-input::file-selector-button {
+    background: var(--primary, #2563eb);
+    color: #ffffff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    margin-right: 12px;
+    cursor: pointer;
+    box-shadow: 2px 2px 6px rgba(37, 99, 235, 0.3);
+    transition: background 0.2s ease;
+}
+
+input[type="file"].neu-input::file-selector-button:hover {
+    background: var(--primary-hover, #1d4ed8);
+}
+
+/* Media Lightbox Container */
+#mediaModalContainer {
+    min-height: 220px;
     display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    margin-bottom: 12px;
+    align-items: center;
+    justify-content: center;
+    background: #000000;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#mediaModalImage,
+#mediaModalVideo {
+    max-width: 100%;
+    max-height: 65vh;
+    object-fit: contain;
+    border-radius: 8px;
 }
