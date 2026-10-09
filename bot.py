@@ -29,7 +29,11 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.9.9"
+import os
+
+# Uses the live Git commit hash on Render; falls back to "dev" locally
+APP_VERSION = os.getenv("RENDER_GIT_COMMIT", "dev")[:7]
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
