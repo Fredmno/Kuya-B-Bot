@@ -8,8 +8,8 @@
     window.KuyaB = window.KuyaB || {};
     window.KuyaB.features = window.KuyaB.features || {};
 
-    var currentVaultType = "pictures"; // 'pictures' | 'videos' | 'other'
-    var activeFolder = null; // null => root folder directory view
+    var currentVaultType = "pictures"; 
+    var activeFolder = null; 
 
     function setVaultType(type) {
         currentVaultType = type || "pictures";
@@ -39,7 +39,6 @@
         }
 
         var adminId = window.KuyaB.ADMIN_ID || "";
-        // If ADMIN_ID is unset or matches placeholder, default to true so you aren't locked out
         if (!adminId || adminId === "YOUR_TELEGRAM_USER_ID") {
             return true;
         }
@@ -113,14 +112,12 @@
             var data = await res.json();
             var allItems = data.vault || [];
 
-            // Filter for current vault category
             var filtered = allItems.filter(function (it) {
                 if (currentVaultType === "pictures") return it.type === "pictures";
                 if (currentVaultType === "videos") return it.type === "videos";
                 return it.type !== "pictures" && it.type !== "videos";
             });
 
-            // Group into folders
             var foldersMap = {};
             filtered.forEach(function (it) {
                 var f = it.folder || "General";
