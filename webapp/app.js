@@ -70,31 +70,58 @@
         }
     };
 
-    // Paste directly from clipboard into textarea
-    window.KuyaB.pasteCommitterContent = async function () {
+    // Paste directly using Telegram WebApp SDK or browser fallback
+    window.KuyaB.pasteCommitterContent = function () {
         var contentInput = document.getElementById("commitContentInput");
         var statusLabel = document.getElementById("fileLoadStatus");
 
         if (!contentInput) return;
 
-        try {
-            if (navigator.clipboard && navigator.clipboard.readText) {
-                var text = await navigator.clipboard.readText();
-                if (text) {
-                    contentInput.value = text;
-                    if (statusLabel) {
-                        statusLabel.innerText = "Pasted from clipboard!";
-                        setTimeout(function () { statusLabel.innerText = ""; }, 2000);
-                    }
-                    return;
+        function applyText(text) {
+            if (text) {
+                contentInput.value = text;
+                if (statusLabel) {
+                    statusLabel.innerText = "Pasted!";
+                    setTimeout(function () { statusLabel.innerText = ""; }, 2000);
                 }
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
             }
-            contentInput.focus();
-            alert("Clipboard permission unavailable. Tap inside the box and select Paste.");
-        } catch (err) {
-            contentInput.focus();
-            alert("Clipboard access blocked by browser. Please tap and paste manually.");
         }
+
+        // 1. Try Telegram WebApp SDK native clipboard reader
+        var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : (window.KuyaB.tg || null);
+        if (tg && typeof tg.readTextFromClipboard === "function") {
+            try {
+                tg.readTextFromClipboard(function (text) {
+                    if (text) {
+                        applyText(text);
+                    } else {
+                        contentInput.focus();
+                    }
+                });
+                return;
+            } catch (tgErr) {
+                // Fallback to browser standard
+            }
+        }
+
+        // 2. Browser standard clipboard API fallback
+        if (navigator.clipboard && navigator.clipboard.readText) {
+            navigator.clipboard.readText().then(function (text) {
+                applyText(text);
+            }).catch(function () {
+                contentInput.focus();
+                contentInput.select();
+                if (statusLabel) {
+                    statusLabel.innerText = "Tap box to paste";
+                    setTimeout(function () { statusLabel.innerText = ""; }, 2500);
+                }
+            });
+            return;
+        }
+
+        // 3. Fallback: focus input immediately
+        contentInput.focus();
     };
 
     // 1. Submit New Content (Standalone) with live % progress bar
