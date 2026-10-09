@@ -2,48 +2,51 @@
     <div class="top-bar">
         <button type="button" class="btn-icon-back" id="adminUpdaterBackButton">←</button>
         <h2>⚡ File Committer</h2>
-        <button type="button" class="btn-icon-add" onclick="window.KuyaB.loadRepoTree()" title="Refresh file list">🔄</button>
+        <button type="button" class="btn-icon-add" onclick="window.KuyaB.loadRepoTree(true)" title="Refresh file list">🔄</button>
     </div>
 
-    <div class="form-box" style="display: block; margin-top: 14px;">
-        <!-- Search & Filter Input with Floating Dropdown List -->
-        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">
-            Search File Name
-        </label>
-        <div style="position: relative; margin-bottom: 14px;">
+    <div class="form-box" style="display: block; margin-top: 14px; position: relative;">
+        <!-- Search File Autocomplete -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-size: 0.82rem; font-weight: 600; color: #64748b;">Search File Name</label>
+            <span id="repoScanStatus" style="font-size: 0.75rem; color: #2563eb; font-weight: 600;"></span>
+        </div>
+
+        <div style="position: relative; margin-bottom: 14px; z-index: 50;">
             <input 
                 type="text" 
                 class="neu-input" 
                 id="fileSearchInput" 
-                placeholder="Type to filter repository files..." 
+                placeholder="Type file name (e.g. tracking, vault, app)..." 
                 autocomplete="off"
                 oninput="window.KuyaB.filterRepoFiles(this.value)"
                 onfocus="window.KuyaB.filterRepoFiles(this.value)"
                 style="width: 100%; box-sizing: border-box;"
             >
-            <!-- Filter Suggestions Dropdown -->
+            <!-- Floating Autocomplete Dropdown -->
             <div id="fileSuggestionsList" style="
                 display: none;
                 position: absolute;
-                top: calc(100% + 4px);
+                top: 100%;
                 left: 0;
                 right: 0;
                 max-height: 220px;
                 overflow-y: auto;
-                background: #eef2f7;
+                background: #f1f5f9;
                 border-radius: 12px;
-                box-shadow: 6px 6px 14px #cad5e2, -6px -6px 14px #ffffff;
-                z-index: 100;
-                padding: 6px 0;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.18), inset 1px 1px 2px #ffffff;
+                z-index: 9999;
+                margin-top: 6px;
+                border: 1px solid #cbd5e1;
                 box-sizing: border-box;
             "></div>
         </div>
 
         <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Target File Path</label>
-        <input type="text" class="neu-input" id="commitFilePath" placeholder="e.g. webapp/views/new_view.html" style="margin-bottom: 14px;">
+        <input type="text" class="neu-input" id="commitFilePath" placeholder="e.g. webapp/modules/tracking.js" style="margin-bottom: 14px;">
 
         <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Commit Message</label>
-        <input type="text" class="neu-input" id="commitMsgInput" placeholder="e.g. Update dashboard button" style="margin-bottom: 14px;">
+        <input type="text" class="neu-input" id="commitMsgInput" placeholder="e.g. Fix user activity counter" style="margin-bottom: 14px;">
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <label style="font-size: 0.82rem; font-weight: 600; color: #64748b;">New File Content</label>
