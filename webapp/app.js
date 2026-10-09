@@ -9,6 +9,7 @@
     window.KuyaB.features = window.KuyaB.features || {};
     window.KuyaB.router = window.KuyaB.router || {};
 
+    // Configure your Telegram user ID here (e.g., "7698531657")
     window.KuyaB.ADMIN_ID = "YOUR_TELEGRAM_USER_ID";
 
     var cachedRepoFiles = [];
@@ -21,6 +22,7 @@
         return window.KuyaB.features;
     }
 
+    // Dynamic file label updater
     function initAddContentInput() {
         var fileEl = document.getElementById("newContentFile");
         var nameLabel = document.getElementById("newContentFileName");
@@ -37,7 +39,7 @@
         }
     }
 
-    // Clear File Committer inputs
+    // Reset all File Committer form inputs
     window.KuyaB.clearFileCommitterForm = function () {
         var searchInput = document.getElementById("fileSearchInput");
         var pathInput = document.getElementById("commitFilePath");
@@ -54,7 +56,48 @@
         if (dropdown) dropdown.style.display = "none";
     };
 
-    // 1. Submit New Content with Real-time % Progress
+    // Clear only textarea content
+    window.KuyaB.clearCommitterContent = function () {
+        var contentInput = document.getElementById("commitContentInput");
+        var statusLabel = document.getElementById("fileLoadStatus");
+        if (contentInput) {
+            contentInput.value = "";
+            contentInput.focus();
+        }
+        if (statusLabel) {
+            statusLabel.innerText = "Cleared";
+            setTimeout(function () { statusLabel.innerText = ""; }, 1800);
+        }
+    };
+
+    // Paste directly from clipboard into textarea
+    window.KuyaB.pasteCommitterContent = async function () {
+        var contentInput = document.getElementById("commitContentInput");
+        var statusLabel = document.getElementById("fileLoadStatus");
+
+        if (!contentInput) return;
+
+        try {
+            if (navigator.clipboard && navigator.clipboard.readText) {
+                var text = await navigator.clipboard.readText();
+                if (text) {
+                    contentInput.value = text;
+                    if (statusLabel) {
+                        statusLabel.innerText = "Pasted from clipboard!";
+                        setTimeout(function () { statusLabel.innerText = ""; }, 2000);
+                    }
+                    return;
+                }
+            }
+            contentInput.focus();
+            alert("Clipboard permission unavailable. Tap inside the box and select Paste.");
+        } catch (err) {
+            contentInput.focus();
+            alert("Clipboard access blocked by browser. Please tap and paste manually.");
+        }
+    };
+
+    // 1. Submit New Content (Standalone) with live % progress bar
     window.KuyaB.submitNewContent = function () {
         var fileInput = document.getElementById("newContentFile");
         var titleInput = document.getElementById("newContentTitle");
@@ -159,7 +202,7 @@
         xhr.send(formData);
     };
 
-    // 2. Inline Vault Upload with Real-time % Progress
+    // 2. Submit Inline Vault Upload with live % progress bar
     window.KuyaB.uploadMediaToVault = function () {
         var titleInput = document.getElementById("vaultItemTitle");
         var folderInput = document.getElementById("vaultItemFolder");
@@ -357,7 +400,7 @@
         }, 3000);
     };
 
-    // 6. Submit GitHub commit and clear contents afterwards
+    // 6. Submit GitHub commit and reset form state
     window.KuyaB.submitFileCommit = async function () {
         var pathInput = document.getElementById("commitFilePath");
         var msgInput = document.getElementById("commitMsgInput");
@@ -396,8 +439,7 @@
             if (data.success) {
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("success");
                 alert(data.message);
-                
-                // Clear the form completely after successful submission
+
                 window.KuyaB.clearFileCommitterForm();
 
                 var feats = getFeatures();
@@ -502,7 +544,7 @@
                 return;
             }
 
-            // Open Admin File Committer: Clear previous values on every entry
+            // Open Admin File Committer: Reset form every time it's opened
             if (target.closest("#btnAdminUpdater")) {
                 e.preventDefault();
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
@@ -667,6 +709,7 @@
             }
         });
 
+        // Hide autocomplete suggestions on outside click
         document.addEventListener("click", function (e) {
             var dropdown = document.getElementById("fileSuggestionsList");
             var searchInput = document.getElementById("fileSearchInput");
