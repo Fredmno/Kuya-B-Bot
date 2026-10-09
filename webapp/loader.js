@@ -1,5 +1,5 @@
 /* =========================================================
-   KUYA B — MODULAR SCRIPT BUNDLER / LOADER
+   KUYA B — MODULAR VIEW & SCRIPT BUNDLER / LOADER
    ========================================================= */
 
 (function () {
@@ -12,23 +12,48 @@
     var vMatch = src ? src.match(/[?&]v=([^&]+)/) : null;
     var v = vMatch ? vMatch[1] : "1.0.0";
 
-    // Ordered list of scripts to load sequentially
+    // 1. Modular HTML Views to load into #app
+    var viewList = [
+        "/app/views/modals.html",
+        "/app/views/dashboard.html",
+        "/app/views/birthdays.html",
+        "/app/views/daily_logs.html",
+        "/app/views/tasks.html",
+        "/app/views/reminders.html",
+        "/app/views/vault.html"
+    ];
+
+    // 2. Sequential JavaScript files
     var scriptList = [
-        // 1. Core Engine
         "/app/js/core/utils.js",
         "/app/js/core/router.js",
-
-        // 2. Feature Modules
         "/app/modules/birthdays.js",
         "/app/modules/daily_logs.js",
         "/app/modules/tracking.js",
         "/app/js/features/vault.js",
         "/app/js/features/tasks.js",
         "/app/js/features/reminders.js",
-
-        // 3. Main Shell Orchestrator
         "/app/app.js"
     ];
+
+    async function loadViews() {
+        var appContainer = document.getElementById("app");
+        if (!appContainer) return;
+
+        try {
+            var promises = viewList.map(function (url) {
+                return fetch(url + "?v=" + encodeURIComponent(v)).then(function (res) {
+                    if (!res.ok) throw new Error("Could not load " + url);
+                    return res.text();
+                });
+            });
+
+            var htmlParts = await Promise.all(promises);
+            appContainer.innerHTML = htmlParts.join("\n");
+        } catch (err) {
+            console.error("View loading failed:", err);
+        }
+    }
 
     function loadScriptSequentially(index) {
         if (index >= scriptList.length) return;
@@ -36,7 +61,7 @@
         var scriptUrl = scriptList[index] + "?v=" + encodeURIComponent(v);
         var tag = document.createElement("script");
         tag.src = scriptUrl;
-        tag.async = false; // Preserves execution order
+        tag.async = false;
 
         tag.onload = function () {
             loadScriptSequentially(index + 1);
@@ -50,5 +75,8 @@
         document.body.appendChild(tag);
     }
 
-    loadScriptSequentially(0);
+    // Load all HTML templates first, then execute JS
+    loadViews().then(function () {
+        loadScriptSequentially(0);
+    });
 })();
