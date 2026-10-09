@@ -8,6 +8,81 @@
     var router = window.KuyaB.router;
     var features = window.KuyaB.features;
 
+    function initAddContentInput() {
+        var fileEl = document.getElementById("newContentFile");
+        var nameLabel = document.getElementById("newContentFileName");
+        if (fileEl && nameLabel) {
+            fileEl.addEventListener("change", function () {
+                if (this.files && this.files.length > 0) {
+                    nameLabel.innerText = this.files[0].name;
+                    nameLabel.style.color = "#1e293b";
+                } else {
+                    nameLabel.innerText = "No file chosen";
+                    nameLabel.style.color = "#64748b";
+                }
+            });
+        }
+    }
+
+    window.KuyaB.submitNewContent = async function () {
+        var fileInput = document.getElementById("newContentFile");
+        var titleInput = document.getElementById("newContentTitle");
+        var folderInput = document.getElementById("newContentFolder");
+        var sectionSelect = document.getElementById("newContentSection");
+        var fileNameLabel = document.getElementById("newContentFileName");
+        var submitBtn = document.getElementById("btnSubmitAddContent");
+
+        if (!fileInput || !fileInput.files.length) {
+            alert("Please choose a file to upload.");
+            return;
+        }
+
+        var file = fileInput.files[0];
+        var chosenSection = sectionSelect ? sectionSelect.value : "other";
+        var isVideo = file.type.startsWith("video/");
+        var mediaType = chosenSection === "other" ? (isVideo ? "videos" : "pictures") : chosenSection;
+        var folderName = folderInput.value.trim() || "General";
+
+        var formData = new FormData();
+        formData.append("file", file);
+        formData.append("title", titleInput.value.trim() || "Untitled");
+        formData.append("folder", folderName);
+        formData.append("type", mediaType);
+
+        if (submitBtn) submitBtn.innerText = "Uploading...";
+
+        try {
+            var res = await fetch("/api/vault/upload", {
+                method: "POST",
+                body: formData
+            });
+            var data = await res.json();
+            if (data.success) {
+                window.KuyaB.triggerHaptic("success");
+                window.KuyaB.showToast("Uploaded successfully! 📁");
+
+                titleInput.value = "";
+                folderInput.value = "";
+                fileInput.value = "";
+                if (fileNameLabel) {
+                    fileNameLabel.innerText = "No file chosen";
+                    fileNameLabel.style.color = "#64748b";
+                }
+
+                features.vault.setVaultType(mediaType);
+                router.showPage("vaultPage", function () {
+                    features.vault.openFolder(folderName);
+                });
+            } else {
+                alert("Upload failed: " + (data.error || "Server error"));
+            }
+        } catch (err) {
+            alert("Network error communicating with backend.");
+        } finally {
+            if (submitBtn) submitBtn.innerText = "Upload Content";
+        }
+    };
+
     function attachGlobalEvents() {
         document.body.addEventListener("click", function (e) {
             var target = e.target;
@@ -43,14 +118,55 @@
             }
 
             // 2. Navigation Back Buttons
-            if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton, #vaultBackButton")) {
+            if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
                 router.showDashboard();
                 return;
             }
 
-            // 3. User Tracking View
+            if (target.closest("#vaultBackButton")) {
+                e.preventDefault();
+                window.KuyaB.triggerHaptic("light");
+                if (features.vault.getActiveFolder()) {
+                    features.vault.backToFolders();
+                } else {
+                    router.showDashboard();
+                }
+                return;
+            }
+
+            // 3. Folder Drilldown Actions
+            var folderCard = target.closest('[data-action="open-folder"]');
+            if (folderCard) {
+                e.preventDefault();
+                var fName = decodeURIComponent(folderCard.getAttribute("data-folder"));
+                features.vault.openFolder(fName);
+                return;
+            }
+
+            if (target.closest("#btnBackToFolders")) {
+                e.preventDefault();
+                features.vault.backToFolders();
+                return;
+            }
+
+            // 4. Standalone Add Content Page
+            if (target.closest("#addContentButton")) {
+                e.preventDefault();
+                window.KuyaB.triggerHaptic("light");
+                router.showPage("addContentPage");
+                return;
+            }
+
+            if (target.closest("#addContentBackButton, #cancelAddContentButton")) {
+                e.preventDefault();
+                window.KuyaB.triggerHaptic("light");
+                router.showDashboard();
+                return;
+            }
+
+            // 5. User Tracking View
             if (target.closest("#btnOpenUserTracking")) {
                 e.preventDefault();
                 if (features.tracking && features.tracking.isAdmin()) {
@@ -67,7 +183,7 @@
                 return;
             }
 
-            // 4. Vault Media Lightbox & Actions
+            // 6. Vault Media Lightbox & Inline Upload Form
             var vaultView = target.closest('[data-action="view-vault"]');
             if (vaultView) {
                 e.preventDefault();
@@ -96,7 +212,7 @@
                 return;
             }
 
-            // 5. Tasks Actions
+            // 7. Tasks Actions
             if (target.closest("#addTaskButton")) {
                 e.preventDefault();
                 var tf = document.getElementById("taskForm");
@@ -127,7 +243,7 @@
                 return;
             }
 
-            // 6. Reminders Actions
+            // 8. Reminders Actions
             if (target.closest("#addReminderButton")) {
                 e.preventDefault();
                 var rf = document.getElementById("reminderForm");
@@ -152,7 +268,7 @@
                 return;
             }
 
-            // 7. Birthdays Actions
+            // 9. Birthdays Actions
             if (target.closest("#addBirthdayButton")) {
                 e.preventDefault();
                 var bf = document.getElementById("birthdayForm");
@@ -183,7 +299,7 @@
                 return;
             }
 
-            // 8. Daily Logs Open
+            // 10. Daily Logs Open
             if (target.closest("#addLogButton")) {
                 e.preventDefault();
                 var lf = document.getElementById("logForm");
@@ -191,52 +307,11 @@
                 return;
             }
 
-
-            // Folder Drilldown Actions
-            var folderCard = target.closest('[data-action="open-folder"]');
-            if (folderCard) {
-                e.preventDefault();
-                var fName = decodeURIComponent(folderCard.getAttribute("data-folder"));
-                features.vault.openFolder(fName);
-                return;
-            }
-
-            if (target.closest("#btnBackToFolders")) {
-                e.preventDefault();
-                features.vault.backToFolders();
-                return;
-            }
-
-            // Top Vault Back Button Behavior:
-            // If inside a folder, back goes to the Folders list. If at Folders list, goes to Dashboard.
-            if (target.closest("#vaultBackButton")) {
-                e.preventDefault();
-                window.KuyaB.triggerHaptic("light");
-                if (features.vault.getActiveFolder()) {
-                    features.vault.backToFolders();
-                } else {
-                    router.showDashboard();
-                }
-                return;
-            }
-
-
-            // 9. Word Game & Quick Add
+            // 11. Word Game
             if (target.closest("#gameButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
                 alert("Use /game in chat to play Word Scramble!");
-                return;
-            }
-            if (target.closest("#addContentButton")) {
-                e.preventDefault();
-                window.KuyaB.triggerHaptic("light");
-                features.vault.setVaultType("other");
-                router.showPage("vaultPage", function () {
-                    features.vault.render();
-                    var vf = document.getElementById("vaultUploadForm");
-                    if (vf) vf.style.display = "block";
-                });
                 return;
             }
         });
@@ -244,6 +319,7 @@
 
     function init() {
         features.vault.initFileInput();
+        initAddContentInput();
         attachGlobalEvents();
 
         if (features.tracking) features.tracking.track();
