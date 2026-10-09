@@ -57,9 +57,12 @@ window.KuyaB.features.birthdays = (function () {
             var badgeText = "";
             var badgeClass = "bday-badge-days";
 
+            // Only generate the Greet button if the birthday is today
+            var greetButtonHtml = "";
             if (days === 0) {
                 badgeText = "Today! 🎉";
                 badgeClass = "bday-badge-today";
+                greetButtonHtml = '<button type="button" class="btn-greet" data-action="greet-bday" data-name="' + b.name + '">Greet</button>';
             } else if (days === 1) {
                 badgeText = "Tomorrow";
             } else {
@@ -75,7 +78,7 @@ window.KuyaB.features.birthdays = (function () {
                     '<span class="birthday-date">📅 ' + b.date + '</span>' +
                 '</div>' +
                 '<div class="birthday-actions">' +
-                    '<button type="button" class="btn-greet" data-action="greet-bday" data-name="' + b.name + '">Greet</button>' +
+                    greetButtonHtml +
                     '<button type="button" class="btn-delete" data-action="delete-bday" data-id="' + b.id + '">🗑️</button>' +
                 '</div>' +
             '</div>';
@@ -206,7 +209,6 @@ window.saveBirthdayFromPopup = async function () {
                 if (window.Telegram.WebApp.HapticFeedback) {
                     window.Telegram.WebApp.HapticFeedback.notificationOccurred("success");
                 }
-                // Auto-close Mini App popup back to chat
                 window.Telegram.WebApp.close();
             }
         } else {
