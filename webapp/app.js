@@ -191,6 +191,36 @@
                 return;
             }
 
+
+            // Folder Drilldown Actions
+            var folderCard = target.closest('[data-action="open-folder"]');
+            if (folderCard) {
+                e.preventDefault();
+                var fName = decodeURIComponent(folderCard.getAttribute("data-folder"));
+                features.vault.openFolder(fName);
+                return;
+            }
+
+            if (target.closest("#btnBackToFolders")) {
+                e.preventDefault();
+                features.vault.backToFolders();
+                return;
+            }
+
+            // Top Vault Back Button Behavior:
+            // If inside a folder, back goes to the Folders list. If at Folders list, goes to Dashboard.
+            if (target.closest("#vaultBackButton")) {
+                e.preventDefault();
+                window.KuyaB.triggerHaptic("light");
+                if (features.vault.getActiveFolder()) {
+                    features.vault.backToFolders();
+                } else {
+                    router.showDashboard();
+                }
+                return;
+            }
+
+
             // 9. Word Game & Quick Add
             if (target.closest("#gameButton")) {
                 e.preventDefault();
