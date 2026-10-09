@@ -127,7 +127,7 @@
                 foldersMap[f].push(it);
             });
 
-            // STATE 1: Folders Directory View
+            // Folders Directory View
             if (!activeFolder) {
                 var folderNames = Object.keys(foldersMap);
                 if (folderNames.length === 0) {
@@ -151,7 +151,7 @@
                 return;
             }
 
-            // STATE 2: Inside Folder View (Structured and Left-Aligned Cards)
+            // Inside Folder View
             var folderItems = foldersMap[activeFolder] || [];
             if (folderItems.length === 0) {
                 itemsContainer.innerHTML = '<p class="empty-state">Folder is empty. Tap + above to add files!</p>';
@@ -205,28 +205,31 @@
 
         if (!modal || !container) return;
 
-        titleEl.innerText = decodeURIComponent(title);
-        container.innerHTML = '<div style="padding: 40px; color: #64748b;">Loading media...</div>';
+        titleEl.innerText = decodeURIComponent(title || "Media");
+        container.innerHTML = '<div style="padding: 40px; color: #94a3b8; font-size: 0.9rem;">Buffering video...</div>';
         modal.style.display = "flex";
 
-        var mediaUrl = "/api/vault/media-file?id=" + encodeURIComponent(id);
+        var mediaUrl = "/api/vault/media-file?id=" + encodeURIComponent(id) + "&t=" + Date.now();
 
         if (type === "videos") {
-            container.innerHTML = '<video controls autoplay playsinline style="max-width: 100%; max-height: 70vh; border-radius: 12px; background: #000;">' +
-                '<source src="' + mediaUrl + '" type="video/mp4">' +
-                'Your browser does not support the video tag.' +
-            '</video>';
+            container.innerHTML = 
+                '<video controls autoplay playsinline webkit-playsinline preload="metadata" style="width: 100%; max-height: 75vh; border-radius: 12px; background: #000; outline: none;">' +
+                    '<source src="' + mediaUrl + '" type="video/mp4">' +
+                    '<source src="' + mediaUrl + '" type="video/quicktime">' +
+                    '<source src="' + mediaUrl + '" type="video/webm">' +
+                    'Your device cannot play this video format.' +
+                '</video>';
         } else {
             var img = new Image();
             img.style.maxWidth = "100%";
-            img.style.maxHeight = "70vh";
+            img.style.maxHeight = "75vh";
             img.style.borderRadius = "12px";
             img.onload = function () {
                 container.innerHTML = "";
                 container.appendChild(img);
             };
             img.onerror = function () {
-                container.innerHTML = '<div style="padding: 20px; color: #ef4444;">Failed to load image.</div>';
+                container.innerHTML = '<div style="padding: 24px; color: #ef4444; font-size: 0.9rem;">Failed to load image.</div>';
             };
             img.src = mediaUrl;
         }
