@@ -29,7 +29,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.9.4"
+APP_VERSION = "2.9.9"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
