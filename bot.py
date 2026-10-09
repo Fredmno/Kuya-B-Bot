@@ -242,16 +242,16 @@ async def lifespan(app):
     if application.job_queue:
         try:
             local_tz = ZoneInfo("Asia/Manila")
-            daily_time = time(hour=8, minute=0, second=0, tzinfo=local_tz)
+            daily_time = time(hour=9, minute=0, second=0, tzinfo=local_tz)
         except Exception:
-            daily_time = time(hour=8, minute=0, second=0)
+            daily_time = time(hour=9, minute=0, second=0)
 
         application.job_queue.run_daily(
             check_and_send_daily_birthday_greetings,
             time=daily_time,
             name="daily_morning_bulletin_job"
         )
-        logging.info("Registered daily morning bulletin job for 08:00 AM (Asia/Manila).")
+        logging.info("Registered daily morning bulletin job for 09:00 AM (Asia/Manila).")
 
     try:
         commands = [
