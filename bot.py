@@ -28,7 +28,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.8.8"
+APP_VERSION = "2.8.9"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -39,7 +39,7 @@ ADMIN_USER_ID = os.getenv("ADMIN_USER_ID")
 WEBHOOK_PATH = "/telegram"
 WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
 
-# 1. Initialize application instance
+# Application instance initialization
 application = Application.builder().token(BOT_TOKEN).build()
 
 
@@ -101,7 +101,7 @@ async def save_registry(registry_data, existing_msg_id=None):
 
 
 # ---------------------------------------------------------
-# IMPORT FEATURE MODULES (AFTER application & registry)
+# IMPORT FEATURE MODULES
 # ---------------------------------------------------------
 from database import init_db
 from features.word_game import register_word_game_handlers
