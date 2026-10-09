@@ -14,7 +14,7 @@
         <span id="activeFolderHeader" style="font-weight: 700; font-size: 0.95rem; color: var(--primary, #2563eb);"></span>
     </div>
 
-    <!-- Actions Bar (Centered and narrower than the header buttons) -->
+    <!-- Actions Bar (Centered and narrower inside 'Other' section) -->
     <div id="otherActionsBar" style="padding: 0 0 16px 0; display: none; width: 100%;">
         <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; width: 86%; margin: 0 auto;">
             <!-- 1. User Activity -->
@@ -92,6 +92,30 @@
                     white-space: nowrap;
                 ">No file chosen</span>
             </label>
+        </div>
+
+        <!-- Inline Progress Bar Container -->
+        <div id="inlineUploadProgressContainer" style="display: none; width: 100%; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">
+                <span id="inlineUploadStatusText">Uploading...</span>
+                <span id="inlineUploadPercentText">0%</span>
+            </div>
+            <div style="
+                width: 100%;
+                height: 10px;
+                background: #dbe4f0;
+                border-radius: 999px;
+                overflow: hidden;
+                box-shadow: inset 1px 1px 3px rgba(0,0,0,0.15);
+            ">
+                <div id="inlineUploadProgressBar" style="
+                    width: 0%;
+                    height: 100%;
+                    background: linear-gradient(90deg, #3b82f6, #2563eb);
+                    border-radius: 999px;
+                    transition: width 0.15s ease;
+                "></div>
+            </div>
         </div>
 
         <div class="form-actions">
