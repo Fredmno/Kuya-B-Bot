@@ -33,6 +33,10 @@ from features.BirthDay.Birthdays import (
     api_edit_birthday,
     check_and_send_daily_birthday_greetings,
 )
+
+from features.BirthDay.Birthdays import command_add_birthday
+application.add_handler(CommandHandler("bday", command_add_birthday))
+
 from features.daily_logs.daily_logs import (
     api_get_daily_logs,
     api_save_daily_log,
