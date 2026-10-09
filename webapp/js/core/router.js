@@ -17,7 +17,8 @@
         "vaultPage",
         "userTrackingPage",
         "addBirthdayStandalonePage",
-        "addContentPage"
+        "addContentPage",
+        "adminUpdaterPage"
     ];
 
     function hideAllForms() {
