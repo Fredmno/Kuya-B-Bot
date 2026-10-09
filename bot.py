@@ -29,7 +29,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.9.1"
+APP_VERSION = "2.9.3"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -171,7 +171,7 @@ async def serve_index(request: Request):
 
 
 # ---------------------------------------------------------
-# VAULT MANAGEMENT & DIRECT MEDIA STREAMING
+# VAULT MANAGEMENT & IN-APP DIRECT STREAMING (VIDEO & PHOTO)
 # ---------------------------------------------------------
 async def api_upload_vault_media(request: Request):
     """Receives file upload from Mini App and forwards to Vault Channel."""
@@ -231,7 +231,7 @@ async def api_upload_vault_media(request: Request):
 
 
 async def api_get_vault_media_file(request: Request):
-    """Streams media file directly to the Mini App, keeping channel links hidden."""
+    """Streams media file directly to the Mini App with proper MIME type."""
     item_id = request.query_params.get("id")
     if not item_id:
         return PlainTextResponse("Missing item id", status_code=400)
@@ -246,8 +246,11 @@ async def api_get_vault_media_file(request: Request):
         matched = next((v for v in vault_list if str(v.get("id")) == str(item_id)), None)
 
         file_id = None
+        is_video = False
+
         if matched and matched.get("fileId"):
             file_id = matched["fileId"]
+            is_video = (matched.get("type") == "videos")
         else:
             msg = await application.bot.forward_message(
                 chat_id=channel_id,
@@ -258,8 +261,10 @@ async def api_get_vault_media_file(request: Request):
 
             if msg.photo:
                 file_id = msg.photo[-1].file_id
+                is_video = False
             elif msg.video:
                 file_id = msg.video.file_id
+                is_video = True
 
         if not file_id:
             return PlainTextResponse("Media file not found", status_code=404)
@@ -267,7 +272,8 @@ async def api_get_vault_media_file(request: Request):
         tg_file = await application.bot.get_file(file_id)
         file_bytes = await tg_file.download_as_bytearray()
 
-        return Response(content=bytes(file_bytes), media_type="image/jpeg")
+        content_type = "video/mp4" if is_video else "image/jpeg"
+        return Response(content=bytes(file_bytes), media_type=content_type)
     except Exception as e:
         logging.error(f"Error streaming vault media: {e}", exc_info=True)
         return PlainTextResponse(f"Error: {e}", status_code=500)
