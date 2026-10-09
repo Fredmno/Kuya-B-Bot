@@ -15,42 +15,44 @@
     </div>
 
     <!-- Actions Bar (Visible only inside 'Other' section) -->
-    <div id="otherActionsBar" style="padding: 0 0 12px 0; display: none;">
-        <!-- 1. User Activity -->
-        <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="margin-bottom: 10px;">
-            <div class="card-left">
-                <span class="card-icon">👥</span>
-                <div>
-                    <div class="card-title">User Activity</div>
-                    <div class="card-desc">View users who accessed Kuya B</div>
+    <div id="otherActionsBar" style="padding: 0 0 16px 0; display: none; width: 100%;">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%;">
+            <!-- 1. User Activity -->
+            <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="width: 100%; margin: 0; box-sizing: border-box;">
+                <div class="card-left">
+                    <span class="card-icon">👥</span>
+                    <div>
+                        <div class="card-title">User Activity</div>
+                        <div class="card-desc">View users who accessed Kuya B</div>
+                    </div>
                 </div>
-            </div>
-            <div class="card-arrow">›</div>
-        </button>
+                <div class="card-arrow">›</div>
+            </button>
 
-        <!-- 2. Word Scramble Game -->
-        <button type="button" class="feature-card-full" id="gameButton" style="margin-bottom: 10px;">
-            <div class="card-left">
-                <span class="card-icon">🎮</span>
-                <div>
-                    <div class="card-title">Word Scramble</div>
-                    <div class="card-desc">Take a quick break</div>
+            <!-- 2. Word Scramble Game -->
+            <button type="button" class="feature-card-full" id="gameButton" style="width: 100%; margin: 0; box-sizing: border-box;">
+                <div class="card-left">
+                    <span class="card-icon">🎮</span>
+                    <div>
+                        <div class="card-title">Word Scramble</div>
+                        <div class="card-desc">Take a quick break</div>
+                    </div>
                 </div>
-            </div>
-            <div class="card-arrow">›</div>
-        </button>
+                <div class="card-arrow">›</div>
+            </button>
 
-        <!-- 3. Admin-Only File Committer Button -->
-        <button type="button" class="feature-card-full" id="btnAdminUpdater" style="display: none; margin-bottom: 10px;">
-            <div class="card-left">
-                <span class="card-icon">⚡</span>
-                <div>
-                    <div class="card-title">File Committer</div>
-                    <div class="card-desc">Update and auto-deploy code</div>
+            <!-- 3. Admin-Only File Committer Button -->
+            <button type="button" class="feature-card-full" id="btnAdminUpdater" style="width: 100%; margin: 0; box-sizing: border-box; display: none;">
+                <div class="card-left">
+                    <span class="card-icon">⚡</span>
+                    <div>
+                        <div class="card-title">File Committer</div>
+                        <div class="card-desc">Update and auto-deploy code</div>
+                    </div>
                 </div>
-            </div>
-            <div class="card-arrow">›</div>
-        </button>
+                <div class="card-arrow">›</div>
+            </button>
+        </div>
     </div>
 
     <!-- Inline Upload Media Form -->
