@@ -21,7 +21,7 @@ from telegram.ext import (
     ContextTypes,
 )
 
-from config import APP_VERSION, BOT_TOKEN, WEBHOOK_URL, WEBHOOK_PATH, PORT
+from config import APP_VERSION, BOT_TOKEN, WEBHOOK_URL, WEBHOOK_PATH, PORT, ADMIN_USER_ID
 from database import init_db
 
 # Feature Imports
@@ -51,6 +51,7 @@ from features.vault import (
     api_get_vault_items,
     api_delete_vault_item,
 )
+from features.admin.github_sync import api_admin_commit_file
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -229,6 +230,9 @@ starlette_app = Starlette(
         Route("/api/vault/media-file", api_get_vault_media_file, methods=["GET"]),
         Route("/api/vault/delete", api_delete_vault_item, methods=["POST"]),
 
+        # GitHub Automated File Updater / Committer
+        Route("/api/admin/commit-file", api_admin_commit_file, methods=["POST"]),
+
         # Helpers & WebApp Static
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
         Route("/app", serve_index, methods=["GET"]),
@@ -240,4 +244,3 @@ starlette_app = Starlette(
 
 if __name__ == "__main__":
     uvicorn.run(starlette_app, host="0.0.0.0", port=PORT)
- 
