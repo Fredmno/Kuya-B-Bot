@@ -127,7 +127,7 @@
                 foldersMap[f].push(it);
             });
 
-            // Folders Directory View
+            // 1. Folders Directory View (Compact Horizontal Cards)
             if (!activeFolder) {
                 var folderNames = Object.keys(foldersMap);
                 if (folderNames.length === 0) {
@@ -135,15 +135,29 @@
                     return;
                 }
 
-                var fHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">';
+                var fHtml = '<div style="display: flex; flex-direction: column; gap: 10px; width: 100%; box-sizing: border-box; margin-top: 4px;">';
                 folderNames.forEach(function (fName) {
                     var count = foldersMap[fName].length;
-                    fHtml += '<div class="feature-card" data-action="open-folder" data-folder="' + encodeURIComponent(fName) + '" style="cursor: pointer; margin: 0; min-height: 90px; justify-content: center;">' +
-                        '<div class="card-header" style="justify-content: center; gap: 6px;">' +
-                            '<span class="card-icon" style="font-size: 1.4rem;">📂</span>' +
-                            '<span class="card-title" style="font-size: 0.95rem;">' + fName + '</span>' +
+                    var itemLabel = count + (count === 1 ? ' item' : ' items');
+                    
+                    fHtml += '<div class="feature-card-full" data-action="open-folder" data-folder="' + encodeURIComponent(fName) + '" style="' +
+                        'width: 100%; ' +
+                        'margin: 0; ' +
+                        'box-sizing: border-box; ' +
+                        'display: flex; ' +
+                        'align-items: center; ' +
+                        'justify-content: space-between; ' +
+                        'cursor: pointer; ' +
+                        'padding: 10px 14px;' +
+                    '">' +
+                        '<div class="card-left" style="display: flex; align-items: center; gap: 12px; text-align: left; overflow: hidden;">' +
+                            '<span class="card-icon" style="font-size: 1.35rem; flex-shrink: 0;">📁</span>' +
+                            '<div style="text-align: left; overflow: hidden;">' +
+                                '<div class="card-title" style="font-weight: 700; font-size: 0.92rem; color: #1e293b; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + fName + '</div>' +
+                                '<div class="card-desc" style="font-size: 0.78rem; color: #64748b; text-align: left; margin-top: 2px;">' + itemLabel + '</div>' +
+                            '</div>' +
                         '</div>' +
-                        '<span class="card-desc" style="text-align: center; margin-top: 4px;">' + count + (count === 1 ? ' item' : ' items') + '</span>' +
+                        '<div class="card-arrow" style="font-size: 1.1rem; color: #94a3b8; font-weight: 600; padding-right: 4px;">›</div>' +
                     '</div>';
                 });
                 fHtml += '</div>';
@@ -151,7 +165,7 @@
                 return;
             }
 
-            // Inside Folder View
+            // 2. Inside Folder Items View (Compact Video / Photo Cards)
             var folderItems = foldersMap[activeFolder] || [];
             if (folderItems.length === 0) {
                 itemsContainer.innerHTML = '<p class="empty-state">Folder is empty. Tap + above to add files!</p>';
@@ -172,20 +186,20 @@
                     'align-items: center; ' +
                     'justify-content: space-between; ' +
                     'cursor: pointer; ' +
-                    'padding: 12px 16px;' +
+                    'padding: 10px 14px;' +
                 '">' +
-                    '<div class="card-left" style="display: flex; align-items: center; gap: 14px; text-align: left; overflow: hidden;">' +
-                        '<span class="card-icon" style="font-size: 1.5rem; flex-shrink: 0;">' + icon + '</span>' +
+                    '<div class="card-left" style="display: flex; align-items: center; gap: 12px; text-align: left; overflow: hidden;">' +
+                        '<span class="card-icon" style="font-size: 1.35rem; flex-shrink: 0;">' + icon + '</span>' +
                         '<div style="text-align: left; overflow: hidden;">' +
-                            '<div class="card-title" style="font-weight: 700; font-size: 0.95rem; color: #1e293b; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + displayTitle + '</div>' +
-                            '<div class="card-desc" style="font-size: 0.8rem; color: #64748b; text-align: left; margin-top: 2px;">' + typeLabel + '</div>' +
+                            '<div class="card-title" style="font-weight: 700; font-size: 0.92rem; color: #1e293b; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + displayTitle + '</div>' +
+                            '<div class="card-desc" style="font-size: 0.78rem; color: #64748b; text-align: left; margin-top: 2px;">' + typeLabel + '</div>' +
                         '</div>' +
                     '</div>' +
                     '<button type="button" class="btn-icon-back" data-action="delete-vault" data-id="' + it.id + '" title="Delete item" style="' +
-                        'width: 36px; ' +
-                        'height: 36px; ' +
+                        'width: 34px; ' +
+                        'height: 34px; ' +
                         'flex-shrink: 0; ' +
-                        'font-size: 0.9rem; ' +
+                        'font-size: 0.85rem; ' +
                         'border-radius: 10px; ' +
                         'box-shadow: 2px 2px 5px #cad5e2, -2px -2px 5px #ffffff;' +
                     '" onclick="event.stopPropagation();">🗑️</button>' +
