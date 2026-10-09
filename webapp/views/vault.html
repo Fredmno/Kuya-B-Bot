@@ -14,9 +14,9 @@
         <span id="activeFolderHeader" style="font-weight: 700; font-size: 0.95rem; color: var(--primary, #2563eb);"></span>
     </div>
 
-    <!-- Actions Bar (Visible only inside 'Other' section) -->
+    <!-- Actions Bar (Centered and narrower than the header buttons) -->
     <div id="otherActionsBar" style="padding: 0 0 16px 0; display: none; width: 100%;">
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; width: 86%; margin: 0 auto;">
             <!-- 1. User Activity -->
             <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="width: 100%; margin: 0; box-sizing: border-box;">
                 <div class="card-left">
@@ -41,7 +41,7 @@
                 <div class="card-arrow">›</div>
             </button>
 
-            <!-- 3. Admin-Only File Committer Button -->
+            <!-- 3. Admin File Committer Button -->
             <button type="button" class="feature-card-full" id="btnAdminUpdater" style="width: 100%; margin: 0; box-sizing: border-box; display: none;">
                 <div class="card-left">
                     <span class="card-icon">⚡</span>
