@@ -1,6 +1,6 @@
 <div id="adminUpdaterPage" style="display: none; padding-bottom: 30px;">
     <div class="top-bar">
-        <button type="button" class="btn-icon-back" onclick="window.KuyaB.router.showDashboard()">←</button>
+        <button type="button" class="btn-icon-back" id="adminUpdaterBackButton">←</button>
         <h2>⚡ File Committer</h2>
         <div style="width: 40px;"></div>
     </div>
@@ -12,24 +12,26 @@
             <option value="bot.py">bot.py</option>
             <option value="database.py">database.py</option>
             <option value="features/vault/vault.py">features/vault/vault.py</option>
+            <option value="features/admin/github_sync.py">features/admin/github_sync.py</option>
             <option value="webapp/loader.js">webapp/loader.js</option>
             <option value="webapp/app.js">webapp/app.js</option>
-            <option value="webapp/views/add_content.html">webapp/views/add_content.html</option>
-            <option value="webapp/views/vault.html">webapp/views/vault.html</option>
             <option value="webapp/views/dashboard.html">webapp/views/dashboard.html</option>
+            <option value="webapp/views/vault.html">webapp/views/vault.html</option>
+            <option value="webapp/views/add_content.html">webapp/views/add_content.html</option>
+            <option value="webapp/views/admin_updater.html">webapp/views/admin_updater.html</option>
         </select>
 
         <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Target File Path</label>
         <input type="text" class="neu-input" id="commitFilePath" placeholder="e.g. webapp/views/new_view.html" style="margin-bottom: 14px;">
 
         <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Commit Message</label>
-        <input type="text" class="neu-input" id="commitMsgInput" placeholder="e.g. Update vault styles" style="margin-bottom: 14px;">
+        <input type="text" class="neu-input" id="commitMsgInput" placeholder="e.g. Update dashboard button" style="margin-bottom: 14px;">
 
         <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">New File Content</label>
         <textarea class="neu-input" id="commitContentInput" placeholder="Paste full file code here..." rows="12" style="font-family: monospace; font-size: 0.8rem; line-height: 1.4; white-space: pre;"></textarea>
 
         <div class="form-actions" style="margin-top: 16px;">
-            <button type="button" class="btn-soft cancel" onclick="window.KuyaB.router.showDashboard()">Cancel</button>
+            <button type="button" class="btn-soft cancel" id="cancelAdminUpdaterButton">Cancel</button>
             <button type="button" class="btn-soft save" id="btnSubmitCommit" onclick="window.KuyaB.submitFileCommit()">Commit & Deploy 🚀</button>
         </div>
     </div>
