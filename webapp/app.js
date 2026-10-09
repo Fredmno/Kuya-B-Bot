@@ -171,7 +171,7 @@
     }
 
     // ---------------------------------------------------------
-    // VAULT ENGINE & MEDIA LIGHTBOX
+    // VAULT ENGINE & MEDIA LIGHTBOX (VIDEO + PHOTO)
     // ---------------------------------------------------------
     function setVaultType(type) {
         currentVaultType = type;
@@ -229,7 +229,7 @@
                     '<span class="birthday-date">📁 ' + (item.type === "videos" ? "Video" : "Photo") + '</span>' +
                 '</div>' +
                 '<div class="birthday-actions">' +
-                    '<button type="button" class="btn-greet" data-action="view-vault" data-id="' + item.id + '" data-title="' + (item.title || "Media") + '">View 👁️</button>' +
+                    '<button type="button" class="btn-greet" data-action="view-vault" data-id="' + item.id + '" data-type="' + (item.type || "pictures") + '" data-title="' + (item.title || "Media") + '">View 👁️</button>' +
                     '<button type="button" class="btn-delete" data-action="delete-vault" data-id="' + item.id + '">🗑️</button>' +
                 '</div>' +
             '</div>';
@@ -237,35 +237,56 @@
         list.innerHTML = html;
     }
 
-    window.KuyaB.openMediaModal = function (itemId, title) {
+    window.KuyaB.openMediaModal = function (itemId, title, mediaType) {
         var modal = document.getElementById("mediaViewerModal");
         var img = document.getElementById("mediaModalImage");
+        var vid = document.getElementById("mediaModalVideo");
         var spinner = document.getElementById("mediaLoadingSpinner");
         var titleEl = document.getElementById("mediaModalTitle");
 
-        if (!modal || !img) return;
+        if (!modal) return;
 
         titleEl.innerText = title || "View Media";
         img.style.display = "none";
+        vid.style.display = "none";
+        vid.pause();
         spinner.style.display = "block";
         spinner.innerText = "Loading media...";
         modal.style.display = "flex";
 
-        img.src = "/api/vault/media-file?id=" + encodeURIComponent(itemId);
-        img.onload = function () {
-            spinner.style.display = "none";
-            img.style.display = "block";
-        };
-        img.onerror = function () {
-            spinner.innerText = "Could not preview this media format in Mini App.";
-        };
+        var streamUrl = "/api/vault/media-file?id=" + encodeURIComponent(itemId);
+
+        if (mediaType === "videos") {
+            vid.src = streamUrl;
+            vid.oncanplay = function () {
+                spinner.style.display = "none";
+                vid.style.display = "block";
+            };
+            vid.onerror = function () {
+                spinner.innerText = "Could not preview this video in Mini App.";
+            };
+        } else {
+            img.src = streamUrl;
+            img.onload = function () {
+                spinner.style.display = "none";
+                img.style.display = "block";
+            };
+            img.onerror = function () {
+                spinner.innerText = "Could not preview this image in Mini App.";
+            };
+        }
     };
 
     window.KuyaB.closeMediaModal = function () {
         var modal = document.getElementById("mediaViewerModal");
         var img = document.getElementById("mediaModalImage");
+        var vid = document.getElementById("mediaModalVideo");
         if (modal) modal.style.display = "none";
         if (img) img.src = "";
+        if (vid) {
+            vid.pause();
+            vid.src = "";
+        }
     };
 
     window.KuyaB.uploadMediaToVault = async function () {
@@ -386,7 +407,8 @@
                 e.preventDefault();
                 var vId = vaultView.getAttribute("data-id");
                 var vTitle = vaultView.getAttribute("data-title");
-                window.KuyaB.openMediaModal(vId, vTitle);
+                var vType = vaultView.getAttribute("data-type") || "pictures";
+                window.KuyaB.openMediaModal(vId, vTitle, vType);
                 return;
             }
 
