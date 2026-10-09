@@ -19,7 +19,8 @@
         "/app/views/tasks.html",
         "/app/views/reminders.html",
         "/app/views/vault.html",
-        "/app/views/add_content.html"
+        "/app/views/add_content.html",
+        "/app/views/admin_updater.html"
     ];
 
     var scriptList = [
