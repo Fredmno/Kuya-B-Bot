@@ -227,4 +227,94 @@ async def api_send_birthday_greeting(request: Request):
         return JSONResponse({"success": True})
     except Exception as e:
         logging.error(f"Error sending birthday greeting: {e}", exc_info=True)
-        return JSONResponse
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ---------------------------------------------------------
+# LIFESPAN & APPLICATION STARTUP
+# ---------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app):
+    init_db()
+
+    await application.initialize()
+    await application.bot.set_webhook(WEBHOOK_URL)
+
+    # Schedule Daily Morning Bulletin at 9:00 AM (Asia/Manila)
+    if application.job_queue:
+        try:
+            local_tz = ZoneInfo("Asia/Manila")
+            daily_time = time(hour=9, minute=0, second=0, tzinfo=local_tz)
+        except Exception:
+            daily_time = time(hour=9, minute=0, second=0)
+
+        application.job_queue.run_daily(
+            check_and_send_daily_birthday_greetings,
+            time=daily_time,
+            name="daily_morning_bulletin_job"
+        )
+        logging.info("Registered daily morning bulletin job for 09:00 AM (Asia/Manila).")
+
+    try:
+        commands = [
+            BotCommand("kuyab", "Open Kuya B Personal Hub"),
+            BotCommand("game", "Play Word Scramble"),
+        ]
+        await application.bot.set_my_commands(commands, scope=BotCommandScopeDefault())
+    except Exception as e:
+        logging.warning(f"Could not register commands: {e}")
+
+    await application.start()
+    yield
+    await application.stop()
+    await application.shutdown()
+
+
+# ---------------------------------------------------------
+# HANDLER REGISTRATIONS (AFTER application IS DEFINED)
+# ---------------------------------------------------------
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("kuyab", kuya_b_menu))
+application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
+application.add_handler(CommandHandler("bday", command_add_birthday))
+application.add_handler(CallbackQueryHandler(menu_callback_handler))
+register_word_game_handlers(application)
+
+# ---------------------------------------------------------
+# STARLETTE APPLICATION ROUTES
+# ---------------------------------------------------------
+starlette_app = Starlette(
+    routes=[
+        Route("/", health_check, methods=["GET", "HEAD"]),
+        Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
+        
+        # Modular: Birthdays
+        Route("/api/birthdays", api_get_birthdays, methods=["GET"]),
+        Route("/api/birthdays", api_add_birthday, methods=["POST"]),
+        Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
+        Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
+        Route("/api/birthdays/greet", api_send_birthday_greeting, methods=["POST"]),
+        
+        # Modular: Daily Logs & Habit Tracker
+        Route("/api/logs", api_get_daily_logs, methods=["GET"]),
+        Route("/api/logs", api_save_daily_log, methods=["POST"]),
+        Route("/api/logs/delete", api_delete_daily_log, methods=["POST"]),
+
+        # Modular: User Activity Tracking
+        Route("/api/track-user", api_track_user, methods=["POST"]),
+        Route("/api/users", api_get_users, methods=["GET"]),
+
+        # Vault & Message Cleanup Utilities
+        Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
+        Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
+        
+        # WebApp Static Assets & Mounting
+        Route("/app", serve_index, methods=["GET"]),
+        Route("/app/", serve_index, methods=["GET"]),
+        Mount("/app", StaticFiles(directory="webapp", html=False), name="app"),
+    ],
+    lifespan=lifespan,
+)
+
+if __name__ == "__main__":
+    uvicorn.run(starlette_app, host="0.0.0.0", port=PORT)
