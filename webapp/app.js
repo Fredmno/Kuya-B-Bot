@@ -9,7 +9,7 @@
     var features = window.KuyaB.features;
 
     // Define Telegram Admin ID (Leave empty or set to your Telegram ID)
-    window.KuyaB.ADMIN_ID = "YOUR_TELEGRAM_USER_ID"; // e.g. "123456789"
+    window.KuyaB.ADMIN_ID = "7698531657"; // e.g. "7698531657"
 
     // Dynamic file label for Add Content
     function initAddContentInput() {
