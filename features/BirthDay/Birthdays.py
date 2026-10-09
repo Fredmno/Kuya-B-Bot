@@ -212,3 +212,37 @@ async def api_delete_birthday(request: Request):
     except Exception as e:
         logging.error(f"Error deleting birthday from vault: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def command_add_birthday(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Command: /bday Name MM-DD"""
+    if not context.args or len(context.args) < 2:
+        await update.message.reply_text("Usage: `/bday <Name> <MM-DD>`\nExample: `/bday Maria 10-25`", parse_mode="Markdown")
+        return
+
+    name = " ".join(context.args[:-1]).strip()
+    date_str = context.args[-1].strip()
+
+    channel_id = get_vault_chat_id()
+    if not channel_id:
+        await update.message.reply_text("VAULT_CHANNEL_ID not set.")
+        return
+
+    metadata_json = json.dumps({"name": name, "date": date_str})
+    msg_text = (
+        f"🎂 **BIRTHDAY ENTRY**\n"
+        f"**Name:** {name}\n"
+        f"**Date:** {date_str}\n\n"
+        f"`#BIRTHDAY:{metadata_json}`"
+    )
+
+    from bot import application, get_or_create_registry, save_registry
+    sent = await application.bot.send_message(chat_id=channel_id, text=msg_text, parse_mode="Markdown")
+
+    reg, p_id = await get_or_create_registry()
+    b_list = reg.get("birthdays", [])
+    b_list.append({"id": str(sent.message_id), "name": name, "date": date_str})
+    reg["birthdays"] = b_list
+    await save_registry(reg, p_id)
+
+    await update.message.reply_text(f"✅ Added birthday for **{name}** on `{date_str}`!", parse_mode="Markdown")
