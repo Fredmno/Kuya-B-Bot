@@ -12,18 +12,18 @@ def get_main_menu_keyboard():
     web_app_url = f"{RENDER_EXTERNAL_URL}/app"
     keyboard = [
         [
-            InlineKeyboardButton("🚀 Open Kuya B Hub", web_app={"url": web_app_url})
+            InlineKeyboardButton("🚀 Open", web_app={"url": web_app_url})
         ],
         [
             InlineKeyboardButton("🎂 Birthdays", callback_data="menu_birthdays"),
-            InlineKeyboardButton("📅 Daily Logs", callback_data="menu_daily_logs"),
+            InlineKeyboardButton("📅 Logs", callback_data="menu_daily_logs"),
         ],
         [
             InlineKeyboardButton("✅ Tasks", callback_data="menu_tasks"),
-            InlineKeyboardButton("🎮 Play Word Game", callback_data="menu_game"),
+            InlineKeyboardButton("🎮 Play", callback_data="menu_game"),
         ],
         [
-            InlineKeyboardButton("❌ Close Menu", callback_data="menu_close"),
+            InlineKeyboardButton("❌ Close", callback_data="menu_close"),
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -73,7 +73,6 @@ async def render_birthdays_menu(update: Update, context: ContextTypes.DEFAULT_TY
     if not birthdays:
         bday_text = "🎂 **BIRTHDAYS LIST**\n\n_No birthdays recorded in your vault yet._"
     else:
-        # Sort by upcoming days
         sorted_bdays = sorted(birthdays, key=lambda b: calculate_days_until(b.get("date", "")))
         lines = []
         for b in sorted_bdays:
@@ -92,14 +91,15 @@ async def render_birthdays_menu(update: Update, context: ContextTypes.DEFAULT_TY
         
         bday_text = "🎂 **BIRTHDAYS LIST**\n\n" + "\n".join(lines)
 
+    # Simplified single-word labels
     keyboard = [
         [
-            InlineKeyboardButton("➕ Add Birthday", callback_data="bday_add_prompt"),
-            InlineKeyboardButton("🗑️ Remove Birthday", callback_data="bday_remove_menu"),
+            InlineKeyboardButton("➕ Add", callback_data="bday_add_prompt"),
+            InlineKeyboardButton("🗑️ Remove", callback_data="bday_remove_menu"),
         ],
         [
-            InlineKeyboardButton("◀️ Back to Menu", callback_data="menu_main"),
-            InlineKeyboardButton("❌ Cancel / Close", callback_data="menu_close"),
+            InlineKeyboardButton("◀️ Menu", callback_data="menu_main"),
+            InlineKeyboardButton("❌ Cancel", callback_data="menu_close"),
         ]
     ]
 
@@ -131,7 +131,7 @@ async def render_remove_birthday_menu(update: Update, context: ContextTypes.DEFA
         name = b.get("name", "Unknown")
         msg_id = str(b.get("id"))
         keyboard.append([
-            InlineKeyboardButton(f"🗑️ Delete {name}", callback_data=f"bday_del_{msg_id}")
+            InlineKeyboardButton(f"🗑️ {name}", callback_data=f"bday_del_{msg_id}")
         ])
 
     keyboard.append([InlineKeyboardButton("◀️ Cancel", callback_data="menu_birthdays")])
@@ -150,7 +150,6 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
 
     data = query.data or ""
 
-    # 1. Main navigation
     if data == "menu_main":
         text = (
             "🤖 **Kuya B Personal Hub**\n\n"
@@ -168,7 +167,6 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
         except Exception:
             await query.edit_message_text("Menu closed.")
 
-    # 2. Birthday Submenu
     elif data == "menu_birthdays":
         await render_birthdays_menu(update, context)
 
@@ -179,8 +177,8 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
             "or reply with `/bday Name MM-DD` (e.g. `/bday Maria 10-25`)."
         )
         keyboard = [
-            [InlineKeyboardButton("🚀 Open App to Add", web_app={"url": f"{RENDER_EXTERNAL_URL}/app"})],
-            [InlineKeyboardButton("◀️ Back to Birthdays", callback_data="menu_birthdays")]
+            [InlineKeyboardButton("🚀 Open", web_app={"url": f"{RENDER_EXTERNAL_URL}/app"})],
+            [InlineKeyboardButton("◀️ Back", callback_data="menu_birthdays")]
         ]
         await query.edit_message_text(
             text=prompt_text,
@@ -205,14 +203,12 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
         reg["birthdays"] = [b for b in reg.get("birthdays", []) if str(b.get("id")) != target_id]
         await save_registry(reg, p_msg_id)
 
-        # Refresh the list
         await render_birthdays_menu(update, context)
 
-    # 3. Placeholders for other submenus
     elif data == "menu_daily_logs":
         keyboard = [
-            [InlineKeyboardButton("🚀 Open Daily Logs", web_app={"url": f"{RENDER_EXTERNAL_URL}/app"})],
-            [InlineKeyboardButton("◀️ Back", callback_data="menu_main")]
+            [InlineKeyboardButton("🚀 Open", web_app={"url": f"{RENDER_EXTERNAL_URL}/app"})],
+            [InlineKeyboardButton("◀️ Menu", callback_data="menu_main")]
         ]
         await query.edit_message_text(
             text="📅 **Daily Logs**\n\nTrack your mood and completed daily habits inside the Mini App:",
@@ -222,8 +218,8 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
 
     elif data == "menu_tasks":
         keyboard = [
-            [InlineKeyboardButton("🚀 Open Tasks", web_app={"url": f"{RENDER_EXTERNAL_URL}/app"})],
-            [InlineKeyboardButton("◀️ Back", callback_data="menu_main")]
+            [InlineKeyboardButton("🚀 Open", web_app={"url": f"{RENDER_EXTERNAL_URL}/app"})],
+            [InlineKeyboardButton("◀️ Menu", callback_data="menu_main")]
         ]
         await query.edit_message_text(
             text="✅ **Tasks & Reminders**\n\nManage your checklist directly inside the Mini App:",
@@ -232,7 +228,7 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
         )
 
     elif data == "menu_game":
-        keyboard = [[InlineKeyboardButton("◀️ Back", callback_data="menu_main")]]
+        keyboard = [[InlineKeyboardButton("◀️ Menu", callback_data="menu_main")]]
         await query.edit_message_text(
             text="🎮 To play Word Scramble, type `/game` in this chat!",
             reply_markup=InlineKeyboardMarkup(keyboard),
