@@ -9,10 +9,10 @@
     window.KuyaB.features = window.KuyaB.features || {};
     window.KuyaB.router = window.KuyaB.router || {};
 
-    // Configure your Telegram user ID here (e.g., "7698531657")
     window.KuyaB.ADMIN_ID = "YOUR_TELEGRAM_USER_ID";
 
     var cachedRepoFiles = [];
+    var addContentCurrentMode = "file";
 
     function getRouter() {
         return window.KuyaB.router;
@@ -22,7 +22,6 @@
         return window.KuyaB.features;
     }
 
-    // Dynamic file label updater
     function initAddContentInput() {
         var fileEl = document.getElementById("newContentFile");
         var nameLabel = document.getElementById("newContentFileName");
@@ -39,92 +38,139 @@
         }
     }
 
-    // Reset all File Committer form inputs
-    window.KuyaB.clearFileCommitterForm = function () {
-        var searchInput = document.getElementById("fileSearchInput");
-        var pathInput = document.getElementById("commitFilePath");
-        var msgInput = document.getElementById("commitMsgInput");
-        var contentInput = document.getElementById("commitContentInput");
-        var statusLabel = document.getElementById("fileLoadStatus");
-        var dropdown = document.getElementById("fileSuggestionsList");
+    // Switch between File Upload & Link Download modes
+    window.KuyaB.switchAddContentMode = function (mode) {
+        addContentCurrentMode = mode;
+        var tabFile = document.getElementById("tabUploadFile");
+        var tabLink = document.getElementById("tabDownloadLink");
+        var secFile = document.getElementById("uploadFileSection");
+        var secLink = document.getElementById("downloadLinkSection");
+        var submitBtn = document.getElementById("btnSubmitAddContent");
 
-        if (searchInput) searchInput.value = "";
-        if (pathInput) pathInput.value = "";
-        if (msgInput) msgInput.value = "";
-        if (contentInput) contentInput.value = "";
-        if (statusLabel) statusLabel.innerText = "";
-        if (dropdown) dropdown.style.display = "none";
-    };
-
-    // Clear only textarea content
-    window.KuyaB.clearCommitterContent = function () {
-        var contentInput = document.getElementById("commitContentInput");
-        var statusLabel = document.getElementById("fileLoadStatus");
-        if (contentInput) {
-            contentInput.value = "";
-            contentInput.focus();
-        }
-        if (statusLabel) {
-            statusLabel.innerText = "Cleared";
-            setTimeout(function () { statusLabel.innerText = ""; }, 1800);
+        if (mode === "file") {
+            if (tabFile) tabFile.className = "btn-soft save";
+            if (tabLink) tabLink.className = "btn-soft cancel";
+            if (secFile) secFile.style.display = "block";
+            if (secLink) secLink.style.display = "none";
+            if (submitBtn) submitBtn.innerText = "Upload Content";
+        } else {
+            if (tabFile) tabFile.className = "btn-soft cancel";
+            if (tabLink) tabLink.className = "btn-soft save";
+            if (secFile) secFile.style.display = "none";
+            if (secLink) secLink.style.display = "block";
+            if (submitBtn) submitBtn.innerText = "Download & Save ⬇️";
         }
     };
 
-    // Paste directly using Telegram WebApp SDK or browser fallback
-    window.KuyaB.pasteCommitterContent = function () {
-        var contentInput = document.getElementById("commitContentInput");
-        var statusLabel = document.getElementById("fileLoadStatus");
+    // Paste into URL input
+    window.KuyaB.pasteDownloadUrl = function () {
+        var urlInput = document.getElementById("downloadMediaUrl");
+        if (!urlInput) return;
 
-        if (!contentInput) return;
-
-        function applyText(text) {
-            if (text) {
-                contentInput.value = text;
-                if (statusLabel) {
-                    statusLabel.innerText = "Pasted!";
-                    setTimeout(function () { statusLabel.innerText = ""; }, 2000);
-                }
-                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
-            }
-        }
-
-        // 1. Try Telegram WebApp SDK native clipboard reader
         var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : (window.KuyaB.tg || null);
         if (tg && typeof tg.readTextFromClipboard === "function") {
             try {
                 tg.readTextFromClipboard(function (text) {
-                    if (text) {
-                        applyText(text);
-                    } else {
-                        contentInput.focus();
-                    }
+                    if (text) urlInput.value = text.trim();
                 });
                 return;
-            } catch (tgErr) {
-                // Fallback to browser standard
-            }
+            } catch (e) {}
         }
 
-        // 2. Browser standard clipboard API fallback
         if (navigator.clipboard && navigator.clipboard.readText) {
             navigator.clipboard.readText().then(function (text) {
-                applyText(text);
+                if (text) urlInput.value = text.trim();
             }).catch(function () {
-                contentInput.focus();
-                contentInput.select();
-                if (statusLabel) {
-                    statusLabel.innerText = "Tap box to paste";
-                    setTimeout(function () { statusLabel.innerText = ""; }, 2500);
-                }
+                urlInput.focus();
             });
             return;
         }
-
-        // 3. Fallback: focus input immediately
-        contentInput.focus();
+        urlInput.focus();
     };
 
-    // 1. Submit New Content (Standalone) with live % progress bar
+    // Dispatcher for Add Content submit
+    window.KuyaB.submitAddContentAction = function () {
+        if (addContentCurrentMode === "file") {
+            window.KuyaB.submitNewContent();
+        } else {
+            window.KuyaB.submitDownloadLink();
+        }
+    };
+
+    // Download media from link
+    window.KuyaB.submitDownloadLink = async function () {
+        var urlInput = document.getElementById("downloadMediaUrl");
+        var titleInput = document.getElementById("newContentTitle");
+        var folderInput = document.getElementById("newContentFolder");
+        var submitBtn = document.getElementById("btnSubmitAddContent");
+        var progressContainer = document.getElementById("uploadProgressContainer");
+        var progressBar = document.getElementById("uploadProgressBar");
+        var statusText = document.getElementById("uploadStatusText");
+        var percentText = document.getElementById("uploadPercentText");
+
+        var url = urlInput ? urlInput.value.trim() : "";
+        if (!url) {
+            alert("Please paste a link first.");
+            return;
+        }
+
+        var folderName = folderInput.value.trim() || "Downloads";
+        var customTitle = titleInput.value.trim();
+
+        if (progressContainer) {
+            progressContainer.style.display = "block";
+            if (progressBar) progressBar.style.width = "75%";
+            if (percentText) percentText.innerText = "Fetching...";
+            if (statusText) statusText.innerText = "Downloading media from link...";
+        }
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Downloading...";
+        }
+
+        try {
+            var res = await fetch("/api/vault/download-url", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url: url,
+                    folder: folderName,
+                    title: customTitle
+                })
+            });
+            var data = await res.json();
+            if (data.success && data.item) {
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("success");
+                if (window.KuyaB.showToast) window.KuyaB.showToast("Saved to Vault! 📁");
+
+                urlInput.value = "";
+                titleInput.value = "";
+                folderInput.value = "";
+                if (progressContainer) progressContainer.style.display = "none";
+
+                var feats = getFeatures();
+                var r = getRouter();
+                if (feats.vault) feats.vault.setVaultType(data.item.type);
+                if (r.showPage) {
+                    r.showPage("vaultPage", function () {
+                        if (feats.vault) feats.vault.openFolder(folderName);
+                    });
+                }
+            } else {
+                alert("Download failed: " + (data.error || "Could not fetch media."));
+            }
+        } catch (err) {
+            alert("Network error processing link.");
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Download & Save ⬇️";
+            }
+            if (progressContainer) progressContainer.style.display = "none";
+        }
+    };
+
+    // Upload local file with progress bar
     window.KuyaB.submitNewContent = function () {
         var fileInput = document.getElementById("newContentFile");
         var titleInput = document.getElementById("newContentTitle");
@@ -229,107 +275,81 @@
         xhr.send(formData);
     };
 
-    // 2. Submit Inline Vault Upload with live % progress bar
-    window.KuyaB.uploadMediaToVault = function () {
-        var titleInput = document.getElementById("vaultItemTitle");
-        var folderInput = document.getElementById("vaultItemFolder");
-        var fileInput = document.getElementById("vaultItemFile");
-        var fileNameLabel = document.getElementById("selectedFileName");
-        var formBox = document.getElementById("vaultUploadForm");
-        var submitBtn = document.getElementById("btnUploadMedia");
+    // Reset committer form
+    window.KuyaB.clearFileCommitterForm = function () {
+        var searchInput = document.getElementById("fileSearchInput");
+        var pathInput = document.getElementById("commitFilePath");
+        var msgInput = document.getElementById("commitMsgInput");
+        var contentInput = document.getElementById("commitContentInput");
+        var statusLabel = document.getElementById("fileLoadStatus");
+        var dropdown = document.getElementById("fileSuggestionsList");
 
-        var progressContainer = document.getElementById("inlineUploadProgressContainer");
-        var progressBar = document.getElementById("inlineUploadProgressBar");
-        var percentText = document.getElementById("inlineUploadPercentText");
-        var statusText = document.getElementById("inlineUploadStatusText");
+        if (searchInput) searchInput.value = "";
+        if (pathInput) pathInput.value = "";
+        if (msgInput) msgInput.value = "";
+        if (contentInput) contentInput.value = "";
+        if (statusLabel) statusLabel.innerText = "";
+        if (dropdown) dropdown.style.display = "none";
+    };
 
-        if (!fileInput || !fileInput.files.length) {
-            alert("Please choose a file to upload.");
+    window.KuyaB.clearCommitterContent = function () {
+        var contentInput = document.getElementById("commitContentInput");
+        var statusLabel = document.getElementById("fileLoadStatus");
+        if (contentInput) {
+            contentInput.value = "";
+            contentInput.focus();
+        }
+        if (statusLabel) {
+            statusLabel.innerText = "Cleared";
+            setTimeout(function () { statusLabel.innerText = ""; }, 1800);
+        }
+    };
+
+    window.KuyaB.pasteCommitterContent = function () {
+        var contentInput = document.getElementById("commitContentInput");
+        var statusLabel = document.getElementById("fileLoadStatus");
+
+        if (!contentInput) return;
+
+        function applyText(text) {
+            if (text) {
+                contentInput.value = text;
+                if (statusLabel) {
+                    statusLabel.innerText = "Pasted!";
+                    setTimeout(function () { statusLabel.innerText = ""; }, 2000);
+                }
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+            }
+        }
+
+        var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : (window.KuyaB.tg || null);
+        if (tg && typeof tg.readTextFromClipboard === "function") {
+            try {
+                tg.readTextFromClipboard(function (text) {
+                    if (text) applyText(text);
+                    else contentInput.focus();
+                });
+                return;
+            } catch (tgErr) {}
+        }
+
+        if (navigator.clipboard && navigator.clipboard.readText) {
+            navigator.clipboard.readText().then(function (text) {
+                applyText(text);
+            }).catch(function () {
+                contentInput.focus();
+                contentInput.select();
+                if (statusLabel) {
+                    statusLabel.innerText = "Tap box to paste";
+                    setTimeout(function () { statusLabel.innerText = ""; }, 2500);
+                }
+            });
             return;
         }
 
-        var file = fileInput.files[0];
-        var feats = getFeatures();
-        var currentVaultType = (feats.vault && feats.vault.getCurrentVaultType) ? feats.vault.getCurrentVaultType() : "pictures";
-        var isVideo = file.type.startsWith("video/");
-        var mediaType = currentVaultType === "other" ? (isVideo ? "videos" : "pictures") : currentVaultType;
-        var folderName = folderInput.value.trim() || ((feats.vault && feats.vault.getActiveFolder && feats.vault.getActiveFolder()) ? feats.vault.getActiveFolder() : "General");
-
-        var formData = new FormData();
-        formData.append("file", file);
-        formData.append("title", titleInput.value.trim() || "Untitled");
-        formData.append("folder", folderName);
-        formData.append("type", mediaType);
-
-        if (progressContainer) {
-            progressContainer.style.display = "block";
-            if (progressBar) progressBar.style.width = "0%";
-            if (percentText) percentText.innerText = "0%";
-            if (statusText) statusText.innerText = isVideo ? "Uploading video..." : "Uploading file...";
-        }
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Uploading (0%)...";
-        }
-
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/api/vault/upload", true);
-
-        xhr.upload.onprogress = function (e) {
-            if (e.lengthComputable) {
-                var percent = Math.round((e.loaded / e.total) * 100);
-                if (progressBar) progressBar.style.width = percent + "%";
-                if (percentText) percentText.innerText = percent + "%";
-                if (submitBtn) submitBtn.innerText = "Uploading (" + percent + "%)...";
-
-                if (percent === 100 && statusText) {
-                    statusText.innerText = "Processing & saving to vault...";
-                }
-            }
-        };
-
-        xhr.onload = function () {
-            if (submitBtn) submitBtn.disabled = false;
-            try {
-                var data = JSON.parse(xhr.responseText);
-                if (xhr.status >= 200 && xhr.status < 300 && data.success) {
-                    if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("success");
-                    if (window.KuyaB.showToast) window.KuyaB.showToast("Uploaded successfully! 📁");
-
-                    titleInput.value = "";
-                    folderInput.value = "";
-                    fileInput.value = "";
-                    if (fileNameLabel) {
-                        fileNameLabel.innerText = "No file chosen";
-                        fileNameLabel.style.color = "#64748b";
-                    }
-                    if (progressContainer) progressContainer.style.display = "none";
-                    if (formBox) formBox.style.display = "none";
-                    if (submitBtn) submitBtn.innerText = "Upload";
-
-                    if (feats.vault && feats.vault.render) feats.vault.render();
-                } else {
-                    alert("Upload failed: " + (data.error || "Server error"));
-                    if (submitBtn) submitBtn.innerText = "Upload";
-                }
-            } catch (err) {
-                alert("Error parsing response.");
-                if (submitBtn) submitBtn.innerText = "Upload";
-            }
-        };
-
-        xhr.onerror = function () {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Upload";
-            }
-            alert("Network error during upload.");
-        };
-
-        xhr.send(formData);
+        contentInput.focus();
     };
 
-    // 3. Scan Repository Files List
     window.KuyaB.loadRepoTree = async function (force) {
         var statusLabel = document.getElementById("repoScanStatus");
         if (cachedRepoFiles.length > 0 && !force) return;
@@ -342,8 +362,6 @@
             if (data.success && Array.isArray(data.files)) {
                 cachedRepoFiles = data.files;
                 if (statusLabel) statusLabel.innerText = cachedRepoFiles.length + " files ready";
-            } else {
-                if (statusLabel) statusLabel.innerText = "Repo scan error";
             }
         } catch (err) {
             if (statusLabel) statusLabel.innerText = "Failed to load files";
@@ -354,7 +372,6 @@
         }, 3000);
     };
 
-    // 4. Real-time Filter on Typing or Focus
     window.KuyaB.filterRepoFiles = async function (query) {
         var dropdown = document.getElementById("fileSuggestionsList");
         if (!dropdown) return;
@@ -395,7 +412,6 @@
         dropdown.style.display = "block";
     };
 
-    // 5. Select file from autocomplete
     window.KuyaB.onSelectRepoFile = async function (filePath) {
         var searchInput = document.getElementById("fileSearchInput");
         var pathInput = document.getElementById("commitFilePath");
@@ -415,8 +431,6 @@
             if (data.success && contentInput) {
                 contentInput.value = data.content;
                 if (statusLabel) statusLabel.innerText = "Loaded latest!";
-            } else {
-                if (statusLabel) statusLabel.innerText = "New / Blank file";
             }
         } catch (e) {
             if (statusLabel) statusLabel.innerText = "Could not load content";
@@ -427,7 +441,6 @@
         }, 3000);
     };
 
-    // 6. Submit GitHub commit and reset form state
     window.KuyaB.submitFileCommit = async function () {
         var pathInput = document.getElementById("commitFilePath");
         var msgInput = document.getElementById("commitMsgInput");
@@ -466,7 +479,6 @@
             if (data.success) {
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("success");
                 alert(data.message);
-
                 window.KuyaB.clearFileCommitterForm();
 
                 var feats = getFeatures();
@@ -495,9 +507,7 @@
             if (repoItem) {
                 e.preventDefault();
                 var encodedPath = repoItem.getAttribute("data-file");
-                if (encodedPath) {
-                    window.KuyaB.onSelectRepoFile(decodeURIComponent(encodedPath));
-                }
+                if (encodedPath) window.KuyaB.onSelectRepoFile(decodeURIComponent(encodedPath));
                 return;
             }
 
@@ -518,9 +528,6 @@
                 } else if (feature === "videos" || feature === "pictures" || feature === "other") {
                     if (feats.vault) feats.vault.setVaultType(feature);
                     if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
-                } else if (feature === "search") {
-                    var searchInput = document.getElementById("dashboardSearchInput");
-                    if (searchInput) searchInput.focus();
                 }
                 return;
             }
@@ -571,7 +578,6 @@
                 return;
             }
 
-            // Open Admin File Committer: Reset form every time it's opened
             if (target.closest("#btnAdminUpdater")) {
                 e.preventDefault();
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
@@ -610,19 +616,6 @@
                 return;
             }
 
-            if (target.closest("#addVaultItemButton")) {
-                e.preventDefault();
-                var vf = document.getElementById("vaultUploadForm");
-                if (vf) vf.style.display = "block";
-                return;
-            }
-            if (target.closest("#cancelVaultItemButton")) {
-                e.preventDefault();
-                var vfCancel = document.getElementById("vaultUploadForm");
-                if (vfCancel) vfCancel.style.display = "none";
-                return;
-            }
-
             var vaultView = target.closest('[data-action="view-vault"]');
             if (vaultView) {
                 e.preventDefault();
@@ -639,104 +632,8 @@
                 if (feats.vault && feats.vault.deleteItem) feats.vault.deleteItem(vaultDel.getAttribute("data-id"));
                 return;
             }
-
-            // Tasks
-            if (target.closest("#addTaskButton")) {
-                e.preventDefault();
-                var tf = document.getElementById("taskForm");
-                if (tf) tf.style.display = "block";
-                return;
-            }
-            if (target.closest("#cancelTaskButton")) {
-                e.preventDefault();
-                var tfc = document.getElementById("taskForm");
-                if (tfc) tfc.style.display = "none";
-                return;
-            }
-            if (target.closest("#saveTaskButton")) {
-                e.preventDefault();
-                if (feats.tasks && feats.tasks.add) feats.tasks.add();
-                return;
-            }
-            var taskToggle = target.closest('[data-action="toggle-task"]');
-            if (taskToggle) {
-                e.preventDefault();
-                if (feats.tasks && feats.tasks.toggle) feats.tasks.toggle(taskToggle.getAttribute("data-id"));
-                return;
-            }
-            var taskDel = target.closest('[data-action="delete-task"]');
-            if (taskDel) {
-                e.preventDefault();
-                if (feats.tasks && feats.tasks.remove) feats.tasks.remove(taskDel.getAttribute("data-id"));
-                return;
-            }
-
-            // Reminders
-            if (target.closest("#addReminderButton")) {
-                e.preventDefault();
-                var rf = document.getElementById("reminderForm");
-                if (rf) rf.style.display = "block";
-                return;
-            }
-            if (target.closest("#cancelReminderButton")) {
-                e.preventDefault();
-                var rfc = document.getElementById("reminderForm");
-                if (rfc) rfc.style.display = "none";
-                return;
-            }
-            if (target.closest("#saveReminderButton")) {
-                e.preventDefault();
-                if (feats.reminders && feats.reminders.add) feats.reminders.add();
-                return;
-            }
-            var remDel = target.closest('[data-action="delete-rem"]');
-            if (remDel) {
-                e.preventDefault();
-                if (feats.reminders && feats.reminders.remove) feats.reminders.remove(remDel.getAttribute("data-id"));
-                return;
-            }
-
-            // Birthdays
-            if (target.closest("#addBirthdayButton")) {
-                e.preventDefault();
-                var bf = document.getElementById("birthdayForm");
-                if (bf) bf.style.display = "block";
-                return;
-            }
-            if (target.closest("#cancelBirthdayButton")) {
-                e.preventDefault();
-                var bfc = document.getElementById("birthdayForm");
-                if (bfc) bfc.style.display = "none";
-                return;
-            }
-            if (target.closest("#saveBirthdayButton")) {
-                e.preventDefault();
-                if (feats.birthdays && feats.birthdays.save) feats.birthdays.save();
-                return;
-            }
-            var bdayGreetBtn = target.closest('[data-action="greet-bday"]');
-            if (bdayGreetBtn) {
-                e.preventDefault();
-                if (feats.birthdays && feats.birthdays.greet) feats.birthdays.greet(bdayGreetBtn.getAttribute("data-name"));
-                return;
-            }
-            var bdayDelBtn = target.closest('[data-action="delete-bday"]');
-            if (bdayDelBtn) {
-                e.preventDefault();
-                if (feats.birthdays && feats.birthdays.remove) feats.birthdays.remove(bdayDelBtn.getAttribute("data-id"));
-                return;
-            }
-
-            // Daily Logs
-            if (target.closest("#addLogButton")) {
-                e.preventDefault();
-                var lf = document.getElementById("logForm");
-                if (lf) lf.style.display = "block";
-                return;
-            }
         });
 
-        // Hide autocomplete suggestions on outside click
         document.addEventListener("click", function (e) {
             var dropdown = document.getElementById("fileSuggestionsList");
             var searchInput = document.getElementById("fileSearchInput");
@@ -766,28 +663,11 @@
             feats.tracking.track();
         }
 
-        var getParam = window.KuyaB.getParam ? window.KuyaB.getParam : function (key) {
-            var params = new URLSearchParams(window.location.search);
-            return params.get(key);
-        };
-
-        var startSection = getParam("start");
-
-        if (startSection === "add_bday") {
-            if (r.hideAllPages) r.hideAllPages();
-            var popupPage = document.getElementById("addBirthdayStandalonePage");
-            if (popupPage) popupPage.style.display = "block";
-            return;
-        }
+        var params = new URLSearchParams(window.location.search);
+        var startSection = params.get("start");
 
         if (startSection === "birthdays") {
             if (r.showPage) r.showPage("birthdaysPage", feats.birthdays ? feats.birthdays.render : null);
-        } else if (startSection === "daily") {
-            if (r.showPage) r.showPage("dailyLogsPage", feats.dailyLogs ? feats.dailyLogs.render : null);
-        } else if (startSection === "tasks") {
-            if (r.showPage) r.showPage("tasksPage", feats.tasks ? feats.tasks.render : null);
-        } else if (startSection === "reminders") {
-            if (r.showPage) r.showPage("remindersPage", feats.reminders ? feats.reminders.render : null);
         } else if (startSection === "videos" || startSection === "pictures" || startSection === "other") {
             if (feats.vault) feats.vault.setVaultType(startSection);
             if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
