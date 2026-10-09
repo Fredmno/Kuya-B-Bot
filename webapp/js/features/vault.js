@@ -1,5 +1,5 @@
 /* =========================================================
-   KUYA B — FEATURE: VAULT & MEDIA LIGHTBOX
+   KUYA B — FEATURE: VAULT WITH FOLDER-FIRST NAVIGATION
    ========================================================= */
 
 (function () {
@@ -10,21 +10,30 @@
 
     var vaultItems = [];
     var currentVaultType = "other";
+    var activeFolder = null; // null = Folders Directory; String = Inside a specific folder
 
     function setVaultType(type) {
         currentVaultType = type;
-        var titleEl = document.getElementById("vaultPageTitle");
-        var otherActions = document.getElementById("otherActionsBar");
+        activeFolder = null; // Reset folder drilldown upon navigation
+        updateTitles();
 
+        var otherActions = document.getElementById("otherActionsBar");
         if (otherActions) {
             var isAdmin = window.KuyaB.features.tracking && window.KuyaB.features.tracking.isAdmin();
             otherActions.style.display = (type === "other" && isAdmin) ? "block" : "none";
         }
+    }
 
-        if (titleEl) {
-            if (type === "videos") titleEl.innerText = "🎥 Videos";
-            else if (type === "pictures") titleEl.innerText = "🖼️ Pictures";
-            else titleEl.innerText = "📁 Other";
+    function updateTitles() {
+        var titleEl = document.getElementById("vaultPageTitle");
+        if (!titleEl) return;
+
+        if (currentVaultType === "videos") {
+            titleEl.innerText = activeFolder ? "🎥 " + activeFolder : "🎥 Videos";
+        } else if (currentVaultType === "pictures") {
+            titleEl.innerText = activeFolder ? "🖼️ " + activeFolder : "🖼️ Pictures";
+        } else {
+            titleEl.innerText = activeFolder ? "📁 " + activeFolder : "📁 Other";
         }
     }
 
@@ -38,19 +47,92 @@
         }
     }
 
-    async function displayVaultItems() {
-        var list = document.getElementById("vaultItemsList");
-        if (!list) return;
-
+    // ---------------------------------------------------------
+    // RENDER CONTROLLER
+    // ---------------------------------------------------------
+    async function renderVault() {
         await fetchVaultItems();
 
-        var filtered = [];
-        for (var i = 0; i < vaultItems.length; i++) {
-            if ((vaultItems[i].type || "other") === currentVaultType) filtered.push(vaultItems[i]);
+        if (activeFolder === null) {
+            displayFoldersView();
+        } else {
+            displayFolderItemsView();
         }
+    }
+
+    // 1. Show Folder Grid/Cards
+    function displayFoldersView() {
+        var foldersContainer = document.getElementById("vaultFoldersContainer");
+        var itemsContainer = document.getElementById("vaultItemsContainer");
+        var breadcrumb = document.getElementById("vaultFolderBreadcrumb");
+
+        if (breadcrumb) breadcrumb.style.display = "none";
+        if (itemsContainer) itemsContainer.style.display = "none";
+        if (foldersContainer) foldersContainer.style.display = "block";
+
+        updateTitles();
+
+        var filtered = vaultItems.filter(function (item) {
+            return (item.type || "other") === currentVaultType;
+        });
 
         if (filtered.length === 0) {
-            list.innerHTML = '<p class="empty-state">No items saved in this section yet. Tap + to upload!</p>';
+            foldersContainer.innerHTML = '<p class="empty-state">No folders or items here yet. Tap + to upload!</p>';
+            return;
+        }
+
+        // Group media count by folder
+        var folderCounts = {};
+        for (var i = 0; i < filtered.length; i++) {
+            var fName = (filtered[i].folder || "General").trim();
+            folderCounts[fName] = (folderCounts[fName] || 0) + 1;
+        }
+
+        var folderNames = Object.keys(folderCounts).sort();
+        var html = "";
+
+        for (var j = 0; j < folderNames.length; j++) {
+            var name = folderNames[j];
+            var count = folderCounts[name];
+            var itemWord = count === 1 ? "item" : "items";
+
+            html += '<div class="feature-card-full" data-action="open-folder" data-folder="' + encodeURIComponent(name) + '" style="margin: 0 0 12px 0;">' +
+                '<div class="card-left">' +
+                    '<span class="card-icon" style="font-size: 1.5rem;">📁</span>' +
+                    '<div>' +
+                        '<div class="card-title">' + name + '</div>' +
+                        '<div class="card-desc">' + count + ' ' + itemWord + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="card-arrow">›</div>' +
+            '</div>';
+        }
+
+        foldersContainer.innerHTML = html;
+    }
+
+    // 2. Show Files Inside Selected Folder
+    function displayFolderItemsView() {
+        var foldersContainer = document.getElementById("vaultFoldersContainer");
+        var itemsContainer = document.getElementById("vaultItemsContainer");
+        var breadcrumb = document.getElementById("vaultFolderBreadcrumb");
+        var activeHeader = document.getElementById("activeFolderHeader");
+
+        if (foldersContainer) foldersContainer.style.display = "none";
+        if (breadcrumb) breadcrumb.style.display = "flex";
+        if (itemsContainer) itemsContainer.style.display = "block";
+        if (activeHeader) activeHeader.innerText = "📁 " + activeFolder;
+
+        updateTitles();
+
+        var filtered = vaultItems.filter(function (item) {
+            var itemType = item.type || "other";
+            var itemFolder = (item.folder || "General").trim();
+            return itemType === currentVaultType && itemFolder.toLowerCase() === activeFolder.toLowerCase();
+        });
+
+        if (filtered.length === 0) {
+            itemsContainer.innerHTML = '<p class="empty-state">No media left in this folder.</p>';
             return;
         }
 
@@ -62,7 +144,6 @@
                 '<div class="birthday-info">' +
                     '<div class="birthday-title-row">' +
                         '<span class="birthday-name">' + (item.title || "Untitled") + '</span>' +
-                        '<span class="bday-badge-days">' + (item.folder || "General") + '</span>' +
                     '</div>' +
                     '<span class="birthday-date">📁 ' + (item.type === "videos" ? "Video" : "Photo") + '</span>' +
                 '</div>' +
@@ -72,9 +153,25 @@
                 '</div>' +
             '</div>';
         }
-        list.innerHTML = html;
+
+        itemsContainer.innerHTML = html;
     }
 
+    function openFolder(folderName) {
+        activeFolder = folderName;
+        window.KuyaB.triggerHaptic("light");
+        displayFolderItemsView();
+    }
+
+    function backToFolders() {
+        activeFolder = null;
+        window.KuyaB.triggerHaptic("light");
+        displayFoldersView();
+    }
+
+    // ---------------------------------------------------------
+    // LIGHTBOX MODAL
+    // ---------------------------------------------------------
     function openMediaModal(itemId, title, mediaType) {
         var modal = document.getElementById("mediaViewerModal");
         var img = document.getElementById("mediaModalImage");
@@ -127,6 +224,9 @@
         }
     }
 
+    // ---------------------------------------------------------
+    // FILE UPLOAD & MANAGEMENT
+    // ---------------------------------------------------------
     async function uploadMedia() {
         var fileInput = document.getElementById("vaultItemFile");
         var titleInput = document.getElementById("vaultItemTitle");
@@ -141,11 +241,12 @@
         var file = fileInput.files[0];
         var isVideo = file.type.startsWith("video/");
         var determinedType = currentVaultType === "other" ? (isVideo ? "videos" : "pictures") : currentVaultType;
+        var chosenFolder = (folderInput.value.trim() || activeFolder || "General");
 
         var formData = new FormData();
         formData.append("file", file);
         formData.append("title", titleInput.value.trim() || "Untitled");
-        formData.append("folder", folderInput.value.trim() || "General");
+        formData.append("folder", chosenFolder);
         formData.append("type", determinedType);
 
         var btn = document.getElementById("btnUploadMedia");
@@ -168,7 +269,7 @@
                     fileNameLabel.style.color = "#64748b";
                 }
                 document.getElementById("vaultUploadForm").style.display = "none";
-                displayVaultItems();
+                renderVault();
             } else {
                 alert("Upload failed: " + (data.error || "Server error"));
             }
@@ -187,7 +288,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id: id })
             });
-            displayVaultItems();
+            renderVault();
         } catch (e) {
             window.KuyaB.showToast("Failed to delete media.");
         }
@@ -209,10 +310,13 @@
         }
     }
 
-    // Export module
+    // Export module functions
     window.KuyaB.features.vault = {
         setVaultType: setVaultType,
-        render: displayVaultItems,
+        render: renderVault,
+        openFolder: openFolder,
+        backToFolders: backToFolders,
+        getActiveFolder: function () { return activeFolder; },
         uploadMedia: uploadMedia,
         deleteItem: deleteItem,
         openMediaModal: openMediaModal,
@@ -220,8 +324,6 @@
         initFileInput: initFileInput
     };
 
-    // Backward compatibility bridges
     window.KuyaB.uploadMediaToVault = uploadMedia;
-    window.KuyaB.openMediaModal = openMediaModal;
     window.KuyaB.closeMediaModal = closeMediaModal;
 })();
