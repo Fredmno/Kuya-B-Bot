@@ -1,27 +1,27 @@
-<div id="addContentPage" style="display: none;">
+<div id="addContentPage" style="display: none; padding-bottom: 30px;">
+    <!-- Top Bar -->
     <div class="top-bar">
         <button type="button" class="btn-icon-back" id="addContentBackButton">←</button>
-        <h2>➕ Add Content</h2>
+        <h2>+ Add Content</h2>
         <div style="width: 40px;"></div>
     </div>
 
-    <div class="form-box" style="display: block; margin-top: 14px;">
-        <!-- Media Category Selector -->
-        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted, #64748b); margin-bottom: 6px;">Select Destination Section</label>
-        <select class="neu-input" id="newContentSection" style="margin-bottom: 14px; width: 100%; height: 44px; padding: 0 12px; cursor: pointer;">
+    <form id="standaloneAddContentForm" class="form-box" style="display: block; margin-top: 14px;">
+        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Select Category</label>
+        <select class="neu-input" id="newContentSection" style="margin-bottom: 14px; width: 100%; height: 44px; padding: 0 10px;">
             <option value="pictures">🖼️ Pictures Vault</option>
             <option value="videos">🎥 Videos Vault</option>
-            <option value="other" selected>📁 Other Files</option>
+            <option value="other">📁 Other Vault</option>
         </select>
 
-        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted, #64748b); margin-bottom: 6px;">Title / Caption</label>
-        <input type="text" class="neu-input" id="newContentTitle" placeholder="Title or brief description..." style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Title or Caption</label>
+        <input type="text" class="neu-input" id="newContentTitle" placeholder="e.g. Birthday Party Clip" style="margin-bottom: 14px;">
 
-        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted, #64748b); margin-bottom: 6px;">Folder Name</label>
-        <input type="text" class="neu-input" id="newContentFolder" placeholder="Folder (e.g. Work, Receipts, Trips)" style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Target Folder</label>
+        <input type="text" class="neu-input" id="newContentFolder" placeholder="e.g. Highlights, Family, Projects" style="margin-bottom: 14px;">
 
-        <!-- Styled File Chooser -->
-        <div style="position: relative; margin-bottom: 20px;">
+        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">Choose File / Video</label>
+        <div style="position: relative; margin-bottom: 16px;">
             <input type="file" id="newContentFile" accept="image/*,video/*" style="opacity: 0; position: absolute; z-index: -1; width: 0.1px; height: 0.1px; overflow: hidden;">
             <label for="newContentFile" style="
                 display: flex;
@@ -44,7 +44,7 @@
                     border-radius: 10px;
                     box-shadow: 2px 2px 5px rgba(37, 99, 235, 0.35);
                     white-space: nowrap;
-                ">Choose File</span>
+                ">Browse File</span>
                 <span id="newContentFileName" style="
                     font-size: 0.88rem;
                     color: #64748b;
@@ -55,9 +55,33 @@
             </label>
         </div>
 
+        <!-- Live Upload Progress Bar Container -->
+        <div id="uploadProgressContainer" style="display: none; width: 100%; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">
+                <span id="uploadStatusText">Uploading...</span>
+                <span id="uploadPercentText">0%</span>
+            </div>
+            <div style="
+                width: 100%;
+                height: 10px;
+                background: #dbe4f0;
+                border-radius: 999px;
+                overflow: hidden;
+                box-shadow: inset 1px 1px 3px rgba(0,0,0,0.15);
+            ">
+                <div id="uploadProgressBar" style="
+                    width: 0%;
+                    height: 100%;
+                    background: linear-gradient(90deg, #3b82f6, #2563eb);
+                    border-radius: 999px;
+                    transition: width 0.15s ease;
+                "></div>
+            </div>
+        </div>
+
         <div class="form-actions">
             <button type="button" class="btn-soft cancel" id="cancelAddContentButton">Cancel</button>
             <button type="button" class="btn-soft save" id="btnSubmitAddContent" onclick="window.KuyaB.submitNewContent()">Upload Content</button>
         </div>
-    </div>
+    </form>
 </div>
