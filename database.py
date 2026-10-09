@@ -60,7 +60,7 @@ def init_db():
 
 
 # ---------------------------------------------------------
-# WORD GAME DB HELPERS (Required by features/word_game.py)
+# WORD GAME DB HELPERS
 # ---------------------------------------------------------
 
 def get_player(user_id, username, name):
@@ -184,7 +184,7 @@ def get_leaderboard(limit=10):
 
 
 # ---------------------------------------------------------
-# VAULT DB HELPERS (Required by features/vault/vault.py)
+# VAULT DB HELPERS
 # ---------------------------------------------------------
 
 def db_get_all_vault_items():
@@ -287,7 +287,7 @@ def db_delete_vault_item(item_id):
 
 
 # ---------------------------------------------------------
-# USER TRACKING DB HELPERS (Required by features/tracking)
+# USER TRACKING DB HELPERS
 # ---------------------------------------------------------
 
 def db_track_user(user_id, username, first_name, last_name):
@@ -305,7 +305,7 @@ def db_track_user(user_id, username, first_name, last_name):
                 first_name = EXCLUDED.first_name,
                 last_name = EXCLUDED.last_name,
                 last_seen = CURRENT_TIMESTAMP,
-                visit_count = user_activity.visit_count + 1;
+                visit_count = COALESCE(user_activity.visit_count, 0) + 1;
         """, (str(user_id), username, first_name, last_name))
         conn.commit()
         return True
