@@ -5,15 +5,9 @@ from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
-RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
-
 
 def get_main_menu_keyboard():
-    web_app_url = f"{RENDER_EXTERNAL_URL}/app"
     keyboard = [
-        [
-            InlineKeyboardButton("🚀 Open", web_app={"url": web_app_url})
-        ],
         [
             InlineKeyboardButton("🎂 Birthdays", callback_data="menu_birthdays"),
             InlineKeyboardButton("📅 Logs", callback_data="menu_daily_logs"),
@@ -33,7 +27,7 @@ async def kuya_b_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Entry point for /kuyab or /kuya_b command."""
     text = (
         "🤖 **Kuya B Personal Hub**\n\n"
-        "Select a feature below to manage your vault or open the Mini App:"
+        "Select a feature below to manage your vault directly in chat:"
     )
     if update.message:
         await update.message.reply_text(
@@ -91,7 +85,6 @@ async def render_birthdays_menu(update: Update, context: ContextTypes.DEFAULT_TY
         
         bday_text = "🎂 **BIRTHDAYS LIST**\n\n" + "\n".join(lines)
 
-    # Simplified single-word labels
     keyboard = [
         [
             InlineKeyboardButton("➕ Add", callback_data="bday_add_prompt"),
@@ -153,7 +146,7 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
     if data == "menu_main":
         text = (
             "🤖 **Kuya B Personal Hub**\n\n"
-            "Select a feature below to manage your vault or open the Mini App:"
+            "Select a feature below to manage your vault directly in chat:"
         )
         await query.edit_message_text(
             text=text,
@@ -173,11 +166,10 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
     elif data == "bday_add_prompt":
         prompt_text = (
             "➕ **To Add a Birthday:**\n\n"
-            "Open the **Kuya B Hub** Mini App via the button below and tap `+` on the Birthdays page, "
-            "or reply with `/bday Name MM-DD` (e.g. `/bday Maria 10-25`)."
+            "Reply in this chat using `/bday Name MM-DD`\n"
+            "Example: `/bday Maria 10-25`"
         )
         keyboard = [
-            [InlineKeyboardButton("🚀 Open", web_app={"url": f"{RENDER_EXTERNAL_URL}/app"})],
             [InlineKeyboardButton("◀️ Back", callback_data="menu_birthdays")]
         ]
         await query.edit_message_text(
@@ -206,23 +198,38 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
         await render_birthdays_menu(update, context)
 
     elif data == "menu_daily_logs":
+        from bot import get_or_create_registry
+        reg, _ = await get_or_create_registry()
+        logs = reg.get("logs", [])
+
+        if not logs:
+            log_text = "📅 **DAILY LOGS**\n\n_No logs found in your vault._"
+        else:
+            recent_logs = logs[:5]
+            lines = []
+            for l in recent_logs:
+                mood = l.get("mood", "📝")
+                dt = f"{l.get('date', '')} {l.get('time', '')}".strip()
+                habits = l.get("habits", [])
+                h_str = f" ({len(habits)} habits)" if habits else ""
+                lines.append(f"• {mood} **{dt}**{h_str}")
+            log_text = "📅 **RECENT LOGS**\n\n" + "\n".join(lines)
+
         keyboard = [
-            [InlineKeyboardButton("🚀 Open", web_app={"url": f"{RENDER_EXTERNAL_URL}/app"})],
             [InlineKeyboardButton("◀️ Menu", callback_data="menu_main")]
         ]
         await query.edit_message_text(
-            text="📅 **Daily Logs**\n\nTrack your mood and completed daily habits inside the Mini App:",
+            text=log_text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
 
     elif data == "menu_tasks":
         keyboard = [
-            [InlineKeyboardButton("🚀 Open", web_app={"url": f"{RENDER_EXTERNAL_URL}/app"})],
             [InlineKeyboardButton("◀️ Menu", callback_data="menu_main")]
         ]
         await query.edit_message_text(
-            text="✅ **Tasks & Reminders**\n\nManage your checklist directly inside the Mini App:",
+            text="✅ **Tasks & Reminders**\n\nTasks can be managed directly via chat bot commands.",
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
