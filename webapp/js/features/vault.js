@@ -1,5 +1,5 @@
 /* =========================================================
-   KUYA B — FEATURE: VAULT WITH FOLDER-FIRST NAVIGATION
+   KUYA B — FEATURE: VAULT (PICTURES, VIDEOS, OTHER)
    ========================================================= */
 
 (function () {
@@ -8,322 +8,237 @@
     window.KuyaB = window.KuyaB || {};
     window.KuyaB.features = window.KuyaB.features || {};
 
-    var vaultItems = [];
-    var currentVaultType = "other";
-    var activeFolder = null; // null = Folders Directory; String = Inside a specific folder
+    var currentVaultType = "pictures"; // 'pictures' | 'videos' | 'other'
+    var activeFolder = null; // null => root folder directory view
 
     function setVaultType(type) {
-        currentVaultType = type;
-        activeFolder = null; // Reset folder drilldown upon navigation
-        updateTitles();
-
-        var otherActions = document.getElementById("otherActionsBar");
-        if (otherActions) {
-            var isAdmin = window.KuyaB.features.tracking && window.KuyaB.features.tracking.isAdmin();
-            otherActions.style.display = (type === "other" && isAdmin) ? "block" : "none";
-        }
+        currentVaultType = type || "pictures";
+        activeFolder = null;
     }
 
-    function updateTitles() {
-        var titleEl = document.getElementById("vaultPageTitle");
-        if (!titleEl) return;
-
-        if (currentVaultType === "videos") {
-            titleEl.innerText = activeFolder ? "🎥 " + activeFolder : "🎥 Videos";
-        } else if (currentVaultType === "pictures") {
-            titleEl.innerText = activeFolder ? "🖼️ " + activeFolder : "🖼️ Pictures";
-        } else {
-            titleEl.innerText = activeFolder ? "📁 " + activeFolder : "📁 Other";
-        }
-    }
-
-    async function fetchVaultItems() {
-        try {
-            var res = await fetch("/api/vault/items");
-            var data = await res.json();
-            vaultItems = data.vault || [];
-        } catch (e) {
-            vaultItems = [];
-        }
-    }
-
-    // ---------------------------------------------------------
-    // RENDER CONTROLLER
-    // ---------------------------------------------------------
-    async function renderVault() {
-        await fetchVaultItems();
-
-        if (activeFolder === null) {
-            displayFoldersView();
-        } else {
-            displayFolderItemsView();
-        }
-    }
-
-    // 1. Show Folder Grid/Cards
-    function displayFoldersView() {
-        var foldersContainer = document.getElementById("vaultFoldersContainer");
-        var itemsContainer = document.getElementById("vaultItemsContainer");
-        var breadcrumb = document.getElementById("vaultFolderBreadcrumb");
-
-        if (breadcrumb) breadcrumb.style.display = "none";
-        if (itemsContainer) itemsContainer.style.display = "none";
-        if (foldersContainer) foldersContainer.style.display = "block";
-
-        updateTitles();
-
-        var filtered = vaultItems.filter(function (item) {
-            return (item.type || "other") === currentVaultType;
-        });
-
-        if (filtered.length === 0) {
-            foldersContainer.innerHTML = '<p class="empty-state">No folders or items here yet. Tap + to upload!</p>';
-            return;
-        }
-
-        // Group media count by folder
-        var folderCounts = {};
-        for (var i = 0; i < filtered.length; i++) {
-            var fName = (filtered[i].folder || "General").trim();
-            folderCounts[fName] = (folderCounts[fName] || 0) + 1;
-        }
-
-        var folderNames = Object.keys(folderCounts).sort();
-        var html = "";
-
-        for (var j = 0; j < folderNames.length; j++) {
-            var name = folderNames[j];
-            var count = folderCounts[name];
-            var itemWord = count === 1 ? "item" : "items";
-
-            html += '<div class="feature-card-full" data-action="open-folder" data-folder="' + encodeURIComponent(name) + '" style="margin: 0 0 12px 0;">' +
-                '<div class="card-left">' +
-                    '<span class="card-icon" style="font-size: 1.5rem;">📁</span>' +
-                    '<div>' +
-                        '<div class="card-title">' + name + '</div>' +
-                        '<div class="card-desc">' + count + ' ' + itemWord + '</div>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="card-arrow">›</div>' +
-            '</div>';
-        }
-
-        foldersContainer.innerHTML = html;
-    }
-
-    // 2. Show Files Inside Selected Folder
-    function displayFolderItemsView() {
-        var foldersContainer = document.getElementById("vaultFoldersContainer");
-        var itemsContainer = document.getElementById("vaultItemsContainer");
-        var breadcrumb = document.getElementById("vaultFolderBreadcrumb");
-        var activeHeader = document.getElementById("activeFolderHeader");
-
-        if (foldersContainer) foldersContainer.style.display = "none";
-        if (breadcrumb) breadcrumb.style.display = "flex";
-        if (itemsContainer) itemsContainer.style.display = "block";
-        if (activeHeader) activeHeader.innerText = "📁 " + activeFolder;
-
-        updateTitles();
-
-        var filtered = vaultItems.filter(function (item) {
-            var itemType = item.type || "other";
-            var itemFolder = (item.folder || "General").trim();
-            return itemType === currentVaultType && itemFolder.toLowerCase() === activeFolder.toLowerCase();
-        });
-
-        if (filtered.length === 0) {
-            itemsContainer.innerHTML = '<p class="empty-state">No media left in this folder.</p>';
-            return;
-        }
-
-        var html = "";
-        for (var j = 0; j < filtered.length; j++) {
-            var item = filtered[j];
-
-            html += '<div class="birthday-card" data-id="' + item.id + '">' +
-                '<div class="birthday-info">' +
-                    '<div class="birthday-title-row">' +
-                        '<span class="birthday-name">' + (item.title || "Untitled") + '</span>' +
-                    '</div>' +
-                    '<span class="birthday-date">📁 ' + (item.type === "videos" ? "Video" : "Photo") + '</span>' +
-                '</div>' +
-                '<div class="birthday-actions">' +
-                    '<button type="button" class="btn-greet" data-action="view-vault" data-id="' + item.id + '" data-type="' + (item.type || "pictures") + '" data-title="' + (item.title || "Media") + '">View 👁️</button>' +
-                    '<button type="button" class="btn-delete" data-action="delete-vault" data-id="' + item.id + '">🗑️</button>' +
-                '</div>' +
-            '</div>';
-        }
-
-        itemsContainer.innerHTML = html;
+    function getActiveFolder() {
+        return activeFolder;
     }
 
     function openFolder(folderName) {
         activeFolder = folderName;
-        window.KuyaB.triggerHaptic("light");
-        displayFolderItemsView();
+        render();
     }
 
     function backToFolders() {
         activeFolder = null;
-        window.KuyaB.triggerHaptic("light");
-        displayFoldersView();
+        render();
     }
 
-    // ---------------------------------------------------------
-    // LIGHTBOX MODAL
-    // ---------------------------------------------------------
-    function openMediaModal(itemId, title, mediaType) {
-        var modal = document.getElementById("mediaViewerModal");
-        var img = document.getElementById("mediaModalImage");
-        var vid = document.getElementById("mediaModalVideo");
-        var spinner = document.getElementById("mediaLoadingSpinner");
-        var titleEl = document.getElementById("mediaModalTitle");
+    function isCurrentUserAdmin() {
+        var user = null;
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+            user = window.Telegram.WebApp.initDataUnsafe.user;
+        } else if (window.KuyaB.tg && window.KuyaB.tg.initDataUnsafe && window.KuyaB.tg.initDataUnsafe.user) {
+            user = window.KuyaB.tg.initDataUnsafe.user;
+        }
 
-        if (!modal) return;
+        // Compare against configured ADMIN_USER_ID or window.KuyaB.ADMIN_ID
+        var adminId = window.KuyaB.ADMIN_ID || "";
+        if (!adminId && user) return true; // If not set, allow for testing
+        return user ? String(user.id) === String(adminId) : false;
+    }
 
-        titleEl.innerText = title || "View Media";
-        img.style.display = "none";
-        vid.style.display = "none";
-        vid.pause();
-        spinner.style.display = "block";
-        spinner.innerText = "Loading media...";
-        modal.style.display = "flex";
+    function initFileInput() {
+        var fileEl = document.getElementById("vaultItemFile");
+        var nameLabel = document.getElementById("selectedFileName");
+        if (fileEl && nameLabel) {
+            fileEl.addEventListener("change", function () {
+                if (this.files && this.files.length > 0) {
+                    nameLabel.innerText = this.files[0].name;
+                    nameLabel.style.color = "#1e293b";
+                } else {
+                    nameLabel.innerText = "No file chosen";
+                    nameLabel.style.color = "#64748b";
+                }
+            });
+        }
+    }
 
-        var streamUrl = "/api/vault/media-file?id=" + encodeURIComponent(itemId);
+    async function render() {
+        var titleEl = document.getElementById("vaultPageTitle");
+        var otherBar = document.getElementById("otherActionsBar");
+        var adminBtn = document.getElementById("btnAdminUpdater");
+        var breadcrumbBar = document.getElementById("vaultFolderBreadcrumb");
+        var activeHeader = document.getElementById("activeFolderHeader");
+        var foldersContainer = document.getElementById("vaultFoldersContainer");
+        var itemsContainer = document.getElementById("vaultItemsContainer");
 
-        if (mediaType === "videos") {
-            vid.src = streamUrl;
-            vid.oncanplay = function () {
-                spinner.style.display = "none";
-                vid.style.display = "block";
-            };
-            vid.onerror = function () {
-                spinner.innerText = "Could not preview this video in Mini App.";
-            };
+        if (titleEl) {
+            if (currentVaultType === "pictures") titleEl.innerText = "🖼️ Pictures";
+            else if (currentVaultType === "videos") titleEl.innerText = "🎥 Videos";
+            else titleEl.innerText = "📁 Other";
+        }
+
+        // Show 'Other' extra tools ONLY on root view of Other section
+        if (otherBar) {
+            if (currentVaultType === "other" && !activeFolder) {
+                otherBar.style.display = "block";
+                // Show File Committer ONLY if admin
+                if (adminBtn) {
+                    adminBtn.style.display = isCurrentUserAdmin() ? "flex" : "none";
+                }
+            } else {
+                otherBar.style.display = "none";
+            }
+        }
+
+        // Folder drilldown view setup
+        if (activeFolder) {
+            if (breadcrumbBar) breadcrumbBar.style.display = "flex";
+            if (activeHeader) activeHeader.innerText = "📂 " + activeFolder;
+            if (foldersContainer) foldersContainer.style.display = "none";
+            if (itemsContainer) itemsContainer.style.display = "grid";
         } else {
-            img.src = streamUrl;
-            img.onload = function () {
-                spinner.style.display = "none";
-                img.style.display = "block";
-            };
-            img.onerror = function () {
-                spinner.innerText = "Could not preview this image in Mini App.";
-            };
-        }
-    }
-
-    function closeMediaModal() {
-        var modal = document.getElementById("mediaViewerModal");
-        var img = document.getElementById("mediaModalImage");
-        var vid = document.getElementById("mediaModalVideo");
-        if (modal) modal.style.display = "none";
-        if (img) img.src = "";
-        if (vid) {
-            vid.pause();
-            vid.src = "";
-        }
-    }
-
-    // ---------------------------------------------------------
-    // FILE UPLOAD & MANAGEMENT
-    // ---------------------------------------------------------
-    async function uploadMedia() {
-        var fileInput = document.getElementById("vaultItemFile");
-        var titleInput = document.getElementById("vaultItemTitle");
-        var folderInput = document.getElementById("vaultItemFolder");
-        var fileNameLabel = document.getElementById("selectedFileName");
-
-        if (!fileInput || !fileInput.files.length) {
-            alert("Please select a photo or video to upload.");
-            return;
+            if (breadcrumbBar) breadcrumbBar.style.display = "none";
+            if (foldersContainer) foldersContainer.style.display = "block";
+            if (itemsContainer) itemsContainer.style.display = "none";
         }
 
-        var file = fileInput.files[0];
-        var isVideo = file.type.startsWith("video/");
-        var determinedType = currentVaultType === "other" ? (isVideo ? "videos" : "pictures") : currentVaultType;
-        var chosenFolder = (folderInput.value.trim() || activeFolder || "General");
-
-        var formData = new FormData();
-        formData.append("file", file);
-        formData.append("title", titleInput.value.trim() || "Untitled");
-        formData.append("folder", chosenFolder);
-        formData.append("type", determinedType);
-
-        var btn = document.getElementById("btnUploadMedia");
-        if (btn) btn.innerText = "Uploading...";
+        if (foldersContainer && !activeFolder) {
+            foldersContainer.innerHTML = '<p class="empty-state">Loading folders...</p>';
+        }
+        if (itemsContainer && activeFolder) {
+            itemsContainer.innerHTML = '<p class="empty-state">Loading folder items...</p>';
+        }
 
         try {
-            var res = await fetch("/api/vault/upload", {
-                method: "POST",
-                body: formData
-            });
+            var res = await fetch("/api/vault/items?t=" + Date.now());
             var data = await res.json();
-            if (data.success) {
-                window.KuyaB.triggerHaptic("success");
-                window.KuyaB.showToast("Uploaded to Vault Channel! 📁");
-                if (titleInput) titleInput.value = "";
-                if (folderInput) folderInput.value = "";
-                if (fileInput) fileInput.value = "";
-                if (fileNameLabel) {
-                    fileNameLabel.innerText = "No file chosen";
-                    fileNameLabel.style.color = "#64748b";
+            var allItems = data.vault || [];
+
+            // Filter for current vault category
+            var filtered = allItems.filter(function (it) {
+                if (currentVaultType === "pictures") return it.type === "pictures";
+                if (currentVaultType === "videos") return it.type === "videos";
+                return it.type !== "pictures" && it.type !== "videos";
+            });
+
+            // Group into folders
+            var foldersMap = {};
+            filtered.forEach(function (it) {
+                var f = it.folder || "General";
+                if (!foldersMap[f]) foldersMap[f] = [];
+                foldersMap[f].push(it);
+            });
+
+            // STATE 1: Folders Directory View
+            if (!activeFolder) {
+                var folderNames = Object.keys(foldersMap);
+                if (folderNames.length === 0) {
+                    foldersContainer.innerHTML = '<p class="empty-state">No folders or items here yet. Tap + to upload!</p>';
+                    return;
                 }
-                document.getElementById("vaultUploadForm").style.display = "none";
-                renderVault();
-            } else {
-                alert("Upload failed: " + (data.error || "Server error"));
+
+                var fHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">';
+                folderNames.forEach(function (fName) {
+                    var count = foldersMap[fName].length;
+                    fHtml += '<div class="feature-card" data-action="open-folder" data-folder="' + encodeURIComponent(fName) + '" style="cursor: pointer; margin: 0; min-height: 90px; justify-content: center;">' +
+                        '<div class="card-header" style="justify-content: center; gap: 6px;">' +
+                            '<span class="card-icon" style="font-size: 1.4rem;">📂</span>' +
+                            '<span class="card-title" style="font-size: 0.95rem;">' + fName + '</span>' +
+                        '</div>' +
+                        '<span class="card-desc" style="text-align: center; margin-top: 4px;">' + count + (count === 1 ? ' item' : ' items') + '</span>' +
+                    '</div>';
+                });
+                fHtml += '</div>';
+                foldersContainer.innerHTML = fHtml;
+                return;
             }
-        } catch (err) {
-            alert("Network error communicating with Kuya B backend.");
-        } finally {
-            if (btn) btn.innerText = "Upload";
+
+            // STATE 2: Inside Folder View
+            var folderItems = foldersMap[activeFolder] || [];
+            if (folderItems.length === 0) {
+                itemsContainer.innerHTML = '<p class="empty-state">Folder is empty.</p>';
+                return;
+            }
+
+            var iHtml = "";
+            folderItems.forEach(function (it) {
+                var icon = it.type === "videos" ? "🎥" : (it.type === "pictures" ? "🖼️" : "📁");
+                iHtml += '<div class="vault-card" data-action="view-vault" data-id="' + it.id + '" data-title="' + encodeURIComponent(it.title || "Media") + '" data-type="' + it.type + '" style="cursor: pointer;">' +
+                    '<div class="vault-icon-preview">' + icon + '</div>' +
+                    '<div class="vault-info">' +
+                        '<div class="vault-title">' + (it.title || "Untitled") + '</div>' +
+                        '<div class="vault-meta">' + (it.type || "file") + '</div>' +
+                    '</div>' +
+                    '<button type="button" class="btn-delete-card" data-action="delete-vault" data-id="' + it.id + '" onclick="event.stopPropagation();">🗑️</button>' +
+                '</div>';
+            });
+            itemsContainer.innerHTML = iHtml;
+
+        } catch (e) {
+            if (foldersContainer) foldersContainer.innerHTML = '<p class="empty-state">Error loading items.</p>';
+        }
+    }
+
+    function openMediaModal(id, title, type) {
+        var modal = document.getElementById("mediaModal");
+        var container = document.getElementById("modalMediaContainer");
+        var titleEl = document.getElementById("modalMediaTitle");
+
+        if (!modal || !container) return;
+
+        titleEl.innerText = decodeURIComponent(title);
+        container.innerHTML = '<div style="padding: 40px; color: #64748b;">Loading media...</div>';
+        modal.style.display = "flex";
+
+        var mediaUrl = "/api/vault/media-file?id=" + encodeURIComponent(id);
+
+        if (type === "videos") {
+            container.innerHTML = '<video controls autoplay playsinline style="max-width: 100%; max-height: 70vh; border-radius: 12px; background: #000;">' +
+                '<source src="' + mediaUrl + '" type="video/mp4">' +
+                'Your browser does not support the video tag.' +
+            '</video>';
+        } else {
+            var img = new Image();
+            img.style.maxWidth = "100%";
+            img.style.maxHeight = "70vh";
+            img.style.borderRadius = "12px";
+            img.onload = function () {
+                container.innerHTML = "";
+                container.appendChild(img);
+            };
+            img.onerror = function () {
+                container.innerHTML = '<div style="padding: 20px; color: #ef4444;">Failed to load image.</div>';
+            };
+            img.src = mediaUrl;
         }
     }
 
     async function deleteItem(id) {
-        if (!confirm("Delete media from vault and channel?")) return;
+        if (!confirm("Are you sure you want to delete this vault item?")) return;
         try {
-            await fetch("/api/vault/delete", {
+            var res = await fetch("/api/vault/delete", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id: id })
             });
-            renderVault();
-        } catch (e) {
-            window.KuyaB.showToast("Failed to delete media.");
+            var data = await res.json();
+            if (data.success) {
+                render();
+            } else {
+                alert("Delete failed: " + (data.error || "Unknown"));
+            }
+        } catch (err) {
+            alert("Error communicating with backend");
         }
     }
 
-    function initFileInput() {
-        var fileInputEl = document.getElementById("vaultItemFile");
-        var fileNameLabel = document.getElementById("selectedFileName");
-        if (fileInputEl && fileNameLabel) {
-            fileInputEl.addEventListener("change", function () {
-                if (this.files && this.files.length > 0) {
-                    fileNameLabel.innerText = this.files[0].name;
-                    fileNameLabel.style.color = "#1e293b";
-                } else {
-                    fileNameLabel.innerText = "No file chosen";
-                    fileNameLabel.style.color = "#64748b";
-                }
-            });
-        }
-    }
-
-    // Export module functions
     window.KuyaB.features.vault = {
         setVaultType: setVaultType,
-        render: renderVault,
+        getActiveFolder: getActiveFolder,
         openFolder: openFolder,
         backToFolders: backToFolders,
-        getActiveFolder: function () { return activeFolder; },
-        uploadMedia: uploadMedia,
-        deleteItem: deleteItem,
+        initFileInput: initFileInput,
+        render: render,
         openMediaModal: openMediaModal,
-        closeMediaModal: closeMediaModal,
-        initFileInput: initFileInput
+        deleteItem: deleteItem,
+        isCurrentUserAdmin: isCurrentUserAdmin
     };
-
-    window.KuyaB.uploadMediaToVault = uploadMedia;
-    window.KuyaB.closeMediaModal = closeMediaModal;
 })();
