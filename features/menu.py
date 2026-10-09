@@ -1,9 +1,13 @@
+import os
+import json
 import logging
+from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
-# Modular delegation to Birthday feature
 from features.BirthDay.Birthdays import render_birthdays_table
+
+RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 
 
 def get_main_menu_keyboard():
@@ -45,12 +49,12 @@ async def render_birthdays_menu(update: Update, context: ContextTypes.DEFAULT_TY
     reg, _ = await get_or_create_registry()
     birthdays = reg.get("birthdays", [])
 
-    # Delegated table formatting to Birthdays.py
     bday_text = render_birthdays_table(birthdays)
+    add_app_url = f"{RENDER_EXTERNAL_URL}/app?start=add_bday"
 
     keyboard = [
         [
-            InlineKeyboardButton("➕ Add", callback_data="bday_add_prompt"),
+            InlineKeyboardButton("➕ Add", web_app={"url": add_app_url}),
             InlineKeyboardButton("🗑️ Remove", callback_data="bday_remove_menu"),
         ],
         [
@@ -125,21 +129,6 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
 
     elif data == "menu_birthdays":
         await render_birthdays_menu(update, context)
-
-    elif data == "bday_add_prompt":
-        prompt_text = (
-            "➕ **To Add a Birthday:**\n\n"
-            "Reply in this chat using `/bday Name MM-DD`\n"
-            "Example: `/bday Maria 10-25`"
-        )
-        keyboard = [
-            [InlineKeyboardButton("◀️ Back", callback_data="menu_birthdays")]
-        ]
-        await query.edit_message_text(
-            text=prompt_text,
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown"
-        )
 
     elif data == "bday_remove_menu":
         await render_remove_birthday_menu(update, context)
