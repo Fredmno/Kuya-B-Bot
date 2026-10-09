@@ -8,6 +8,7 @@
     var router = window.KuyaB.router;
     var features = window.KuyaB.features;
 
+    // --- Dynamic file label for Add Content ---
     function initAddContentInput() {
         var fileEl = document.getElementById("newContentFile");
         var nameLabel = document.getElementById("newContentFileName");
@@ -24,6 +25,7 @@
         }
     }
 
+    // --- Standalone Add Content submission handler ---
     window.KuyaB.submitNewContent = async function () {
         var fileInput = document.getElementById("newContentFile");
         var titleInput = document.getElementById("newContentTitle");
@@ -83,6 +85,57 @@
         }
     };
 
+    // --- Dynamic Repository Tree Loader ---
+    window.KuyaB.loadRepoTree = async function () {
+        var select = document.getElementById("quickFileSelect");
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Scanning repository... --</option>';
+
+        try {
+            var res = await fetch("/api/admin/repo-tree?t=" + Date.now());
+            var data = await res.json();
+            if (data.success && data.files) {
+                var html = '<option value="">-- Select File to Edit or Type Below --</option>';
+                data.files.forEach(function (filePath) {
+                    html += '<option value="' + filePath + '">' + filePath + '</option>';
+                });
+                select.innerHTML = html;
+            } else {
+                select.innerHTML = '<option value="">-- Failed to load files --</option>';
+            }
+        } catch (err) {
+            select.innerHTML = '<option value="">-- Error fetching files --</option>';
+        }
+    };
+
+    // --- Live File Content Loader ---
+    window.KuyaB.onSelectRepoFile = async function (filePath) {
+        var pathInput = document.getElementById("commitFilePath");
+        var contentInput = document.getElementById("commitContentInput");
+        var statusLabel = document.getElementById("fileLoadStatus");
+
+        if (pathInput) pathInput.value = filePath;
+        if (!filePath) return;
+
+        if (statusLabel) statusLabel.innerText = "Fetching current code...";
+        try {
+            var res = await fetch("/api/admin/get-file?path=" + encodeURIComponent(filePath) + "&t=" + Date.now());
+            var data = await res.json();
+            if (data.success && contentInput) {
+                contentInput.value = data.content;
+                if (statusLabel) statusLabel.innerText = "Loaded latest!";
+            } else {
+                if (statusLabel) statusLabel.innerText = "Blank / New File";
+            }
+        } catch (e) {
+            if (statusLabel) statusLabel.innerText = "Could not load content";
+        }
+        setTimeout(function () {
+            if (statusLabel) statusLabel.innerText = "";
+        }, 3000);
+    };
+
+    // --- GitHub Committer Submission ---
     window.KuyaB.submitFileCommit = async function () {
         var pathInput = document.getElementById("commitFilePath");
         var msgInput = document.getElementById("commitMsgInput");
@@ -220,7 +273,7 @@
             if (target.closest("#btnAdminUpdater")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
-                router.showPage("adminUpdaterPage");
+                router.showPage("adminUpdaterPage", window.KuyaB.loadRepoTree);
                 return;
             }
 
@@ -383,7 +436,6 @@
     }
 
     function init() {
-        // Initialize Telegram WebApp explicitly first
         if (window.Telegram && window.Telegram.WebApp) {
             window.KuyaB.tg = window.Telegram.WebApp;
             window.KuyaB.tg.ready();
@@ -394,7 +446,6 @@
         initAddContentInput();
         attachGlobalEvents();
 
-        // Trigger tracking visit count
         if (features.tracking) {
             features.tracking.track();
         }
@@ -434,7 +485,7 @@
             features.vault.setVaultType(startSection);
             router.showPage("vaultPage", features.vault.render);
         } else if (startSection === "admin_updater") {
-            router.showPage("adminUpdaterPage");
+            router.showPage("adminUpdaterPage", window.KuyaB.loadRepoTree);
         } else {
             router.showDashboard();
         }
