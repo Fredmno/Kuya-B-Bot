@@ -14,10 +14,10 @@ def get_main_menu_keyboard():
     keyboard = [
         [
             InlineKeyboardButton("🎂 Birthdays", callback_data="menu_birthdays"),
-            InlineKeyboardButton("📅 Logs", callback_data="menu_daily_logs"),
+            InlineKeyboardButton("🖼️ Pics", callback_data="menu_pics"),
         ],
         [
-            InlineKeyboardButton("✅ Tasks", callback_data="menu_tasks"),
+            InlineKeyboardButton("🎥 Vids", callback_data="menu_vids"),
             InlineKeyboardButton("🎮 Play", callback_data="menu_game"),
         ],
         [
@@ -103,6 +103,41 @@ async def render_remove_birthday_menu(update: Update, context: ContextTypes.DEFA
     )
 
 
+async def render_vault_media_menu(update: Update, media_type: str):
+    """Renders vault media list (pictures or videos) in chat."""
+    query = update.callback_query
+
+    from bot import get_or_create_registry
+    reg, _ = await get_or_create_registry()
+    
+    # Filter vault items by media type
+    vault_items = [v for v in reg.get("vault", []) if v.get("type") == media_type]
+    
+    icon = "🖼️" if media_type == "pictures" else "🎥"
+    title = "PICS" if media_type == "pictures" else "VIDS"
+
+    if not vault_items:
+        text = f"{icon} **VAULT {title}**\n\n_No {media_type} saved in your vault yet._"
+    else:
+        lines = []
+        for item in vault_items[:8]:
+            item_title = item.get("title", "Untitled")
+            folder = item.get("folder", "General")
+            msg_id = item.get("messageId", "—")
+            lines.append(f"• **{item_title}** `[{folder}]` (ID: `{msg_id}`)")
+        text = f"{icon} **VAULT {title}**\n\n" + "\n".join(lines)
+
+    keyboard = [
+        [InlineKeyboardButton("◀️ Menu", callback_data="menu_main")]
+    ]
+
+    await query.edit_message_text(
+        text=text,
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="Markdown"
+    )
+
+
 async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Global callback query router for chat inline buttons."""
     query = update.callback_query
@@ -149,42 +184,11 @@ async def menu_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
 
         await render_birthdays_menu(update, context)
 
-    elif data == "menu_daily_logs":
-        from bot import get_or_create_registry
-        reg, _ = await get_or_create_registry()
-        logs = reg.get("logs", [])
+    elif data == "menu_pics":
+        await render_vault_media_menu(update, "pictures")
 
-        if not logs:
-            log_text = "📅 **DAILY LOGS**\n\n_No logs found in your vault._"
-        else:
-            recent_logs = logs[:5]
-            lines = []
-            for l in recent_logs:
-                mood = l.get("mood", "📝")
-                dt = f"{l.get('date', '')} {l.get('time', '')}".strip()
-                habits = l.get("habits", [])
-                h_str = f" ({len(habits)} habits)" if habits else ""
-                lines.append(f"• {mood} **{dt}**{h_str}")
-            log_text = "📅 **RECENT LOGS**\n\n" + "\n".join(lines)
-
-        keyboard = [
-            [InlineKeyboardButton("◀️ Menu", callback_data="menu_main")]
-        ]
-        await query.edit_message_text(
-            text=log_text,
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown"
-        )
-
-    elif data == "menu_tasks":
-        keyboard = [
-            [InlineKeyboardButton("◀️ Menu", callback_data="menu_main")]
-        ]
-        await query.edit_message_text(
-            text="✅ **Tasks & Reminders**\n\nTasks can be managed directly via chat bot commands.",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown"
-        )
+    elif data == "menu_vids":
+        await render_vault_media_menu(update, "videos")
 
     elif data == "menu_game":
         keyboard = [[InlineKeyboardButton("◀️ Menu", callback_data="menu_main")]]
