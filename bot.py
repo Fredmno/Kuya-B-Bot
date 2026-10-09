@@ -22,30 +22,6 @@ from telegram.ext import (
     ContextTypes,
 )
 
-from database import init_db
-from features.word_game import register_word_game_handlers
-from features.menu import kuya_b_menu, menu_callback_handler
-from features.business.assistant import handle_business_message
-
-# Clean modular imports
-from features.BirthDay.Birthdays import (
-    api_get_birthdays,
-    api_add_birthday,
-    api_delete_birthday,
-    api_edit_birthday,
-    check_and_send_daily_birthday_greetings,
-    command_add_birthday,
-)
-from features.daily_logs.daily_logs import (
-    api_get_daily_logs,
-    api_save_daily_log,
-    api_delete_daily_log,
-)
-from features.tracking.tracking import (
-    api_track_user,
-    api_get_users,
-)
-
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
@@ -62,7 +38,7 @@ ADMIN_USER_ID = os.getenv("ADMIN_USER_ID")
 WEBHOOK_PATH = "/telegram"
 WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
 
-# Application instance initialization
+# 1. Initialize application instance
 application = Application.builder().token(BOT_TOKEN).build()
 
 
@@ -121,6 +97,33 @@ async def save_registry(registry_data, existing_msg_id=None):
         await application.bot.pin_chat_message(chat_id=channel_id, message_id=msg.message_id)
     except Exception as e:
         logging.warning(f"Could not pin registry: {e}")
+
+
+# ---------------------------------------------------------
+# IMPORT FEATURE MODULES (AFTER application & registry ARE DEFINED)
+# ---------------------------------------------------------
+from database import init_db
+from features.word_game import register_word_game_handlers
+from features.menu import kuya_b_menu, menu_callback_handler
+from features.business.assistant import handle_business_message
+
+from features.BirthDay.Birthdays import (
+    api_get_birthdays,
+    api_add_birthday,
+    api_delete_birthday,
+    api_edit_birthday,
+    check_and_send_daily_birthday_greetings,
+    command_add_birthday,
+)
+from features.daily_logs.daily_logs import (
+    api_get_daily_logs,
+    api_save_daily_log,
+    api_delete_daily_log,
+)
+from features.tracking.tracking import (
+    api_track_user,
+    api_get_users,
+)
 
 
 # ---------------------------------------------------------
@@ -241,10 +244,23 @@ async def lifespan(app):
 
     await application.initialize()
 
-    # Explicitly register all update types to enable Telegram Business messages
+    # Explicit list of allowed updates to ensure business messages are routed
+    allowed_updates_list = [
+        "message",
+        "edited_message",
+        "callback_query",
+        "inline_query",
+        "chosen_inline_result",
+        "business_connection",
+        "business_message",
+        "edited_business_message",
+        "deleted_business_messages",
+    ]
+
     await application.bot.set_webhook(
         url=WEBHOOK_URL,
-        allowed_updates=Update.ALL_TYPES
+        allowed_updates=allowed_updates_list,
+        drop_pending_updates=False
     )
 
     # Schedule Daily Morning Bulletin at 9:00 AM (Asia/Manila)
