@@ -120,3 +120,42 @@ async def api_delete_birthday(request: Request):
     except Exception as e:
         logging.error(f"Error deleting birthday from vault: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+import os
+import logging
+from datetime import datetime
+from telegram.ext import ContextTypes
+
+async def check_and_send_daily_birthday_greetings(context: ContextTypes.DEFAULT_TYPE):
+    group_chat_id = os.getenv("GROUP_CHAT_ID")
+    if not group_chat_id:
+        logging.warning("GROUP_CHAT_ID is not configured. Skipping daily greeting.")
+        return
+
+    try:
+        from bot import get_or_create_registry
+        reg, _ = await get_or_create_registry()
+        birthdays = reg.get("birthdays", [])
+
+        # Match MM-DD format (e.g., "10-09")
+        today_str = datetime.now().strftime("%m-%d")
+
+        celebrants = [b["name"] for b in birthdays if b.get("date") == today_str]
+
+        if celebrants:
+            names = ", ".join(celebrants)
+            greeting_msg = (
+                f"🎉🎂 **HAPPY BIRTHDAY TO {names.upper()}!** 🎂🎉\n\n"
+                f"Wishing you a wonderful day filled with joy, good health, and blessings! 🥳✨\n\n"
+                f"— *Kuya B Hub*"
+            )
+
+            await context.bot.send_message(
+                chat_id=int(group_chat_id) if group_chat_id.startswith("-") or group_chat_id.isdigit() else group_chat_id,
+                text=greeting_msg,
+                parse_mode="Markdown"
+            )
+            logging.info(f"Sent automatic birthday greeting for: {names}")
+    except Exception as e:
+        logging.error(f"Error in automatic daily birthday check: {e}", exc_info=True)
