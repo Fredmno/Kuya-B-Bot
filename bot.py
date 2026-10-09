@@ -1,4 +1,4 @@
- import os
+import os
 import logging
 from datetime import time
 from zoneinfo import ZoneInfo
@@ -223,7 +223,7 @@ starlette_app = Starlette(
         Route("/api/track-user", api_track_user, methods=["POST"]),
         Route("/api/users", api_get_users, methods=["GET"]),
 
-        # Vault Media (Modular)
+        # Vault Media
         Route("/api/vault/items", api_get_vault_items, methods=["GET"]),
         Route("/api/vault/upload", api_upload_vault_media, methods=["POST"]),
         Route("/api/vault/media-file", api_get_vault_media_file, methods=["GET"]),
