@@ -8,7 +8,7 @@
     var router = window.KuyaB.router;
     var features = window.KuyaB.features;
 
-    // --- Dynamic file inputs listener for Add Content ---
+    // Dynamic file label for the standalone Add Content page
     function initAddContentInput() {
         var fileEl = document.getElementById("newContentFile");
         var nameLabel = document.getElementById("newContentFileName");
@@ -25,7 +25,7 @@
         }
     }
 
-    // --- Standalone Add Content submission handler ---
+    // Standalone Add Content upload handler
     window.KuyaB.submitNewContent = async function () {
         var fileInput = document.getElementById("newContentFile");
         var titleInput = document.getElementById("newContentTitle");
@@ -85,7 +85,7 @@
         }
     };
 
-    // --- Admin GitHub File Committer ---
+    // GitHub automated file commit handler
     window.KuyaB.submitFileCommit = async function () {
         var pathInput = document.getElementById("commitFilePath");
         var msgInput = document.getElementById("commitMsgInput");
@@ -219,7 +219,22 @@
                 return;
             }
 
-            // 5. User Tracking View
+            // 5. Admin File Committer Navigation
+            if (target.closest("#btnAdminUpdater")) {
+                e.preventDefault();
+                window.KuyaB.triggerHaptic("light");
+                router.showPage("adminUpdaterPage");
+                return;
+            }
+
+            if (target.closest("#adminUpdaterBackButton, #cancelAdminUpdaterButton")) {
+                e.preventDefault();
+                window.KuyaB.triggerHaptic("light");
+                router.showDashboard();
+                return;
+            }
+
+            // 6. User Tracking View
             if (target.closest("#btnOpenUserTracking")) {
                 e.preventDefault();
                 if (features.tracking && features.tracking.isAdmin()) {
@@ -236,7 +251,7 @@
                 return;
             }
 
-            // 6. Vault Media Lightbox & Inline Upload Form
+            // 7. Vault Media Lightbox & Inline Upload Form
             var vaultView = target.closest('[data-action="view-vault"]');
             if (vaultView) {
                 e.preventDefault();
@@ -265,7 +280,7 @@
                 return;
             }
 
-            // 7. Tasks Actions
+            // 8. Tasks Actions
             if (target.closest("#addTaskButton")) {
                 e.preventDefault();
                 var tf = document.getElementById("taskForm");
@@ -296,7 +311,7 @@
                 return;
             }
 
-            // 8. Reminders Actions
+            // 9. Reminders Actions
             if (target.closest("#addReminderButton")) {
                 e.preventDefault();
                 var rf = document.getElementById("reminderForm");
@@ -321,7 +336,7 @@
                 return;
             }
 
-            // 9. Birthdays Actions
+            // 10. Birthdays Actions
             if (target.closest("#addBirthdayButton")) {
                 e.preventDefault();
                 var bf = document.getElementById("birthdayForm");
@@ -352,7 +367,7 @@
                 return;
             }
 
-            // 10. Daily Logs Open
+            // 11. Daily Logs Open
             if (target.closest("#addLogButton")) {
                 e.preventDefault();
                 var lf = document.getElementById("logForm");
@@ -360,7 +375,7 @@
                 return;
             }
 
-            // 11. Word Game
+            // 12. Word Game
             if (target.closest("#gameButton")) {
                 e.preventDefault();
                 window.KuyaB.triggerHaptic("light");
