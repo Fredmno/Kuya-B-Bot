@@ -12,6 +12,7 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse, JSONResponse, HTMLResponse
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
+from starlette.datastructures import UploadFile
 
 from telegram import Update, BotCommand, BotCommandScopeDefault
 from telegram.ext import (
@@ -28,7 +29,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.8.9"
+APP_VERSION = "2.9.0"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -56,18 +57,21 @@ def get_vault_chat_id():
 async def get_or_create_registry():
     channel_id = get_vault_chat_id()
     if not channel_id:
-        return {"logs": [], "birthdays": [], "users": []}, None
+        return {"logs": [], "birthdays": [], "vault": [], "users": []}, None
 
     try:
         chat = await application.bot.get_chat(chat_id=channel_id)
         if chat.pinned_message and "#KUYA_B_REGISTRY" in (chat.pinned_message.text or ""):
             raw_match = re.search(r"#KUYA_B_REGISTRY:(\{.*\})", chat.pinned_message.text)
             if raw_match:
-                return json.loads(raw_match.group(1)), chat.pinned_message.message_id
+                data = json.loads(raw_match.group(1))
+                if "vault" not in data:
+                    data["vault"] = []
+                return data, chat.pinned_message.message_id
     except Exception as e:
         logging.warning(f"Error fetching pinned registry: {e}")
 
-    return {"logs": [], "birthdays": [], "users": []}, None
+    return {"logs": [], "birthdays": [], "vault": [], "users": []}, None
 
 
 async def save_registry(registry_data, existing_msg_id=None):
@@ -167,8 +171,92 @@ async def serve_index(request: Request):
 
 
 # ---------------------------------------------------------
-# VAULT ITEM FORWARDING & UTILITY APIS
+# VAULT ITEM FORWARDING & FILE UPLOAD ROUTINES
 # ---------------------------------------------------------
+async def api_upload_vault_media(request: Request):
+    """Receives file upload from Mini App and forwards to Vault Channel."""
+    try:
+        form = await request.form()
+        file: UploadFile = form.get("file")
+        title = form.get("title", "Untitled").strip() or "Untitled"
+        folder = form.get("folder", "General").strip() or "General"
+        media_type = form.get("type", "pictures").strip()
+
+        if not file:
+            return JSONResponse({"error": "No file uploaded"}, status_code=400)
+
+        channel_id = get_vault_chat_id()
+        if not channel_id:
+            return JSONResponse({"error": "VAULT_CHANNEL_ID not configured"}, status_code=500)
+
+        file_bytes = await file.read()
+        caption = f"📁 **VAULT MEDIA**\n🏷️ **Title:** {title}\n📂 **Folder:** #{folder}"
+
+        if media_type == "pictures":
+            sent = await application.bot.send_photo(
+                chat_id=channel_id,
+                photo=file_bytes,
+                caption=caption,
+                parse_mode="Markdown"
+            )
+        else:
+            sent = await application.bot.send_video(
+                chat_id=channel_id,
+                video=file_bytes,
+                caption=caption,
+                parse_mode="Markdown"
+            )
+
+        raw_channel_id = str(channel_id).replace("-100", "")
+        t_me_link = f"https://t.me/c/{raw_channel_id}/{sent.message_id}"
+
+        reg, p_id = await get_or_create_registry()
+        vault_list = reg.get("vault", [])
+        entry = {
+            "id": str(sent.message_id),
+            "type": media_type,
+            "title": title,
+            "folder": folder,
+            "messageId": str(sent.message_id),
+            "link": t_me_link
+        }
+        vault_list.append(entry)
+        reg["vault"] = vault_list
+        await save_registry(reg, p_id)
+
+        return JSONResponse({"success": True, "item": entry})
+    except Exception as e:
+        logging.error(f"Error handling media upload to vault: {e}", exc_info=True)
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def api_get_vault_items(request: Request):
+    """Retrieves vault items from registry."""
+    reg, _ = await get_or_create_registry()
+    return JSONResponse({"success": True, "vault": reg.get("vault", [])})
+
+
+async def api_delete_vault_item(request: Request):
+    """Deletes an item from the vault registry and telegram channel."""
+    try:
+        data = await request.json()
+        item_id = str(data.get("id"))
+        channel_id = get_vault_chat_id()
+
+        try:
+            await application.bot.delete_message(chat_id=channel_id, message_id=int(item_id))
+        except Exception as e:
+            logging.warning(f"Could not delete channel message {item_id}: {e}")
+
+        reg, p_id = await get_or_create_registry()
+        reg["vault"] = [v for v in reg.get("vault", []) if str(v.get("id")) != item_id]
+        await save_registry(reg, p_id)
+
+        return JSONResponse({"success": True})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 async def api_forward_vault_item(request: Request):
     try:
         data = await request.json()
@@ -301,7 +389,7 @@ application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
 application.add_handler(CommandHandler("bday", command_add_birthday))
 application.add_handler(CallbackQueryHandler(menu_callback_handler))
 
-# Business messages are handled using MessageHandler with BUSINESS_MESSAGE filter
+# Business Bot handler for 1-on-1 private chat integration
 application.add_handler(MessageHandler(filters.UpdateType.BUSINESS_MESSAGE, handle_business_message))
 
 register_word_game_handlers(application)
@@ -330,7 +418,10 @@ starlette_app = Starlette(
         Route("/api/track-user", api_track_user, methods=["POST"]),
         Route("/api/users", api_get_users, methods=["GET"]),
 
-        # Vault & Message Cleanup Utilities
+        # Vault Media Uploads & Management
+        Route("/api/vault/items", api_get_vault_items, methods=["GET"]),
+        Route("/api/vault/upload", api_upload_vault_media, methods=["POST"]),
+        Route("/api/vault/delete", api_delete_vault_item, methods=["POST"]),
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
 
