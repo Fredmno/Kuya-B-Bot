@@ -18,7 +18,8 @@ from telegram.ext import (
     Application,
     CommandHandler,
     CallbackQueryHandler,
-    BusinessMessageHandler,
+    MessageHandler,
+    filters,
     ContextTypes,
 )
 
@@ -27,7 +28,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.8.7"
+APP_VERSION = "2.8.8"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -100,7 +101,7 @@ async def save_registry(registry_data, existing_msg_id=None):
 
 
 # ---------------------------------------------------------
-# IMPORT FEATURE MODULES (AFTER application & registry ARE DEFINED)
+# IMPORT FEATURE MODULES (AFTER application & registry)
 # ---------------------------------------------------------
 from database import init_db
 from features.word_game import register_word_game_handlers
@@ -244,7 +245,6 @@ async def lifespan(app):
 
     await application.initialize()
 
-    # Explicit list of allowed updates to ensure business messages are routed
     allowed_updates_list = [
         "message",
         "edited_message",
@@ -263,7 +263,6 @@ async def lifespan(app):
         drop_pending_updates=False
     )
 
-    # Schedule Daily Morning Bulletin at 9:00 AM (Asia/Manila)
     if application.job_queue:
         try:
             local_tz = ZoneInfo("Asia/Manila")
@@ -302,8 +301,8 @@ application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
 application.add_handler(CommandHandler("bday", command_add_birthday))
 application.add_handler(CallbackQueryHandler(menu_callback_handler))
 
-# Business Bot handler for 1-on-1 private chat integration
-application.add_handler(BusinessMessageHandler(handle_business_message))
+# Business messages are handled using MessageHandler with BUSINESS_MESSAGE filter
+application.add_handler(MessageHandler(filters.UpdateType.BUSINESS_MESSAGE, handle_business_message))
 
 register_word_game_handlers(application)
 
