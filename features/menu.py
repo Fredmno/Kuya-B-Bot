@@ -57,7 +57,7 @@ def calculate_days_until(date_str):
 
 
 async def render_birthdays_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Fetches birthdays from registry and edits message with list and actions."""
+    """Fetches birthdays from registry and renders a neat, monochrome table."""
     query = update.callback_query
     
     from bot import get_or_create_registry
@@ -65,25 +65,34 @@ async def render_birthdays_menu(update: Update, context: ContextTypes.DEFAULT_TY
     birthdays = reg.get("birthdays", [])
 
     if not birthdays:
-        bday_text = "🎂 **BIRTHDAYS LIST**\n\n_No birthdays recorded in your vault yet._"
+        bday_text = (
+            "```\n"
+            "+-------+--------------------+\n"
+            "| DATE  | NAME               |\n"
+            "+-------+--------------------+\n"
+            "| --    | No entries found   |\n"
+            "+-------+--------------------+\n"
+            "```"
+        )
     else:
+        # Sort chronologically by upcoming date
         sorted_bdays = sorted(birthdays, key=lambda b: calculate_days_until(b.get("date", "")))
-        lines = []
-        for b in sorted_bdays:
-            name = b.get("name", "Unknown")
-            b_date = b.get("date", "MM-DD")
-            days_left = calculate_days_until(b_date)
-            
-            if days_left == 0:
-                badge = "🎉 **TODAY!**"
-            elif days_left == 1:
-                badge = "⏳ _Tomorrow_"
-            else:
-                badge = f"⏳ _In {days_left} days_"
-                
-            lines.append(f"• **{name}** — 📅 `{b_date}` ({badge})")
         
-        bday_text = "🎂 **BIRTHDAYS LIST**\n\n" + "\n".join(lines)
+        table_rows = [
+            "+-------+--------------------+",
+            "| DATE  | NAME               |",
+            "+-------+--------------------+"
+        ]
+        
+        for b in sorted_bdays:
+            b_date = (b.get("date") or "MM-DD")[:5].ljust(5)
+            # Truncate to 18 chars if too long to maintain aligned columns
+            name = (b.get("name") or "Unknown")[:18].ljust(18)
+            table_rows.append(f"| {b_date} | {name} |")
+            
+        table_rows.append("+-------+--------------------+")
+        
+        bday_text = "```\n" + "\n".join(table_rows) + "\n```"
 
     keyboard = [
         [
