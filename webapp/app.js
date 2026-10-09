@@ -9,7 +9,6 @@
     window.KuyaB.features = window.KuyaB.features || {};
     window.KuyaB.router = window.KuyaB.router || {};
 
-    // Telegram Admin User ID configuration
     window.KuyaB.ADMIN_ID = "YOUR_TELEGRAM_USER_ID";
 
     var cachedRepoFiles = [];
@@ -22,7 +21,6 @@
         return window.KuyaB.features;
     }
 
-    // Dynamic file label for Add Content
     function initAddContentInput() {
         var fileEl = document.getElementById("newContentFile");
         var nameLabel = document.getElementById("newContentFileName");
@@ -39,14 +37,19 @@
         }
     }
 
-    // Submit new content to vault
-    window.KuyaB.submitNewContent = async function () {
+    // 1. Submit New Content with Real-time % Progress
+    window.KuyaB.submitNewContent = function () {
         var fileInput = document.getElementById("newContentFile");
         var titleInput = document.getElementById("newContentTitle");
         var folderInput = document.getElementById("newContentFolder");
         var sectionSelect = document.getElementById("newContentSection");
         var fileNameLabel = document.getElementById("newContentFileName");
         var submitBtn = document.getElementById("btnSubmitAddContent");
+
+        var progressContainer = document.getElementById("uploadProgressContainer");
+        var progressBar = document.getElementById("uploadProgressBar");
+        var percentText = document.getElementById("uploadPercentText");
+        var statusText = document.getElementById("uploadStatusText");
 
         if (!fileInput || !fileInput.files.length) {
             alert("Please choose a file to upload.");
@@ -65,45 +68,181 @@
         formData.append("folder", folderName);
         formData.append("type", mediaType);
 
-        if (submitBtn) submitBtn.innerText = "Uploading...";
-
-        try {
-            var res = await fetch("/api/vault/upload", {
-                method: "POST",
-                body: formData
-            });
-            var data = await res.json();
-            if (data.success) {
-                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("success");
-                if (window.KuyaB.showToast) window.KuyaB.showToast("Uploaded successfully! 📁");
-
-                titleInput.value = "";
-                folderInput.value = "";
-                fileInput.value = "";
-                if (fileNameLabel) {
-                    fileNameLabel.innerText = "No file chosen";
-                    fileNameLabel.style.color = "#64748b";
-                }
-
-                var feats = getFeatures();
-                var r = getRouter();
-                if (feats.vault) feats.vault.setVaultType(mediaType);
-                if (r.showPage) {
-                    r.showPage("vaultPage", function () {
-                        if (feats.vault) feats.vault.openFolder(folderName);
-                    });
-                }
-            } else {
-                alert("Upload failed: " + (data.error || "Server error"));
-            }
-        } catch (err) {
-            alert("Network error communicating with backend.");
-        } finally {
-            if (submitBtn) submitBtn.innerText = "Upload Content";
+        if (progressContainer) {
+            progressContainer.style.display = "block";
+            if (progressBar) progressBar.style.width = "0%";
+            if (percentText) percentText.innerText = "0%";
+            if (statusText) statusText.innerText = isVideo ? "Uploading video..." : "Uploading file...";
         }
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Uploading (0%)...";
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/vault/upload", true);
+
+        xhr.upload.onprogress = function (e) {
+            if (e.lengthComputable) {
+                var percent = Math.round((e.loaded / e.total) * 100);
+                if (progressBar) progressBar.style.width = percent + "%";
+                if (percentText) percentText.innerText = percent + "%";
+                if (submitBtn) submitBtn.innerText = "Uploading (" + percent + "%)...";
+
+                if (percent === 100 && statusText) {
+                    statusText.innerText = "Processing & saving to vault...";
+                }
+            }
+        };
+
+        xhr.onload = function () {
+            if (submitBtn) submitBtn.disabled = false;
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (xhr.status >= 200 && xhr.status < 300 && data.success) {
+                    if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("success");
+                    if (window.KuyaB.showToast) window.KuyaB.showToast("Uploaded successfully! 📁");
+
+                    titleInput.value = "";
+                    folderInput.value = "";
+                    fileInput.value = "";
+                    if (fileNameLabel) {
+                        fileNameLabel.innerText = "No file chosen";
+                        fileNameLabel.style.color = "#64748b";
+                    }
+                    if (progressContainer) progressContainer.style.display = "none";
+                    if (submitBtn) submitBtn.innerText = "Upload Content";
+
+                    var feats = getFeatures();
+                    var r = getRouter();
+                    if (feats.vault) feats.vault.setVaultType(mediaType);
+                    if (r.showPage) {
+                        r.showPage("vaultPage", function () {
+                            if (feats.vault) feats.vault.openFolder(folderName);
+                        });
+                    }
+                } else {
+                    alert("Upload failed: " + (data.error || "Server error"));
+                    if (submitBtn) submitBtn.innerText = "Upload Content";
+                }
+            } catch (err) {
+                alert("Error parsing server response.");
+                if (submitBtn) submitBtn.innerText = "Upload Content";
+            }
+        };
+
+        xhr.onerror = function () {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Upload Content";
+            }
+            alert("Network error uploading file.");
+        };
+
+        xhr.send(formData);
     };
 
-    // 1. Scan Repository Files List
+    // 2. Inline Vault Upload with Real-time % Progress
+    window.KuyaB.uploadMediaToVault = function () {
+        var titleInput = document.getElementById("vaultItemTitle");
+        var folderInput = document.getElementById("vaultItemFolder");
+        var fileInput = document.getElementById("vaultItemFile");
+        var fileNameLabel = document.getElementById("selectedFileName");
+        var formBox = document.getElementById("vaultUploadForm");
+        var submitBtn = document.getElementById("btnUploadMedia");
+
+        var progressContainer = document.getElementById("inlineUploadProgressContainer");
+        var progressBar = document.getElementById("inlineUploadProgressBar");
+        var percentText = document.getElementById("inlineUploadPercentText");
+        var statusText = document.getElementById("inlineUploadStatusText");
+
+        if (!fileInput || !fileInput.files.length) {
+            alert("Please choose a file to upload.");
+            return;
+        }
+
+        var file = fileInput.files[0];
+        var feats = getFeatures();
+        var currentVaultType = (feats.vault && feats.vault.getCurrentVaultType) ? feats.vault.getCurrentVaultType() : "pictures";
+        var isVideo = file.type.startsWith("video/");
+        var mediaType = currentVaultType === "other" ? (isVideo ? "videos" : "pictures") : currentVaultType;
+        var folderName = folderInput.value.trim() || ((feats.vault && feats.vault.getActiveFolder && feats.vault.getActiveFolder()) ? feats.vault.getActiveFolder() : "General");
+
+        var formData = new FormData();
+        formData.append("file", file);
+        formData.append("title", titleInput.value.trim() || "Untitled");
+        formData.append("folder", folderName);
+        formData.append("type", mediaType);
+
+        if (progressContainer) {
+            progressContainer.style.display = "block";
+            if (progressBar) progressBar.style.width = "0%";
+            if (percentText) percentText.innerText = "0%";
+            if (statusText) statusText.innerText = isVideo ? "Uploading video..." : "Uploading file...";
+        }
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Uploading (0%)...";
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/vault/upload", true);
+
+        xhr.upload.onprogress = function (e) {
+            if (e.lengthComputable) {
+                var percent = Math.round((e.loaded / e.total) * 100);
+                if (progressBar) progressBar.style.width = percent + "%";
+                if (percentText) percentText.innerText = percent + "%";
+                if (submitBtn) submitBtn.innerText = "Uploading (" + percent + "%)...";
+
+                if (percent === 100 && statusText) {
+                    statusText.innerText = "Processing & saving to vault...";
+                }
+            }
+        };
+
+        xhr.onload = function () {
+            if (submitBtn) submitBtn.disabled = false;
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (xhr.status >= 200 && xhr.status < 300 && data.success) {
+                    if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("success");
+                    if (window.KuyaB.showToast) window.KuyaB.showToast("Uploaded successfully! 📁");
+
+                    titleInput.value = "";
+                    folderInput.value = "";
+                    fileInput.value = "";
+                    if (fileNameLabel) {
+                        fileNameLabel.innerText = "No file chosen";
+                        fileNameLabel.style.color = "#64748b";
+                    }
+                    if (progressContainer) progressContainer.style.display = "none";
+                    if (formBox) formBox.style.display = "none";
+                    if (submitBtn) submitBtn.innerText = "Upload";
+
+                    if (feats.vault && feats.vault.render) feats.vault.render();
+                } else {
+                    alert("Upload failed: " + (data.error || "Server error"));
+                    if (submitBtn) submitBtn.innerText = "Upload";
+                }
+            } catch (err) {
+                alert("Error parsing response.");
+                if (submitBtn) submitBtn.innerText = "Upload";
+            }
+        };
+
+        xhr.onerror = function () {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Upload";
+            }
+            alert("Network error during upload.");
+        };
+
+        xhr.send(formData);
+    };
+
+    // 3. Scan Repository Files List
     window.KuyaB.loadRepoTree = async function (force) {
         var statusLabel = document.getElementById("repoScanStatus");
         if (cachedRepoFiles.length > 0 && !force) return;
@@ -128,7 +267,7 @@
         }, 3000);
     };
 
-    // 2. Real-time Filter on Typing or Focus
+    // 4. Real-time Filter on Typing or Focus
     window.KuyaB.filterRepoFiles = async function (query) {
         var dropdown = document.getElementById("fileSuggestionsList");
         if (!dropdown) return;
@@ -169,7 +308,7 @@
         dropdown.style.display = "block";
     };
 
-    // 3. Select file from autocomplete
+    // 5. Select file from autocomplete
     window.KuyaB.onSelectRepoFile = async function (filePath) {
         var searchInput = document.getElementById("fileSearchInput");
         var pathInput = document.getElementById("commitFilePath");
@@ -201,7 +340,7 @@
         }, 3000);
     };
 
-    // Submit GitHub commit
+    // 6. Submit GitHub commit
     window.KuyaB.submitFileCommit = async function () {
         var pathInput = document.getElementById("commitFilePath");
         var msgInput = document.getElementById("commitMsgInput");
@@ -263,7 +402,6 @@
             var r = getRouter();
             var feats = getFeatures();
 
-            // Autocomplete item click
             var repoItem = target.closest(".repo-file-item");
             if (repoItem) {
                 e.preventDefault();
@@ -274,7 +412,6 @@
                 return;
             }
 
-            // Dashboard feature cards
             var card = target.closest(".feature-card");
             if (card && !card.hasAttribute("data-action")) {
                 e.preventDefault();
@@ -299,7 +436,6 @@
                 return;
             }
 
-            // Navigation back buttons
             if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton")) {
                 e.preventDefault();
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
@@ -318,7 +454,6 @@
                 return;
             }
 
-            // Vault folder navigation
             var folderCard = target.closest('[data-action="open-folder"]');
             if (folderCard) {
                 e.preventDefault();
@@ -333,7 +468,6 @@
                 return;
             }
 
-            // Standalone Add Content page
             if (target.closest("#addContentButton")) {
                 e.preventDefault();
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
@@ -348,7 +482,6 @@
                 return;
             }
 
-            // Admin File Committer navigation
             if (target.closest("#btnAdminUpdater")) {
                 e.preventDefault();
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
@@ -364,7 +497,6 @@
                 return;
             }
 
-            // User tracking
             if (target.closest("#btnOpenUserTracking")) {
                 e.preventDefault();
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
@@ -379,7 +511,6 @@
                 return;
             }
 
-            // Word Scramble
             if (target.closest("#gameButton")) {
                 e.preventDefault();
                 if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
@@ -387,7 +518,6 @@
                 return;
             }
 
-            // Vault upload form
             if (target.closest("#addVaultItemButton")) {
                 e.preventDefault();
                 var vf = document.getElementById("vaultUploadForm");
@@ -401,7 +531,6 @@
                 return;
             }
 
-            // Vault media view / delete
             var vaultView = target.closest('[data-action="view-vault"]');
             if (vaultView) {
                 e.preventDefault();
@@ -515,7 +644,6 @@
             }
         });
 
-        // Close dropdown suggestions when clicking elsewhere
         document.addEventListener("click", function (e) {
             var dropdown = document.getElementById("fileSuggestionsList");
             var searchInput = document.getElementById("fileSearchInput");
