@@ -18,22 +18,14 @@ from telegram.ext import (
     Application,
     CommandHandler,
     CallbackQueryHandler,
+    BusinessMessageHandler,
     ContextTypes,
 )
-
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    CallbackQueryHandler,
-    BusinessMessageHandler,  # <-- Add this import
-    ContextTypes,
-)
-
-from features.business.assistant import handle_business_message  # <-- Import your feature function
 
 from database import init_db
 from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
+from features.business.assistant import handle_business_message
 
 # Clean modular imports
 from features.BirthDay.Birthdays import (
@@ -59,7 +51,7 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-APP_VERSION = "2.8.6"
+APP_VERSION = "2.8.7"
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 PORT = int(os.getenv("PORT", 10000))
@@ -70,7 +62,7 @@ ADMIN_USER_ID = os.getenv("ADMIN_USER_ID")
 WEBHOOK_PATH = "/telegram"
 WEBHOOK_URL = f"{RENDER_EXTERNAL_URL}{WEBHOOK_PATH}"
 
-# Initialize application instance FIRST
+# Application instance initialization
 application = Application.builder().token(BOT_TOKEN).build()
 
 
@@ -107,7 +99,7 @@ async def save_registry(registry_data, existing_msg_id=None):
         return
 
     text = f"🗄️ **KUYA B PERMANENT VAULT REGISTRY**\nDO NOT DELETE\n\n`#KUYA_B_REGISTRY:{json.dumps(registry_data)}`"
-    
+
     if existing_msg_id:
         try:
             await application.bot.edit_message_text(
@@ -248,7 +240,12 @@ async def lifespan(app):
     init_db()
 
     await application.initialize()
-    await application.bot.set_webhook(WEBHOOK_URL)
+
+    # Explicitly register all update types to enable Telegram Business messages
+    await application.bot.set_webhook(
+        url=WEBHOOK_URL,
+        allowed_updates=Update.ALL_TYPES
+    )
 
     # Schedule Daily Morning Bulletin at 9:00 AM (Asia/Manila)
     if application.job_queue:
@@ -281,7 +278,7 @@ async def lifespan(app):
 
 
 # ---------------------------------------------------------
-# HANDLER REGISTRATIONS (AFTER application IS DEFINED)
+# HANDLER REGISTRATIONS
 # ---------------------------------------------------------
 application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("kuyab", kuya_b_menu))
@@ -289,11 +286,10 @@ application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
 application.add_handler(CommandHandler("bday", command_add_birthday))
 application.add_handler(CallbackQueryHandler(menu_callback_handler))
 
-# Register Business Bot handler
+# Business Bot handler for 1-on-1 private chat integration
 application.add_handler(BusinessMessageHandler(handle_business_message))
 
 register_word_game_handlers(application)
-
 
 # ---------------------------------------------------------
 # STARLETTE APPLICATION ROUTES
@@ -302,14 +298,14 @@ starlette_app = Starlette(
     routes=[
         Route("/", health_check, methods=["GET", "HEAD"]),
         Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
-        
+
         # Modular: Birthdays
         Route("/api/birthdays", api_get_birthdays, methods=["GET"]),
         Route("/api/birthdays", api_add_birthday, methods=["POST"]),
         Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
         Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
         Route("/api/birthdays/greet", api_send_birthday_greeting, methods=["POST"]),
-        
+
         # Modular: Daily Logs & Habit Tracker
         Route("/api/logs", api_get_daily_logs, methods=["GET"]),
         Route("/api/logs", api_save_daily_log, methods=["POST"]),
@@ -322,7 +318,7 @@ starlette_app = Starlette(
         # Vault & Message Cleanup Utilities
         Route("/api/vault/forward", api_forward_vault_item, methods=["POST"]),
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
-        
+
         # WebApp Static Assets & Mounting
         Route("/app", serve_index, methods=["GET"]),
         Route("/app/", serve_index, methods=["GET"]),
