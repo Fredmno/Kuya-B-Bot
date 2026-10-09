@@ -1,9 +1,9 @@
-import os
-import json
 import logging
-from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
+
+# Modular delegation to Birthday feature
+from features.BirthDay.Birthdays import render_birthdays_table
 
 
 def get_main_menu_keyboard():
@@ -37,62 +37,16 @@ async def kuya_b_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-def calculate_days_until(date_str):
-    """Calculates days remaining until upcoming birthday (MM-DD)."""
-    try:
-        parts = date_str.split("-")
-        month = int(parts[0])
-        day = int(parts[1])
-        now = datetime.now()
-        today = datetime(now.year, now.month, now.day)
-        
-        target = datetime(now.year, month, day)
-        if target < today:
-            target = datetime(now.year + 1, month, day)
-            
-        diff = (target - today).days
-        return diff
-    except Exception:
-        return 999
-
-
 async def render_birthdays_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Fetches birthdays from registry and renders a neat, monochrome table."""
+    """Fetches birthdays from registry and renders the clean monochrome table via Birthdays module."""
     query = update.callback_query
     
     from bot import get_or_create_registry
     reg, _ = await get_or_create_registry()
     birthdays = reg.get("birthdays", [])
 
-    if not birthdays:
-        bday_text = (
-            "```\n"
-            "+-------+--------------------+\n"
-            "| DATE  | NAME               |\n"
-            "+-------+--------------------+\n"
-            "| --    | No entries found   |\n"
-            "+-------+--------------------+\n"
-            "```"
-        )
-    else:
-        # Sort chronologically by upcoming date
-        sorted_bdays = sorted(birthdays, key=lambda b: calculate_days_until(b.get("date", "")))
-        
-        table_rows = [
-            "+-------+--------------------+",
-            "| DATE  | NAME               |",
-            "+-------+--------------------+"
-        ]
-        
-        for b in sorted_bdays:
-            b_date = (b.get("date") or "MM-DD")[:5].ljust(5)
-            # Truncate to 18 chars if too long to maintain aligned columns
-            name = (b.get("name") or "Unknown")[:18].ljust(18)
-            table_rows.append(f"| {b_date} | {name} |")
-            
-        table_rows.append("+-------+--------------------+")
-        
-        bday_text = "```\n" + "\n".join(table_rows) + "\n```"
+    # Delegated table formatting to Birthdays.py
+    bday_text = render_birthdays_table(birthdays)
 
     keyboard = [
         [
