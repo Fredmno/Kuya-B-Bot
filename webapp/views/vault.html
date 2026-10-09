@@ -6,7 +6,7 @@
         <button type="button" class="btn-icon-add" id="addVaultItemButton">+</button>
     </div>
 
-    <!-- Active Folder Breadcrumb Bar (Visible inside an opened folder) -->
+    <!-- Active Folder Breadcrumb Bar -->
     <div id="vaultFolderBreadcrumb" style="display: none; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 4px 6px;">
         <button type="button" class="btn-soft cancel" id="btnBackToFolders" style="flex: none; padding: 6px 12px; font-size: 0.82rem; border-radius: 8px;">
             ← All Folders
@@ -14,9 +14,10 @@
         <span id="activeFolderHeader" style="font-weight: 700; font-size: 0.95rem; color: var(--primary, #2563eb);"></span>
     </div>
 
-    <!-- Admin User Activity Bar -->
+    <!-- Actions Bar (Visible only inside 'Other' section) -->
     <div id="otherActionsBar" style="padding: 0 0 12px 0; display: none;">
-        <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="margin-bottom: 0;">
+        <!-- 1. User Activity -->
+        <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="margin-bottom: 10px;">
             <div class="card-left">
                 <span class="card-icon">👥</span>
                 <div>
@@ -26,14 +27,37 @@
             </div>
             <div class="card-arrow">›</div>
         </button>
+
+        <!-- 2. Word Scramble Game -->
+        <button type="button" class="feature-card-full" id="gameButton" style="margin-bottom: 10px;">
+            <div class="card-left">
+                <span class="card-icon">🎮</span>
+                <div>
+                    <div class="card-title">Word Scramble</div>
+                    <div class="card-desc">Take a quick break</div>
+                </div>
+            </div>
+            <div class="card-arrow">›</div>
+        </button>
+
+        <!-- 3. Admin-Only File Committer Button -->
+        <button type="button" class="feature-card-full" id="btnAdminUpdater" style="display: none; margin-bottom: 10px;">
+            <div class="card-left">
+                <span class="card-icon">⚡</span>
+                <div>
+                    <div class="card-title">File Committer</div>
+                    <div class="card-desc">Update and auto-deploy code</div>
+                </div>
+            </div>
+            <div class="card-arrow">›</div>
+        </button>
     </div>
 
-    <!-- Upload Media Form -->
+    <!-- Inline Upload Media Form -->
     <form id="vaultUploadForm" class="form-box" style="display: none;">
         <input type="text" class="neu-input" id="vaultItemTitle" placeholder="Title / Caption" style="margin-bottom: 12px;">
         <input type="text" class="neu-input" id="vaultItemFolder" placeholder="Folder (e.g. Work, Trips, Receipts)" style="margin-bottom: 12px;">
 
-        <!-- Styled Neumorphic File Selector Wrapper -->
         <div style="position: relative; margin-bottom: 16px;">
             <input type="file" id="vaultItemFile" accept="image/*,video/*" style="opacity: 0; position: absolute; z-index: -1; width: 0.1px; height: 0.1px; overflow: hidden;">
             <label for="vaultItemFile" style="
@@ -74,10 +98,10 @@
         </div>
     </form>
 
-    <!-- State 1: Folders Directory List -->
+    <!-- Folders Directory List -->
     <div id="vaultFoldersContainer"></div>
 
-    <!-- State 2: Inside-Folder Items List -->
+    <!-- Inside-Folder Items List -->
     <div id="vaultItemsContainer" style="display: none;"></div>
 </div>
 
