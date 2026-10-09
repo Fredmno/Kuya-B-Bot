@@ -8,6 +8,7 @@
     var router = window.KuyaB.router;
     var features = window.KuyaB.features;
 
+    // --- Dynamic file inputs listener for Add Content ---
     function initAddContentInput() {
         var fileEl = document.getElementById("newContentFile");
         var nameLabel = document.getElementById("newContentFileName");
@@ -24,6 +25,7 @@
         }
     }
 
+    // --- Standalone Add Content submission handler ---
     window.KuyaB.submitNewContent = async function () {
         var fileInput = document.getElementById("newContentFile");
         var titleInput = document.getElementById("newContentTitle");
@@ -80,6 +82,57 @@
             alert("Network error communicating with backend.");
         } finally {
             if (submitBtn) submitBtn.innerText = "Upload Content";
+        }
+    };
+
+    // --- Admin GitHub File Committer ---
+    window.KuyaB.submitFileCommit = async function () {
+        var pathInput = document.getElementById("commitFilePath");
+        var msgInput = document.getElementById("commitMsgInput");
+        var contentInput = document.getElementById("commitContentInput");
+        var btn = document.getElementById("btnSubmitCommit");
+
+        var path = pathInput ? pathInput.value.trim() : "";
+        var content = contentInput ? contentInput.value : "";
+        var msg = msgInput ? msgInput.value.trim() : "";
+
+        if (!path) return alert("Please specify the file path.");
+        if (!content) return alert("Please provide content to write.");
+
+        var user = (window.KuyaB.tg && window.KuyaB.tg.initDataUnsafe) ? window.KuyaB.tg.initDataUnsafe.user : null;
+        var userId = user ? user.id : "";
+
+        if (!confirm("Are you sure you want to commit to " + path + "? This will trigger a live deploy.")) {
+            return;
+        }
+
+        if (btn) btn.innerText = "Committing to GitHub...";
+
+        try {
+            var res = await fetch("/api/admin/commit-file", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    file_path: path,
+                    content: content,
+                    message: msg || ("Update " + path),
+                    user_id: userId
+                })
+            });
+
+            var data = await res.json();
+            if (data.success) {
+                window.KuyaB.triggerHaptic("success");
+                alert(data.message);
+                contentInput.value = "";
+                router.showDashboard();
+            } else {
+                alert("Commit failed: " + (data.error || "Unknown error"));
+            }
+        } catch (e) {
+            alert("Network error: " + e.message);
+        } finally {
+            if (btn) btn.innerText = "Commit & Deploy 🚀";
         }
     };
 
@@ -358,6 +411,8 @@
         } else if (startSection === "videos" || startSection === "pictures" || startSection === "other") {
             features.vault.setVaultType(startSection);
             router.showPage("vaultPage", features.vault.render);
+        } else if (startSection === "admin_updater") {
+            router.showPage("adminUpdaterPage");
         } else {
             router.showDashboard();
         }
