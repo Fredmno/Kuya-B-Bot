@@ -10,6 +10,8 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse, JSONResponse
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
+from features.admin.render_status import api_get_deploy_status
+
 
 from telegram import Update, BotCommand, BotCommandScopeDefault
 from telegram.ext import (
@@ -234,6 +236,11 @@ starlette_app = Starlette(
         Route("/api/admin/repo-tree", api_admin_get_repo_tree, methods=["GET"]),
         Route("/api/admin/get-file", api_admin_get_file_content, methods=["GET"]),
         Route("/api/admin/commit-file", api_admin_commit_file, methods=["POST"]),
+
+        
+        # For Render Status Update
+        Route("/api/admin/deploy-status", api_get_deploy_status, methods=["GET"]),
+
 
         # Helpers & WebApp Static
         Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
