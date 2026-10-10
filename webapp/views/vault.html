@@ -6,36 +6,33 @@
                 <button type="button" class="btn-icon-add" id="addVaultItemButton">+</button>
             </div>
 
-            <!-- "OTHER" FOLDER APPS GRID (Matching Theme) -->
+            <!-- "OTHER" FOLDER APPS GRID (4 Columns in 1 Row) -->
             <div id="otherActionsBar" style="padding: 0 16px 20px 16px; display: none;">
                 <div class="section-title" style="margin-bottom: 12px;">Apps & Tools</div>
                 
-                <div class="grid-2">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
                     <!-- 1. Word Scramble Game Tile -->
-                    <div class="feature-card" id="gameButton">
-                        <div class="card-header">
-                            <span class="card-icon">🎮</span>
-                            <span class="card-title">Word Game</span>
-                        </div>
-                        <span class="card-desc">Play in chat</span>
+                    <div class="feature-card" id="gameButton" style="padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer;">
+                        <span class="card-icon" style="font-size: 1.6rem; margin-bottom: 6px;">🎮</span>
+                        <span class="card-title" style="font-size: 0.76rem; font-weight: 600; line-height: 1.2;">Game</span>
                     </div>
 
                     <!-- 2. File Committer Tile -->
-                    <div class="feature-card" id="btnAdminUpdater">
-                        <div class="card-header">
-                            <span class="card-icon">🚀</span>
-                            <span class="card-title">Committer</span>
-                        </div>
-                        <span class="card-desc">Deploy updates</span>
+                    <div class="feature-card" id="btnAdminUpdater" style="padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer;">
+                        <span class="card-icon" style="font-size: 1.6rem; margin-bottom: 6px;">🚀</span>
+                        <span class="card-title" style="font-size: 0.76rem; font-weight: 600; line-height: 1.2;">Commit</span>
                     </div>
 
                     <!-- 3. User Activity Tile -->
-                    <div class="feature-card" id="btnOpenUserTracking">
-                        <div class="card-header">
-                            <span class="card-icon">👥</span>
-                            <span class="card-title">User Activity</span>
-                        </div>
-                        <span class="card-desc">View logs</span>
+                    <div class="feature-card" id="btnOpenUserTracking" style="padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer;">
+                        <span class="card-icon" style="font-size: 1.6rem; margin-bottom: 6px;">👥</span>
+                        <span class="card-title" style="font-size: 0.76rem; font-weight: 600; line-height: 1.2;">Activity</span>
+                    </div>
+
+                    <!-- 4. Future Slot (Placeholder / Ready for your next tool) -->
+                    <div class="feature-card" id="btnDeployStatus" style="padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; opacity: 0.85;">
+                        <span class="card-icon" style="font-size: 1.6rem; margin-bottom: 6px;">⚡</span>
+                        <span class="card-title" style="font-size: 0.76rem; font-weight: 600; line-height: 1.2;">Status</span>
                     </div>
                 </div>
             </div>
