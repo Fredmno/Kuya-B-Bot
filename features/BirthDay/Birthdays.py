@@ -1,3 +1,4 @@
+import os
 import uuid
 import logging
 from datetime import datetime
@@ -13,20 +14,29 @@ from features.registry import get_or_create_registry, update_registry_data
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_GROUP_CHAT_ID = -1002607400749
+
 
 def _get_bot_from_request(request: Request):
     """Extracts bot instance from Starlette application state."""
     return request.app.state.telegram_app.bot
 
 
+def _get_target_chat_id():
+    """Resolves target group/bulletin chat ID."""
+    cid = os.getenv("GROUP_CHAT_ID") or os.getenv("BULLETIN_CHAT_ID")
+    if cid:
+        try:
+            return int(str(cid).strip())
+        except ValueError:
+            pass
+    return DEFAULT_GROUP_CHAT_ID
+
+
 # ---------------------------------------------------------
-# CHAT MENU HELPER (Imported by features/menu.py)
+# CHAT MENU HELPER
 # ---------------------------------------------------------
 async def render_birthdays_table(bot):
-    """
-    Renders a formatted text table/list of upcoming birthdays
-    for the Telegram chat /kuyab menu.
-    """
     try:
         _, registry = await get_or_create_registry(bot)
         birthdays = registry.get("birthdays", [])
@@ -45,14 +55,13 @@ async def render_birthdays_table(bot):
 
         for b in birthdays:
             name = b.get("name", "Unknown")
-            date_str = b.get("date", "").strip()
+            date_str = str(b.get("date", "")).strip()
             try:
                 parts = date_str.split("-")
                 month = int(parts[0])
                 day = int(parts[1])
                 bday_date = datetime(current_year, month, day)
 
-                # If birthday has already occurred this year, calculate for next year
                 if bday_date.date() < today.date():
                     bday_date = datetime(current_year + 1, month, day)
 
@@ -69,7 +78,6 @@ async def render_birthdays_table(bot):
                     "days_left": 9999
                 })
 
-        # Sort by upcoming days
         items.sort(key=lambda x: x["days_left"])
 
         lines = ["🎂 *Upcoming Birthdays*\n"]
@@ -88,6 +96,74 @@ async def render_birthdays_table(bot):
     except Exception as e:
         logger.error(f"Error rendering birthdays table: {e}", exc_info=True)
         return "🎂 *Birthdays*\n\nCould not load birthdays."
+
+
+# ---------------------------------------------------------
+# DAILY SCHEDULED BULLETIN JOB
+# ---------------------------------------------------------
+async def check_and_send_daily_birthday_greetings(context: ContextTypes.DEFAULT_TYPE):
+    """
+    Scheduled job running daily at 9:00 AM (Asia/Manila).
+    Sends morning birthday greetings to GROUP_CHAT_ID (-1002607400749).
+    """
+    try:
+        bot = context.bot
+        _, registry = await get_or_create_registry(bot)
+        birthdays = registry.get("birthdays", [])
+
+        try:
+            now = datetime.now(ZoneInfo("Asia/Manila"))
+        except Exception:
+            now = datetime.now()
+
+        target_month = now.month
+        target_day = now.day
+        target_chat = _get_target_chat_id()
+
+        logger.info(f"[Daily Job] Checking birthdays for {target_month:02d}-{target_day:02d} | Target chat: {target_chat}")
+
+        for b in birthdays:
+            name = b.get("name", "Friend")
+            raw_date = str(b.get("date", "")).strip()
+
+            # Robust comparison across formats (MM-DD, M-D, etc.)
+            is_birthday_today = False
+            try:
+                parts = raw_date.split("-")
+                if len(parts) == 2 and int(parts[0]) == target_month and int(parts[1]) == target_day:
+                    is_birthday_today = True
+            except Exception:
+                if raw_date == now.strftime("%m-%d"):
+                    is_birthday_today = True
+
+            if is_birthday_today:
+                logger.info(f"Sending morning birthday greeting for {name} to {target_chat}")
+                greeting_text = (
+                    f"🎉🎂 **Happy Birthday, {name}!** 🎂🎉\n\n"
+                    "Wishing you good health, endless happiness, and many blessings ahead on your special day! ✨\n\n"
+                    "— *Kuya B Bulletin*"
+                )
+                try:
+                    await bot.send_message(
+                        chat_id=target_chat,
+                        text=greeting_text,
+                        parse_mode="Markdown"
+                    )
+                except Exception as send_err:
+                    logger.error(f"Failed to dispatch birthday message to chat {target_chat}: {send_err}")
+
+    except Exception as e:
+        logger.error(f"check_and_send_daily_birthday_greetings fatal error: {e}", exc_info=True)
+
+
+# ---------------------------------------------------------
+# BOT COMMAND FOR MANUAL TRIGGER & TESTING
+# ---------------------------------------------------------
+async def command_trigger_bulletin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Manually triggers the daily bulletin check via Telegram (/trigger_greetings)"""
+    await update.message.reply_text("⏳ Running birthday greetings check...")
+    await check_and_send_daily_birthday_greetings(context)
+    await update.message.reply_text("✅ Check complete!")
 
 
 # ---------------------------------------------------------
@@ -192,27 +268,6 @@ async def api_delete_birthday(request: Request):
     except Exception as e:
         logger.error(f"api_delete_birthday error: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
-
-
-async def check_and_send_daily_birthday_greetings(context: ContextTypes.DEFAULT_TYPE):
-    """Daily scheduled background job checking for birthdays."""
-    try:
-        bot = context.bot
-        _, registry = await get_or_create_registry(bot)
-        birthdays = registry.get("birthdays", [])
-
-        try:
-            now = datetime.now(ZoneInfo("Asia/Manila"))
-        except Exception:
-            now = datetime.now()
-
-        today_str = now.strftime("%m-%d")
-
-        for b in birthdays:
-            if b.get("date") == today_str:
-                logger.info(f"Today is {b.get('name')}'s birthday!")
-    except Exception as e:
-        logger.error(f"Error checking daily birthdays: {e}", exc_info=True)
 
 
 async def command_add_birthday(update: Update, context: ContextTypes.DEFAULT_TYPE):
