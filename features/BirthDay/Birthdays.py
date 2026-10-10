@@ -1,5 +1,4 @@
 import os
-import uuid
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -12,18 +11,16 @@ from telegram.ext import ContextTypes
 # Import from independent registry module
 from features.registry import get_or_create_registry, update_registry_data
 
+# Import dedicated modular handlers
+from features.BirthDay.birthday_add import api_add_birthday, command_add_birthday
+from features.BirthDay.birthday_delete import api_delete_birthday
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_GROUP_CHAT_ID = -1002607400749
 
 
-def _get_bot_from_request(request: Request):
-    """Extracts bot instance from Starlette application state."""
-    return request.app.state.telegram_app.bot
-
-
 def _get_target_chat_id():
-    """Resolves target group/bulletin chat ID from Render environment."""
     cid = os.getenv("GROUP_CHAT_ID") or os.getenv("BULLETIN_CHAT_ID")
     if cid:
         try:
@@ -58,8 +55,12 @@ async def render_birthdays_table(bot):
             date_str = str(b.get("date", "")).strip()
             try:
                 parts = date_str.split("-")
-                month = int(parts[0])
-                day = int(parts[1])
+                if len(parts) == 3:
+                    month = int(parts[1])
+                    day = int(parts[2])
+                else:
+                    month = int(parts[0])
+                    day = int(parts[1])
                 bday_date = datetime(current_year, month, day)
 
                 if bday_date.date() < today.date():
@@ -68,7 +69,7 @@ async def render_birthdays_table(bot):
                 days_left = (bday_date.date() - today.date()).days
                 items.append({
                     "name": name,
-                    "date": date_str,
+                    "date": f"{month:02d}-{day:02d}",
                     "days_left": days_left
                 })
             except Exception:
@@ -129,7 +130,11 @@ async def check_and_send_daily_birthday_greetings(context: ContextTypes.DEFAULT_
             is_birthday_today = False
             try:
                 parts = raw_date.split("-")
-                if len(parts) == 2 and int(parts[0]) == target_month and int(parts[1]) == target_day:
+                if len(parts) == 3:
+                    m, d = int(parts[1]), int(parts[2])
+                else:
+                    m, d = int(parts[0]), int(parts[1])
+                if m == target_month and d == target_day:
                     is_birthday_today = True
             except Exception:
                 if raw_date == now.strftime("%m-%d"):
@@ -166,85 +171,46 @@ async def command_trigger_bulletin(update: Update, context: ContextTypes.DEFAULT
 
 
 # ---------------------------------------------------------
-# WEBAPP REST API ENDPOINTS
+# GET & EDIT REST API ENDPOINTS
 # ---------------------------------------------------------
 async def api_get_birthdays(request: Request):
     try:
-        bot = _get_bot_from_request(request)
+        bot = request.app.state.telegram_app.bot
         _, registry = await get_or_create_registry(bot)
         birthdays = registry.get("birthdays", [])
-        return JSONResponse({"birthdays": birthdays})
+        return JSONResponse({"success": True, "birthdays": birthdays})
     except Exception as e:
         logger.error(f"api_get_birthdays error: {e}", exc_info=True)
         return JSONResponse({"error": str(e), "birthdays": []}, status_code=500)
 
 
-async def api_add_birthday(request: Request):
-    try:
-        data = await request.json()
-        name = data.get("name", "").strip()
-        date = data.get("date", "").strip()
-
-        if not name or not date:
-            return JSONResponse({"error": "Name and date are required"}, status_code=400)
-
-        bot = _get_bot_from_request(request)
-        msg_id, registry = await get_or_create_registry(bot)
-        birthdays = registry.setdefault("birthdays", [])
-
-        new_bday = {
-            "id": str(uuid.uuid4())[:8],
-            "name": name,
-            "date": date
-        }
-        birthdays.append(new_bday)
-
-        saved = await update_registry_data(msg_id, registry, bot)
-        if not saved:
-            return JSONResponse({"error": "Failed to persist birthday"}, status_code=500)
-
-        # Notify Group Chat when added via WebApp
-        target_chat = _get_target_chat_id()
-        notification_text = (
-            f"📅 **New Birthday Added!**\n\n"
-            f"👤 **Name:** {name}\n"
-            f"🎂 **Date:** `{date}`\n\n"
-            "— *Kuya B Hub*"
-        )
-        try:
-            await bot.send_message(
-                chat_id=target_chat,
-                text=notification_text,
-                parse_mode="Markdown"
-            )
-        except Exception as notify_err:
-            logger.warning(f"Could not send group notification for added birthday: {notify_err}")
-
-        return JSONResponse({"success": True, "birthday": new_bday})
-    except Exception as e:
-        logger.error(f"api_add_birthday error: {e}", exc_info=True)
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-
 async def api_edit_birthday(request: Request):
     try:
         data = await request.json()
-        bday_id = data.get("id")
-        name = data.get("name", "").strip()
-        date = data.get("date", "").strip()
+        bday_id = str(data.get("id", "")).strip()
+        name = str(data.get("name", "")).strip()
+        date_raw = str(data.get("date", "")).strip()
 
-        if not bday_id or not name or not date:
+        if not bday_id or not name or not date_raw:
             return JSONResponse({"error": "ID, name, and date are required"}, status_code=400)
 
-        bot = _get_bot_from_request(request)
+        parts = date_raw.split("-")
+        if len(parts) == 3:
+            formatted_date = f"{int(parts[1]):02d}-{int(parts[2]):02d}"
+        elif len(parts) == 2:
+            formatted_date = f"{int(parts[0]):02d}-{int(parts[1]):02d}"
+        else:
+            formatted_date = date_raw
+
+        bot = request.app.state.telegram_app.bot
         msg_id, registry = await get_or_create_registry(bot)
         birthdays = registry.get("birthdays", [])
 
         found = False
         for b in birthdays:
-            if str(b.get("id")) == str(bday_id):
+            if str(b.get("id")) == bday_id:
                 b["name"] = name
-                b["date"] = date
+                b["date"] = formatted_date
                 found = True
                 break
 
@@ -259,77 +225,3 @@ async def api_edit_birthday(request: Request):
     except Exception as e:
         logger.error(f"api_edit_birthday error: {e}", exc_info=True)
         return JSONResponse({"error": str(e)}, status_code=500)
-
-
-async def api_delete_birthday(request: Request):
-    try:
-        data = await request.json()
-        bday_id = data.get("id")
-
-        if not bday_id:
-            return JSONResponse({"error": "Birthday ID is required"}, status_code=400)
-
-        bot = _get_bot_from_request(request)
-        msg_id, registry = await get_or_create_registry(bot)
-        birthdays = registry.get("birthdays", [])
-
-        filtered = [b for b in birthdays if str(b.get("id")) != str(bday_id)]
-        registry["birthdays"] = filtered
-
-        saved = await update_registry_data(msg_id, registry, bot)
-        if not saved:
-            return JSONResponse({"error": "Failed to persist deletion"}, status_code=500)
-
-        return JSONResponse({"success": True})
-    except Exception as e:
-        logger.error(f"api_delete_birthday error: {e}", exc_info=True)
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-
-async def command_add_birthday(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Telegram bot command /bday Name MM-DD"""
-    try:
-        args = context.args
-        if len(args) < 2:
-            await update.message.reply_text("Usage: /bday [Name] [MM-DD]\nExample: /bday Juan 05-23")
-            return
-
-        date_str = args[-1]
-        name = " ".join(args[:-1])
-
-        msg_id, registry = await get_or_create_registry(context.bot)
-        birthdays = registry.setdefault("birthdays", [])
-
-        new_bday = {
-            "id": str(uuid.uuid4())[:8],
-            "name": name,
-            "date": date_str
-        }
-        birthdays.append(new_bday)
-
-        saved = await update_registry_data(msg_id, registry, context.bot)
-        if saved:
-            await update.message.reply_text(f"🎉 Added birthday for {name} on {date_str}!")
-
-            # Notify group chat if command is entered elsewhere
-            target_chat = _get_target_chat_id()
-            if update.effective_chat.id != target_chat:
-                notification_text = (
-                    f"📅 **New Birthday Added!**\n\n"
-                    f"👤 **Name:** {name}\n"
-                    f"🎂 **Date:** `{date_str}`\n\n"
-                    "— *Kuya B Hub*"
-                )
-                try:
-                    await context.bot.send_message(
-                        chat_id=target_chat,
-                        text=notification_text,
-                        parse_mode="Markdown"
-                    )
-                except Exception as notify_err:
-                    logger.warning(f"Could not forward birthday notification to target group: {notify_err}")
-        else:
-            await update.message.reply_text("Failed to save birthday to registry.")
-    except Exception as e:
-        logger.error(f"command_add_birthday error: {e}", exc_info=True)
-        await update.message.reply_text("An error occurred while saving birthday.")
