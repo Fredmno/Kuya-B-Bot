@@ -6,7 +6,33 @@
                 <button type="button" class="btn-icon-add" id="addVaultItemButton">+</button>
             </div>
 
-            <div id="otherActionsBar" style="padding: 0 16px 12px 16px; display: none;">
+            <!-- "OTHER" FOLDER ACTIONS (Word Game, Committer, User Activity) -->
+            <div id="otherActionsBar" style="padding: 0 16px 14px 16px; display: none;">
+                <!-- Word Scramble Game Card -->
+                <button type="button" class="feature-card-full" id="gameButton" style="margin-bottom: 10px;">
+                    <div class="card-left">
+                        <span class="card-icon">🎮</span>
+                        <div>
+                            <div class="card-title">Word Scramble</div>
+                            <div class="card-desc">Play mini word game in chat</div>
+                        </div>
+                    </div>
+                    <div class="card-arrow">›</div>
+                </button>
+
+                <!-- File Committer Card -->
+                <button type="button" class="feature-card-full" id="btnAdminUpdater" style="margin-bottom: 10px;">
+                    <div class="card-left">
+                        <span class="card-icon">🚀</span>
+                        <div>
+                            <div class="card-title">File Committer</div>
+                            <div class="card-desc">Edit code and deploy updates</div>
+                        </div>
+                    </div>
+                    <div class="card-arrow">›</div>
+                </button>
+
+                <!-- User Activity Card -->
                 <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="margin-bottom: 0;">
                     <div class="card-left">
                         <span class="card-icon">👥</span>
@@ -19,14 +45,14 @@
                 </button>
             </div>
 
-            <!-- Upload Media Form -->
+            <!-- Upload Media / Add Content Form -->
             <form id="vaultUploadForm" class="form-box" style="display: none;">
                 <input type="text" class="neu-input" id="vaultItemTitle" placeholder="Title / Caption" style="margin-bottom: 12px;">
                 <input type="text" class="neu-input" id="vaultItemFolder" placeholder="Folder (e.g. Work, Trips, Receipts)" style="margin-bottom: 12px;">
                 <input type="file" class="neu-input" id="vaultItemFile" accept="image/*,video/*" style="margin-bottom: 16px;">
                 <div class="form-actions">
                     <button type="button" class="btn-soft cancel" id="cancelVaultItemButton">Cancel</button>
-                    <button type="button" class="btn-soft save" id="btnUploadMedia" onclick="window.KuyaB.uploadMediaToVault()">Upload</button>
+                    <button type="button" class="btn-soft save" id="btnUploadMedia">Upload</button>
                 </div>
             </form>
 
