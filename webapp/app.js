@@ -515,3 +515,187 @@
             if (!target) return;
 
             var r = getRouter();
+            var feats = getFeatures();
+
+            var repoItem = target.closest(".repo-file-item");
+            if (repoItem) {
+                e.preventDefault();
+                var encodedPath = repoItem.getAttribute("data-file");
+                if (encodedPath) window.KuyaB.onSelectRepoFile(decodeURIComponent(encodedPath));
+                return;
+            }
+
+            var card = target.closest(".feature-card");
+            if (card && !card.hasAttribute("data-action")) {
+                e.preventDefault();
+                var feature = card.getAttribute("data-feature");
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+
+                if (feature === "birthdays") {
+                    if (r.showPage) r.showPage("birthdaysPage", feats.birthdays ? feats.birthdays.render : null);
+                } else if (feature === "daily") {
+                    if (r.showPage) r.showPage("dailyLogsPage", feats.dailyLogs ? feats.dailyLogs.render : null);
+                } else if (feature === "tasks") {
+                    if (r.showPage) r.showPage("tasksPage", feats.tasks ? feats.tasks.render : null);
+                } else if (feature === "reminders") {
+                    if (r.showPage) r.showPage("remindersPage", feats.reminders ? feats.reminders.render : null);
+                } else if (feature === "videos" || feature === "pictures" || feature === "other") {
+                    if (feats.vault) feats.vault.setVaultType(feature);
+                    if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
+                }
+                return;
+            }
+
+            if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton")) {
+                e.preventDefault();
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                if (r.showDashboard) r.showDashboard();
+                return;
+            }
+
+            if (target.closest("#vaultBackButton")) {
+                e.preventDefault();
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                if (feats.vault && feats.vault.getActiveFolder && feats.vault.getActiveFolder()) {
+                    feats.vault.backToFolders();
+                } else {
+                    if (r.showDashboard) r.showDashboard();
+                }
+                return;
+            }
+
+            var folderCard = target.closest('[data-action="open-folder"]');
+            if (folderCard) {
+                e.preventDefault();
+                var fName = decodeURIComponent(folderCard.getAttribute("data-folder"));
+                if (feats.vault && feats.vault.openFolder) feats.vault.openFolder(fName);
+                return;
+            }
+
+            if (target.closest("#btnBackToFolders")) {
+                e.preventDefault();
+                if (feats.vault && feats.vault.backToFolders) feats.vault.backToFolders();
+                return;
+            }
+
+            if (target.closest("#addContentButton")) {
+                e.preventDefault();
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                if (r.showPage) r.showPage("addContentPage");
+                return;
+            }
+
+            if (target.closest("#addContentBackButton, #cancelAddContentButton")) {
+                e.preventDefault();
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                if (r.showDashboard) r.showDashboard();
+                return;
+            }
+
+            if (target.closest("#btnAdminUpdater")) {
+                e.preventDefault();
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                window.KuyaB.clearFileCommitterForm();
+                if (r.showPage) r.showPage("adminUpdaterPage", window.KuyaB.loadRepoTree);
+                return;
+            }
+
+            if (target.closest("#adminUpdaterBackButton, #cancelAdminUpdaterButton")) {
+                e.preventDefault();
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                window.KuyaB.clearFileCommitterForm();
+                if (feats.vault) feats.vault.setVaultType("other");
+                if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
+                return;
+            }
+
+            if (target.closest("#btnOpenUserTracking")) {
+                e.preventDefault();
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                if (r.showPage) r.showPage("userTrackingPage", feats.tracking ? feats.tracking.render : null);
+                return;
+            }
+            if (target.closest("#userTrackingBackButton")) {
+                e.preventDefault();
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                if (feats.vault) feats.vault.setVaultType("other");
+                if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
+                return;
+            }
+
+            if (target.closest("#gameButton")) {
+                e.preventDefault();
+                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
+                alert("Use /game in chat to play Word Scramble!");
+                return;
+            }
+
+            var vaultView = target.closest('[data-action="view-vault"]');
+            if (vaultView) {
+                e.preventDefault();
+                var vId = vaultView.getAttribute("data-id");
+                var vTitle = vaultView.getAttribute("data-title");
+                var vType = vaultView.getAttribute("data-type") || "pictures";
+                if (feats.vault && feats.vault.openMediaModal) feats.vault.openMediaModal(vId, vTitle, vType);
+                return;
+            }
+
+            var vaultDel = target.closest('[data-action="delete-vault"]');
+            if (vaultDel) {
+                e.preventDefault();
+                if (feats.vault && feats.vault.deleteItem) feats.vault.deleteItem(vaultDel.getAttribute("data-id"));
+                return;
+            }
+        });
+
+        document.addEventListener("click", function (e) {
+            var dropdown = document.getElementById("fileSuggestionsList");
+            var searchInput = document.getElementById("fileSearchInput");
+            if (dropdown && searchInput && !dropdown.contains(e.target) && e.target !== searchInput) {
+                dropdown.style.display = "none";
+            }
+        });
+    }
+
+    function init() {
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.KuyaB.tg = window.Telegram.WebApp;
+            try {
+                window.KuyaB.tg.ready();
+                window.KuyaB.tg.expand();
+            } catch (e) {}
+        }
+
+        var feats = getFeatures();
+        var r = getRouter();
+
+        if (feats.vault && feats.vault.initFileInput) feats.vault.initFileInput();
+        initAddContentInput();
+        attachGlobalEvents();
+
+        if (feats.tracking && feats.tracking.track) {
+            feats.tracking.track();
+        }
+
+        var params = new URLSearchParams(window.location.search);
+        var startSection = params.get("start");
+
+        if (startSection === "birthdays") {
+            if (r.showPage) r.showPage("birthdaysPage", feats.birthdays ? feats.birthdays.render : null);
+        } else if (startSection === "videos" || startSection === "pictures" || startSection === "other") {
+            if (feats.vault) feats.vault.setVaultType(startSection);
+            if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
+        } else if (startSection === "admin_updater") {
+            window.KuyaB.clearFileCommitterForm();
+            if (r.showPage) r.showPage("adminUpdaterPage", window.KuyaB.loadRepoTree);
+        } else {
+            if (r.showDashboard) r.showDashboard();
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+})();
