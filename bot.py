@@ -32,6 +32,7 @@ from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 from features.business.assistant import handle_business_message
 from features.downloader import api_download_link_to_vault
+from features.remote_sync import api_remote_sync_file
 from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
@@ -239,6 +240,9 @@ starlette_app = Starlette(
         Route("/api/vault/download-url", api_download_link_to_vault, methods=["POST"]),
         Route("/api/vault/media-file", api_get_vault_media_file, methods=["GET"]),
         Route("/api/vault/delete", api_delete_vault_item, methods=["POST"]),
+
+        # Dedicated Remote Sync Dispatch Webhook
+        Route("/api/admin/remote-sync", api_remote_sync_file, methods=["POST"]),
 
         # GitHub Automated File Manager
         Route("/api/admin/repo-tree", api_admin_get_repo_tree, methods=["GET"]),
