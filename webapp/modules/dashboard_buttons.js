@@ -1,6 +1,6 @@
 /* =========================================================
    KUYA B — DASHBOARD & NAVIGATION BUTTONS MODULE
-   Handles feature cards, back buttons, and dashboard actions
+   webapp/modules/dashboard_buttons.js
    ========================================================= */
 
 (function () {
@@ -25,6 +25,33 @@
         }
     }
 
+    function openVaultCategory(type) {
+        var r = getRouter();
+        var feats = getFeatures();
+
+        var titleEl = document.getElementById("vaultPageTitle");
+        var otherBar = document.getElementById("otherActionsBar");
+
+        if (titleEl) {
+            if (type === "videos") titleEl.innerText = "🎥 Videos";
+            else if (type === "pictures") titleEl.innerText = "🖼️ Pictures";
+            else titleEl.innerText = "📁 Other";
+        }
+
+        // Show Word Game, Committer, User Activity ONLY in Other folder
+        if (otherBar) {
+            otherBar.style.display = (type === "other") ? "block" : "none";
+        }
+
+        if (feats.vault && feats.vault.setVaultType) {
+            feats.vault.setVaultType(type);
+        }
+
+        if (r.showPage) {
+            r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
+        }
+    }
+
     function initDashboardButtons() {
         document.body.addEventListener("click", function (e) {
             var target = e.target;
@@ -33,7 +60,7 @@
             var r = getRouter();
             var feats = getFeatures();
 
-            // 1. Dashboard Feature Cards (.feature-card)
+            // 1. Dashboard Feature Cards
             var card = target.closest(".feature-card");
             if (card && !card.hasAttribute("data-action")) {
                 e.preventDefault();
@@ -49,13 +76,12 @@
                 } else if (feature === "reminders") {
                     if (r.showPage) r.showPage("remindersPage", feats.reminders ? feats.reminders.render : null);
                 } else if (feature === "videos" || feature === "pictures" || feature === "other") {
-                    if (feats.vault) feats.vault.setVaultType(feature);
-                    if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
+                    openVaultCategory(feature);
                 }
                 return;
             }
 
-            // 2. Navigation Back Buttons
+            // 2. Back Buttons
             if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton")) {
                 e.preventDefault();
                 triggerHaptic("light");
@@ -74,18 +100,19 @@
                 return;
             }
 
-            // 3. Add Content Button (+ Add Content on dashboard)
-            if (target.closest("#addContentButton")) {
+            // 3. Vault Add Button (+) & Cancel Button
+            if (target.closest("#addVaultItemButton")) {
                 e.preventDefault();
                 triggerHaptic("light");
-                if (r.showPage) r.showPage("addContentPage");
+                var form = document.getElementById("vaultUploadForm");
+                if (form) form.style.display = (form.style.display === "none") ? "block" : "none";
                 return;
             }
 
-            if (target.closest("#addContentBackButton, #cancelAddContentButton")) {
+            if (target.closest("#cancelVaultItemButton")) {
                 e.preventDefault();
-                triggerHaptic("light");
-                if (r.showDashboard) r.showDashboard();
+                var form = document.getElementById("vaultUploadForm");
+                if (form) form.style.display = "none";
                 return;
             }
 
@@ -97,7 +124,7 @@
                 return;
             }
 
-            // 5. User Activity Navigation
+            // 5. User Activity Card
             if (target.closest("#btnOpenUserTracking")) {
                 e.preventDefault();
                 triggerHaptic("light");
@@ -108,12 +135,11 @@
             if (target.closest("#userTrackingBackButton")) {
                 e.preventDefault();
                 triggerHaptic("light");
-                if (feats.vault) feats.vault.setVaultType("other");
-                if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
+                openVaultCategory("other");
                 return;
             }
 
-            // 6. Admin File Committer Navigation
+            // 6. File Committer Card
             if (target.closest("#btnAdminUpdater")) {
                 e.preventDefault();
                 triggerHaptic("light");
@@ -126,8 +152,7 @@
                 e.preventDefault();
                 triggerHaptic("light");
                 if (window.KuyaB.clearFileCommitterForm) window.KuyaB.clearFileCommitterForm();
-                if (feats.vault) feats.vault.setVaultType("other");
-                if (r.showPage) r.showPage("vaultPage", feats.vault ? feats.vault.render : null);
+                openVaultCategory("other");
                 return;
             }
         });
