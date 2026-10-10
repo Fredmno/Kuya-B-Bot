@@ -4,14 +4,432 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kuya B Hub</title>
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="/app/style.css?v={{ v }}">
+    <link rel="stylesheet" href="/app/styles.css?v={{ v }}">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #f1f5f9);
+            color: var(--tg-theme-text-color, #1e293b);
+            padding: 16px;
+            padding-bottom: 80px;
+            line-height: 1.5;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--tg-theme-text-color, #0f172a);
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #ffffff);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .feature-card {
+            background: var(--tg-theme-secondary-bg-color, #ffffff);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            transition: transform 0.1s ease;
+        }
+
+        .feature-card:active {
+            transform: scale(0.98);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--tg-theme-text-color, #1e293b);
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .input-control, textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.92rem;
+            background: #fff;
+            color: #1e293b;
+            outline: none;
+        }
+
+        .input-control:focus, textarea:focus, select:focus {
+            border-color: #3b82f6;
+        }
+
+        textarea {
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+        .btn:active {
+            opacity: 0.85;
+        }
+
+        .btn-primary {
+            background-color: var(--tg-theme-button-color, #2563eb);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .btn-soft {
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-soft.save {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .btn-soft.cancel {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-soft.delete {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .relative {
+            position: relative;
+        }
+    </style>
 </head>
 <body>
-    <!-- App Shell & View Container -->
-    <div id="app"></div>
 
-    <!-- Script Bundler & View Loader -->
-    <script src="/app/loader.js?v={{ v }}"></script>
+    <!-- 1. DASHBOARD PAGE -->
+    <div id="dashboardPage" class="page active">
+        <div class="header">
+            <h1>Kuya B Hub</h1>
+            <span style="font-size: 0.8rem; color: #64748b; background: #e2e8f0; padding: 2px 8px; border-radius: 12px;">v{{ v }}</span>
+        </div>
+
+        <div class="grid">
+            <div class="feature-card" data-feature="birthdays">
+                <div class="feature-icon">🎂</div>
+                <div class="feature-title">Birthdays</div>
+            </div>
+            <div class="feature-card" data-feature="daily">
+                <div class="feature-icon">📝</div>
+                <div class="feature-title">Daily Logs</div>
+            </div>
+            <div class="feature-card" data-feature="tasks">
+                <div class="feature-icon">✅</div>
+                <div class="feature-title">Tasks</div>
+            </div>
+            <div class="feature-card" data-feature="reminders">
+                <div class="feature-icon">🔔</div>
+                <div class="feature-title">Reminders</div>
+            </div>
+            <div class="feature-card" data-feature="videos">
+                <div class="feature-icon">🎬</div>
+                <div class="feature-title">Vault Videos</div>
+            </div>
+            <div class="feature-card" data-feature="pictures">
+                <div class="feature-icon">🖼️</div>
+                <div class="feature-title">Vault Pictures</div>
+            </div>
+            <div class="feature-card" data-feature="other">
+                <div class="feature-icon">📁</div>
+                <div class="feature-title">Vault Files</div>
+            </div>
+            <div class="feature-card" id="gameButton">
+                <div class="feature-icon">🎮</div>
+                <div class="feature-title">Word Game</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+            <button type="button" id="addContentButton" class="btn btn-primary">+ Add Vault Content</button>
+        </div>
+    </div>
+
+
+    <!-- 2. BIRTHDAYS PAGE -->
+    <div id="birthdaysPage" class="page">
+        <button type="button" id="birthdayBackButton" class="btn-back">← Back to Hub</button>
+        <div class="header">
+            <h1>🎂 Birthdays</h1>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Register Birthday</h2>
+            <div class="input-group">
+                <label for="bdayNameInput">Name</label>
+                <input type="text" id="bdayNameInput" class="input-control" placeholder="e.g. Juan Dela Cruz">
+            </div>
+            <div class="input-group">
+                <label for="bdayDateInput">Date (MM-DD)</label>
+                <input type="text" id="bdayDateInput" class="input-control" placeholder="e.g. 05-23">
+            </div>
+            <button type="button" id="btnAddBday" class="btn btn-primary">Add Birthday</button>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Birthday Directory</h2>
+            <div id="birthdaysList">
+                <!-- Dynamically rendered by birthdays.js -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 3. DAILY LOGS PAGE -->
+    <div id="dailyLogsPage" class="page">
+        <button type="button" id="dailyLogsBackButton" class="btn-back">← Back to Hub</button>
+        <div class="header">
+            <h1>📝 Daily Logs</h1>
+        </div>
+        <div id="dailyLogsContainer"></div>
+    </div>
+
+
+    <!-- 4. TASKS PAGE -->
+    <div id="tasksPage" class="page">
+        <button type="button" id="tasksBackButton" class="btn-back">← Back to Hub</button>
+        <div class="header">
+            <h1>✅ Tasks</h1>
+        </div>
+        <div id="tasksContainer"></div>
+    </div>
+
+
+    <!-- 5. REMINDERS PAGE -->
+    <div id="remindersPage" class="page">
+        <button type="button" id="remindersBackButton" class="btn-back">← Back to Hub</button>
+        <div class="header">
+            <h1>🔔 Reminders</h1>
+        </div>
+        <div id="remindersContainer"></div>
+    </div>
+
+
+    <!-- 6. VAULT MEDIA PAGE -->
+    <div id="vaultPage" class="page">
+        <button type="button" id="vaultBackButton" class="btn-back">← Back</button>
+        <div class="header">
+            <h1 id="vaultHeaderTitle">📁 Vault</h1>
+            <button type="button" id="btnAdminUpdater" class="btn-soft save" style="font-size: 0.78rem;">File Committer</button>
+        </div>
+        <div id="vaultContentArea"></div>
+    </div>
+
+
+    <!-- 7. ADD VAULT CONTENT PAGE -->
+    <div id="addContentPage" class="page">
+        <button type="button" id="addContentBackButton" class="btn-back">← Cancel</button>
+        <div class="header">
+            <h1>Add Vault Content</h1>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                <button type="button" id="tabUploadFile" class="btn-soft save" onclick="window.KuyaB.switchAddContentMode('file')" style="flex:1;">Upload File</button>
+                <button type="button" id="tabDownloadLink" class="btn-soft cancel" onclick="window.KuyaB.switchAddContentMode('link')" style="flex:1;">From URL</button>
+            </div>
+
+            <!-- Upload File Section -->
+            <div id="uploadFileSection">
+                <div class="input-group">
+                    <label>Choose File</label>
+                    <input type="file" id="newContentFile" class="input-control">
+                    <span id="newContentFileName" style="font-size: 0.8rem; color: #64748b; margin-top: 4px; display: block;">No file chosen</span>
+                </div>
+            </div>
+
+            <!-- Download Link Section -->
+            <div id="downloadLinkSection" style="display: none;">
+                <div class="input-group">
+                    <label>Direct Media URL</label>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="url" id="downloadMediaUrl" class="input-control" placeholder="https://...">
+                        <button type="button" class="btn-soft save" onclick="window.KuyaB.pasteDownloadUrl()">Paste</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Title (Optional)</label>
+                <input type="text" id="newContentTitle" class="input-control" placeholder="Enter title">
+            </div>
+
+            <div class="input-group">
+                <label>Folder Name</label>
+                <input type="text" id="newContentFolder" class="input-control" placeholder="General">
+            </div>
+
+            <div class="input-group">
+                <label>Category</label>
+                <select id="newContentSection" class="input-control">
+                    <option value="pictures">Pictures</option>
+                    <option value="videos">Videos</option>
+                    <option value="other">Other Documents</option>
+                </select>
+            </div>
+
+            <div id="uploadProgressContainer" style="display: none; margin-bottom: 12px;">
+                <div style="width: 100%; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div id="uploadProgressBar" style="width: 0%; height: 100%; background: #2563eb; transition: width 0.2s;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+                    <span id="uploadStatusText">Uploading...</span>
+                    <span id="uploadPercentText">0%</span>
+                </div>
+            </div>
+
+            <button type="button" id="btnSubmitAddContent" class="btn btn-primary" onclick="window.KuyaB.submitAddContentAction()">Upload Content</button>
+        </div>
+    </div>
+
+
+    <!-- 8. ADMIN FILE COMMITTER PAGE -->
+    <div id="adminUpdaterPage" class="page">
+        <button type="button" id="adminUpdaterBackButton" class="btn-back">← Back to Vault</button>
+        <div class="header">
+            <h1>File Committer 🚀</h1>
+            <span id="repoScanStatus" style="font-size: 0.8rem; color: #64748b;"></span>
+        </div>
+
+        <div class="card">
+            <div class="input-group relative">
+                <label>Search Repository File</label>
+                <input type="text" id="fileSearchInput" class="input-control" placeholder="Type filename to search..." oninput="window.KuyaB.filterRepoFiles(this.value)">
+                <div id="fileSuggestionsList" class="dropdown-menu"></div>
+            </div>
+
+            <div class="input-group">
+                <label>Target Path</label>
+                <input type="text" id="commitFilePath" class="input-control" placeholder="e.g. features/BirthDay/Birthdays.py">
+            </div>
+
+            <div class="input-group">
+                <label>Commit Message</label>
+                <input type="text" id="commitMsgInput" class="input-control" placeholder="e.g. Update birthday handler">
+            </div>
+
+            <div class="input-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label style="margin-bottom: 0;">File Content</label>
+                    <div style="display: flex; gap: 6px;">
+                        <span id="fileLoadStatus" style="font-size: 0.78rem; color: #3b82f6; align-self: center;"></span>
+                        <button type="button" class="btn-soft cancel" onclick="window.KuyaB.clearCommitterContent()">Clear</button>
+                        <button type="button" class="btn-soft save" onclick="window.KuyaB.pasteCommitterContent()">Paste</button>
+                    </div>
+                </div>
+                <textarea id="commitContentInput" rows="12" placeholder="Paste file content here..."></textarea>
+            </div>
+
+            <button type="button" id="btnSubmitCommit" class="btn btn-primary" onclick="window.KuyaB.submitFileCommit()">Commit & Deploy 🚀</button>
+        </div>
+    </div>
+
+    <!-- FEATURE MODULE SCRIPTS -->
+    <script src="/app/features/birthdays.js?v={{ v }}"></script>
+    <script src="/app/app.js?v={{ v }}"></script>
 </body>
 </html>
