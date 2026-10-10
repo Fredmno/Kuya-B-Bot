@@ -4,432 +4,312 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kuya B Hub</title>
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="/app/styles.css?v={{ v }}">
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color, #f1f5f9);
-            color: var(--tg-theme-text-color, #1e293b);
-            padding: 16px;
-            padding-bottom: 80px;
-            line-height: 1.5;
-        }
-
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: var(--tg-theme-text-color, #0f172a);
-        }
-
-        .page {
-            display: none;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        .card {
-            background: var(--tg-theme-secondary-bg-color, #ffffff);
-            border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0, 0, 0, 0.06);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .feature-card {
-            background: var(--tg-theme-secondary-bg-color, #ffffff);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(0, 0, 0, 0.06);
-            transition: transform 0.1s ease;
-        }
-
-        .feature-card:active {
-            transform: scale(0.98);
-        }
-
-        .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 8px;
-        }
-
-        .feature-title {
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--tg-theme-text-color, #1e293b);
-        }
-
-        .input-group {
-            margin-bottom: 12px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #64748b;
-            margin-bottom: 4px;
-        }
-
-        .input-control, textarea, select {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            font-size: 0.92rem;
-            background: #fff;
-            color: #1e293b;
-            outline: none;
-        }
-
-        .input-control:focus, textarea:focus, select:focus {
-            border-color: #3b82f6;
-        }
-
-        textarea {
-            font-family: monospace;
-            resize: vertical;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.15s ease;
-        }
-
-        .btn:active {
-            opacity: 0.85;
-        }
-
-        .btn-primary {
-            background-color: var(--tg-theme-button-color, #2563eb);
-            color: var(--tg-theme-button-text-color, #ffffff);
-        }
-
-        .btn-soft {
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-soft.save {
-            background: #e0e7ff;
-            color: #3730a3;
-        }
-
-        .btn-soft.cancel {
-            background: #f1f5f9;
-            color: #475569;
-        }
-
-        .btn-soft.delete {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .btn-back {
-            background: none;
-            border: none;
-            color: #3b82f6;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .dropdown-menu {
-            position: absolute;
-            width: 100%;
-            max-height: 200px;
-            overflow-y: auto;
-            background: #fff;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            z-index: 50;
-            display: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .relative {
-            position: relative;
-        }
-    </style>
+    <link rel="stylesheet" href="/app/style.css?v={{ v }}">
 </head>
 <body>
-
-    <!-- 1. DASHBOARD PAGE -->
-    <div id="dashboardPage" class="page active">
-        <div class="header">
-            <h1>Kuya B Hub</h1>
-            <span style="font-size: 0.8rem; color: #64748b; background: #e2e8f0; padding: 2px 8px; border-radius: 12px;">v{{ v }}</span>
-        </div>
-
-        <div class="grid">
-            <div class="feature-card" data-feature="birthdays">
-                <div class="feature-icon">🎂</div>
-                <div class="feature-title">Birthdays</div>
-            </div>
-            <div class="feature-card" data-feature="daily">
-                <div class="feature-icon">📝</div>
-                <div class="feature-title">Daily Logs</div>
-            </div>
-            <div class="feature-card" data-feature="tasks">
-                <div class="feature-icon">✅</div>
-                <div class="feature-title">Tasks</div>
-            </div>
-            <div class="feature-card" data-feature="reminders">
-                <div class="feature-icon">🔔</div>
-                <div class="feature-title">Reminders</div>
-            </div>
-            <div class="feature-card" data-feature="videos">
-                <div class="feature-icon">🎬</div>
-                <div class="feature-title">Vault Videos</div>
-            </div>
-            <div class="feature-card" data-feature="pictures">
-                <div class="feature-icon">🖼️</div>
-                <div class="feature-title">Vault Pictures</div>
-            </div>
-            <div class="feature-card" data-feature="other">
-                <div class="feature-icon">📁</div>
-                <div class="feature-title">Vault Files</div>
-            </div>
-            <div class="feature-card" id="gameButton">
-                <div class="feature-icon">🎮</div>
-                <div class="feature-title">Word Game</div>
+    <div id="app">
+        <!-- IN-APP MEDIA VIEWER MODAL (LIGHTBOX) -->
+        <div id="mediaViewerModal" class="modal-overlay" style="display: none; align-items: center; justify-content: center;" onclick="if(event.target===this) window.KuyaB.closeMediaModal()">
+            <div class="modal-card" style="max-width: 92%; padding: 14px; text-align: center; border-radius: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span id="mediaModalTitle" style="font-weight: 700; font-size: 1rem;">View Media</span>
+                    <button type="button" class="btn-soft cancel" style="padding: 4px 10px; font-size: 0.85rem;" onclick="window.KuyaB.closeMediaModal()">✕</button>
+                </div>
+                <div id="mediaModalContainer" style="min-height: 220px; display: flex; align-items: center; justify-content: center; background: #000; border-radius: 12px; overflow: hidden;">
+                    <img id="mediaModalImage" src="" alt="Vault Picture" style="max-width: 100%; max-height: 65vh; object-fit: contain; display: none;">
+                    <video id="mediaModalVideo" controls playsinline style="max-width: 100%; max-height: 65vh; display: none; border-radius: 8px;"></video>
+                    <div id="mediaLoadingSpinner" style="color: #fff; font-size: 0.9rem;">Loading media...</div>
+                </div>
             </div>
         </div>
 
-        <div style="margin-top: 16px;">
-            <button type="button" id="addContentButton" class="btn btn-primary">+ Add Vault Content</button>
-        </div>
-    </div>
-
-
-    <!-- 2. BIRTHDAYS PAGE -->
-    <div id="birthdaysPage" class="page">
-        <button type="button" id="birthdayBackButton" class="btn-back">← Back to Hub</button>
-        <div class="header">
-            <h1>🎂 Birthdays</h1>
-        </div>
-
-        <div class="card">
-            <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Register Birthday</h2>
-            <div class="input-group">
-                <label for="bdayNameInput">Name</label>
-                <input type="text" id="bdayNameInput" class="input-control" placeholder="e.g. Juan Dela Cruz">
+        <!-- STANDALONE ADD BIRTHDAY POPUP VIEW -->
+        <div id="addBirthdayStandalonePage" style="display: none; padding: 24px 16px;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;">🎂 Add Birthday</h2>
+                <p style="color: var(--text-muted); font-size: 0.88rem;">Save directly to your permanent registry</p>
             </div>
-            <div class="input-group">
-                <label for="bdayDateInput">Date (MM-DD)</label>
-                <input type="text" id="bdayDateInput" class="input-control" placeholder="e.g. 05-23">
-            </div>
-            <button type="button" id="btnAddBday" class="btn btn-primary">Add Birthday</button>
-        </div>
-
-        <div class="card">
-            <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Birthday Directory</h2>
-            <div id="birthdaysList">
-                <!-- Dynamically rendered by birthdays.js -->
+            <div class="form-box" style="display: block; padding: 20px;">
+                <input type="text" class="neu-input" id="popupBirthdayName" placeholder="Full Name" style="margin-bottom: 14px;">
+                <input type="text" class="neu-input" id="popupBirthdayDate" placeholder="Date (MM-DD, e.g. 10-25)" maxlength="5" style="margin-bottom: 20px;">
+                <div class="form-actions" style="display: flex; gap: 12px;">
+                    <button type="button" class="btn-soft cancel" style="flex: 1;" onclick="if(window.Telegram && Telegram.WebApp) Telegram.WebApp.close();">Cancel</button>
+                    <button type="button" class="btn-soft save" id="btnPopupSaveBirthday" style="flex: 1;" onclick="window.saveBirthdayFromPopup()">Save</button>
+                </div>
             </div>
         </div>
-    </div>
 
+        <!-- MAIN DASHBOARD PAGE -->
+        <div id="dashboardPage">
+            <header class="dashboard-header">
+                <div class="greeting">Welcome Back 👋</div>
+                <h1>Kuya B</h1>
+                <div class="subtext">Your personal hub</div>
+            </header>
 
-    <!-- 3. DAILY LOGS PAGE -->
-    <div id="dailyLogsPage" class="page">
-        <button type="button" id="dailyLogsBackButton" class="btn-back">← Back to Hub</button>
-        <div class="header">
-            <h1>📝 Daily Logs</h1>
-        </div>
-        <div id="dailyLogsContainer"></div>
-    </div>
-
-
-    <!-- 4. TASKS PAGE -->
-    <div id="tasksPage" class="page">
-        <button type="button" id="tasksBackButton" class="btn-back">← Back to Hub</button>
-        <div class="header">
-            <h1>✅ Tasks</h1>
-        </div>
-        <div id="tasksContainer"></div>
-    </div>
-
-
-    <!-- 5. REMINDERS PAGE -->
-    <div id="remindersPage" class="page">
-        <button type="button" id="remindersBackButton" class="btn-back">← Back to Hub</button>
-        <div class="header">
-            <h1>🔔 Reminders</h1>
-        </div>
-        <div id="remindersContainer"></div>
-    </div>
-
-
-    <!-- 6. VAULT MEDIA PAGE -->
-    <div id="vaultPage" class="page">
-        <button type="button" id="vaultBackButton" class="btn-back">← Back</button>
-        <div class="header">
-            <h1 id="vaultHeaderTitle">📁 Vault</h1>
-            <button type="button" id="btnAdminUpdater" class="btn-soft save" style="font-size: 0.78rem;">File Committer</button>
-        </div>
-        <div id="vaultContentArea"></div>
-    </div>
-
-
-    <!-- 7. ADD VAULT CONTENT PAGE -->
-    <div id="addContentPage" class="page">
-        <button type="button" id="addContentBackButton" class="btn-back">← Cancel</button>
-        <div class="header">
-            <h1>Add Vault Content</h1>
-        </div>
-
-        <div class="card">
-            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-                <button type="button" id="tabUploadFile" class="btn-soft save" onclick="window.KuyaB.switchAddContentMode('file')" style="flex:1;">Upload File</button>
-                <button type="button" id="tabDownloadLink" class="btn-soft cancel" onclick="window.KuyaB.switchAddContentMode('link')" style="flex:1;">From URL</button>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search your vault..." id="dashboardSearchInput">
             </div>
 
-            <!-- Upload File Section -->
-            <div id="uploadFileSection">
-                <div class="input-group">
-                    <label>Choose File</label>
-                    <input type="file" id="newContentFile" class="input-control">
-                    <span id="newContentFileName" style="font-size: 0.8rem; color: #64748b; margin-top: 4px; display: block;">No file chosen</span>
+            <div class="section-title">Personal</div>
+            <div class="grid-2">
+                <div class="feature-card" data-feature="daily">
+                    <div class="card-header"><span class="card-icon">📅</span><span class="card-title">Daily Logs</span></div>
+                    <span class="card-desc">Your days & habits</span>
+                </div>
+                <div class="feature-card" data-feature="tasks">
+                    <div class="card-header"><span class="card-icon">✅</span><span class="card-title">Tasks</span></div>
+                    <span class="card-desc">Get things done</span>
+                </div>
+                <div class="feature-card" data-feature="reminders">
+                    <div class="card-header"><span class="card-icon">⏰</span><span class="card-title">Reminders</span></div>
+                    <span class="card-desc">Don't forget</span>
+                </div>
+                <div class="feature-card" data-feature="birthdays">
+                    <div class="card-header"><span class="card-icon">🎂</span><span class="card-title">Birthdays</span></div>
+                    <span class="card-desc">Important dates</span>
                 </div>
             </div>
 
-            <!-- Download Link Section -->
-            <div id="downloadLinkSection" style="display: none;">
-                <div class="input-group">
-                    <label>Direct Media URL</label>
-                    <div style="display: flex; gap: 6px;">
-                        <input type="url" id="downloadMediaUrl" class="input-control" placeholder="https://...">
-                        <button type="button" class="btn-soft save" onclick="window.KuyaB.pasteDownloadUrl()">Paste</button>
+            <div class="section-title">Media & Content</div>
+            <div class="grid-2">
+                <div class="feature-card" data-feature="videos">
+                    <div class="card-header"><span class="card-icon">🎥</span><span class="card-title">Videos</span></div>
+                    <span class="card-desc">Your video vault</span>
+                </div>
+                <div class="feature-card" data-feature="pictures">
+                    <div class="card-header"><span class="card-icon">🖼️</span><span class="card-title">Pictures</span></div>
+                    <span class="card-desc">Your photo vault</span>
+                </div>
+                <div class="feature-card" data-feature="other">
+                    <div class="card-header"><span class="card-icon">📁</span><span class="card-title">Other</span></div>
+                    <span class="card-desc">Everything else</span>
+                </div>
+                <div class="feature-card" data-feature="search">
+                    <div class="card-header"><span class="card-icon">🔍</span><span class="card-title">Search</span></div>
+                    <span class="card-desc">Find anything</span>
+                </div>
+            </div>
+
+            <div class="feature-card-full" id="gameButton">
+                <div class="card-left">
+                    <span class="card-icon">🎮</span>
+                    <div>
+                        <div class="card-title">Word Scramble</div>
+                        <div class="card-desc">Take a quick break</div>
                     </div>
                 </div>
+                <div class="card-arrow">›</div>
             </div>
 
-            <div class="input-group">
-                <label>Title (Optional)</label>
-                <input type="text" id="newContentTitle" class="input-control" placeholder="Enter title">
-            </div>
-
-            <div class="input-group">
-                <label>Folder Name</label>
-                <input type="text" id="newContentFolder" class="input-control" placeholder="General">
-            </div>
-
-            <div class="input-group">
-                <label>Category</label>
-                <select id="newContentSection" class="input-control">
-                    <option value="pictures">Pictures</option>
-                    <option value="videos">Videos</option>
-                    <option value="other">Other Documents</option>
-                </select>
-            </div>
-
-            <div id="uploadProgressContainer" style="display: none; margin-bottom: 12px;">
-                <div style="width: 100%; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
-                    <div id="uploadProgressBar" style="width: 0%; height: 100%; background: #2563eb; transition: width 0.2s;"></div>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #64748b; margin-top: 4px;">
-                    <span id="uploadStatusText">Uploading...</span>
-                    <span id="uploadPercentText">0%</span>
-                </div>
-            </div>
-
-            <button type="button" id="btnSubmitAddContent" class="btn btn-primary" onclick="window.KuyaB.submitAddContentAction()">Upload Content</button>
-        </div>
-    </div>
-
-
-    <!-- 8. ADMIN FILE COMMITTER PAGE -->
-    <div id="adminUpdaterPage" class="page">
-        <button type="button" id="adminUpdaterBackButton" class="btn-back">← Back to Vault</button>
-        <div class="header">
-            <h1>File Committer 🚀</h1>
-            <span id="repoScanStatus" style="font-size: 0.8rem; color: #64748b;"></span>
+            <button class="full-btn" id="addContentButton">+ Add Content</button>
+            <footer class="dashboard-footer">Kuya B Personal Hub</footer>
         </div>
 
-        <div class="card">
-            <div class="input-group relative">
-                <label>Search Repository File</label>
-                <input type="text" id="fileSearchInput" class="input-control" placeholder="Type filename to search..." oninput="window.KuyaB.filterRepoFiles(this.value)">
-                <div id="fileSuggestionsList" class="dropdown-menu"></div>
+        <!-- BIRTHDAYS FULL PAGE -->
+        <div id="birthdaysPage" style="display: none;">
+            <div class="top-bar">
+                <button type="button" class="btn-icon-back" id="birthdayBackButton">←</button>
+                <h2>🎂 Birthdays</h2>
+                <button type="button" class="btn-icon-add" id="addBirthdayButton">+</button>
+            </div>
+            <div class="form-box" id="birthdayForm" style="display: none;">
+                <input type="text" class="neu-input" id="birthdayName" placeholder="Name">
+                <input type="text" class="neu-input" id="birthdayDate" placeholder="Date (MM-DD)" maxlength="5">
+                <div class="form-actions">
+                    <button type="button" class="btn-soft cancel" id="cancelBirthdayButton">Cancel</button>
+                    <button type="button" class="btn-soft save" id="saveBirthdayButton">Save</button>
+                </div>
+            </div>
+            <div id="birthdaysList"></div>
+        </div>
+
+        <!-- DAILY LOGS PAGE -->
+        <div id="dailyLogsPage" style="display: none;">
+            <div class="top-bar">
+                <button type="button" class="btn-icon-back" id="dailyLogsBackButton">←</button>
+                <h2>📅 Daily Logs</h2>
+                <button type="button" class="btn-icon-add" id="addLogButton">+</button>
             </div>
 
-            <div class="input-group">
-                <label>Target Path</label>
-                <input type="text" id="commitFilePath" class="input-control" placeholder="e.g. features/BirthDay/Birthdays.py">
+            <div class="form-box" id="logForm" style="display: none;">
+                <div class="mood-selector-label">How are you feeling?</div>
+                <div class="mood-selector" id="moodSelectorContainer">
+                    <button type="button" class="mood-pill selected" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😊')">
+                        <span class="mood-emoji">😊</span><span class="mood-label">Happy</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😔')">
+                        <span class="mood-emoji">😔</span><span class="mood-label">Sad</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '🥺')">
+                        <span class="mood-emoji">🥺</span><span class="mood-label">Lonely</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😡')">
+                        <span class="mood-emoji">😡</span><span class="mood-label">Angry</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😴')">
+                        <span class="mood-emoji">😴</span><span class="mood-label">Tired</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '✨')">
+                        <span class="mood-emoji">✨</span><span class="mood-label">Excited</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '🧘')">
+                        <span class="mood-emoji">🧘</span><span class="mood-label">Calm</span>
+                    </button>
+                </div>
+
+                <div class="mood-selector-label" style="margin-top: 14px;">Habits Completed</div>
+                <div class="habit-chips-grid" id="habitsContainer">
+                    <button type="button" class="habit-chip" data-habit="💧 2L Water" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">💧</span> 2L Water
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="🏃 Workout" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">🏃</span> Workout
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="📖 Read" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">📖</span> Read
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="💊 Vitamins" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">💊</span> Vitamins
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="💻 Deep Work" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">💻</span> Deep Work
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="🧘 Meditation" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">🧘</span> Meditation
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="🥗 Clean Eating" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">🥗</span> Clean Eating
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="😴 7+ hrs Sleep" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">😴</span> 7+ hrs Sleep
+                    </button>
+                </div>
+
+                <div class="mood-selector-label" style="margin-top: 14px;">Thoughts & Reflections</div>
+                <textarea class="neu-input" id="logContent" placeholder="Write any notes or thoughts (optional)..." rows="3"></textarea>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-soft cancel" onclick="document.getElementById('logForm').style.display='none'">Cancel</button>
+                    <button type="button" class="btn-soft save" id="saveLogButton" onclick="window.KuyaB.features.dailyLogs.save(event)">Save</button>
+                </div>
             </div>
 
-            <div class="input-group">
-                <label>Commit Message</label>
-                <input type="text" id="commitMsgInput" class="input-control" placeholder="e.g. Update birthday handler">
-            </div>
+            <div id="dailyLogsList"></div>
+        </div>
 
-            <div class="input-group">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <label style="margin-bottom: 0;">File Content</label>
-                    <div style="display: flex; gap: 6px;">
-                        <span id="fileLoadStatus" style="font-size: 0.78rem; color: #3b82f6; align-self: center;"></span>
-                        <button type="button" class="btn-soft cancel" onclick="window.KuyaB.clearCommitterContent()">Clear</button>
-                        <button type="button" class="btn-soft save" onclick="window.KuyaB.pasteCommitterContent()">Paste</button>
+        <!-- DETAIL MODAL FOR LOGS -->
+        <div id="logDetailModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) window.KuyaB.features.dailyLogs.closeModal()">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <span class="modal-emoji" id="modalLogEmoji">😊</span>
+                    <div>
+                        <div class="modal-date" id="modalLogDate"></div>
+                        <div class="modal-sub" id="modalHabitsCount"></div>
                     </div>
                 </div>
-                <textarea id="commitContentInput" rows="12" placeholder="Paste file content here..."></textarea>
+                <div id="modalHabitsSection" style="display: none;">
+                    <div class="modal-section-title">Completed Habits:</div>
+                    <div class="modal-habits-list" id="modalHabitsList"></div>
+                </div>
+                <div class="modal-section-title" style="margin-top: 8px;">Reflection:</div>
+                <div class="modal-body" id="modalLogContent"></div>
+                <div class="form-actions">
+                    <button type="button" class="btn-soft cancel" style="width: 100%;" onclick="window.KuyaB.features.dailyLogs.closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TASKS PAGE -->
+        <div id="tasksPage" style="display: none;">
+            <div class="top-bar">
+                <button type="button" class="btn-icon-back" id="tasksBackButton">←</button>
+                <h2>✅ Tasks</h2>
+                <button type="button" class="btn-icon-add" id="addTaskButton">+</button>
+            </div>
+            <div class="form-box" id="taskForm" style="display: none;">
+                <input type="text" class="neu-input" id="taskTitle" placeholder="Task description...">
+                <div class="form-actions">
+                    <button type="button" class="btn-soft cancel" id="cancelTaskButton">Cancel</button>
+                    <button type="button" class="btn-soft save" id="saveTaskButton">Save</button>
+                </div>
+            </div>
+            <div id="tasksList"></div>
+        </div>
+
+        <!-- REMINDERS PAGE -->
+        <div id="remindersPage" style="display: none;">
+            <div class="top-bar">
+                <button type="button" class="btn-icon-back" id="remindersBackButton">←</button>
+                <h2>⏰ Reminders</h2>
+                <button type="button" class="btn-icon-add" id="addReminderButton">+</button>
+            </div>
+            <div class="form-box" id="reminderForm" style="display: none;">
+                <input type="text" class="neu-input" id="reminderTitle" placeholder="Reminder text...">
+                <div class="form-actions">
+                    <button type="button" class="btn-soft cancel" id="cancelReminderButton">Cancel</button>
+                    <button type="button" class="btn-soft save" id="saveReminderButton">Save</button>
+                </div>
+            </div>
+            <div id="remindersList"></div>
+        </div>
+
+        <!-- VAULT PAGE (PICTURES, VIDEOS, OTHER) -->
+        <div id="vaultPage" style="display: none;">
+            <div class="top-bar">
+                <button type="button" class="btn-icon-back" id="vaultBackButton">←</button>
+                <h2 id="vaultPageTitle">📁 Vault</h2>
+                <button type="button" class="btn-icon-add" id="addVaultItemButton">+</button>
             </div>
 
-            <button type="button" id="btnSubmitCommit" class="btn btn-primary" onclick="window.KuyaB.submitFileCommit()">Commit & Deploy 🚀</button>
+            <div id="otherActionsBar" style="padding: 0 16px 12px 16px; display: none;">
+                <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="margin-bottom: 0;">
+                    <div class="card-left">
+                        <span class="card-icon">👥</span>
+                        <div>
+                            <div class="card-title">User Activity</div>
+                            <div class="card-desc">View users who accessed Kuya B</div>
+                        </div>
+                    </div>
+                    <div class="card-arrow">›</div>
+                </button>
+            </div>
+
+            <!-- Upload Media Form -->
+            <form id="vaultUploadForm" class="form-box" style="display: none;">
+                <input type="text" class="neu-input" id="vaultItemTitle" placeholder="Title / Caption" style="margin-bottom: 12px;">
+                <input type="text" class="neu-input" id="vaultItemFolder" placeholder="Folder (e.g. Work, Trips, Receipts)" style="margin-bottom: 12px;">
+                <input type="file" class="neu-input" id="vaultItemFile" accept="image/*,video/*" style="margin-bottom: 16px;">
+                <div class="form-actions">
+                    <button type="button" class="btn-soft cancel" id="cancelVaultItemButton">Cancel</button>
+                    <button type="button" class="btn-soft save" id="btnUploadMedia" onclick="window.KuyaB.uploadMediaToVault()">Upload</button>
+                </div>
+            </form>
+
+            <div id="vaultItemsList"></div>
+        </div>
+
+        <!-- USER ACTIVITY PAGE -->
+        <div id="userTrackingPage" style="display: none;">
+            <div class="top-bar">
+                <button type="button" class="btn-icon-back" id="userTrackingBackButton">←</button>
+                <h2>👥 User Activity</h2>
+                <div style="width: 40px;"></div>
+            </div>
+            <div id="usersListContainer" style="padding: 16px;">
+                <p class="empty-state">Loading user activity...</p>
+            </div>
         </div>
     </div>
 
-    <!-- FEATURE MODULE SCRIPTS -->
-    <script src="/app/features/birthdays.js?v={{ v }}"></script>
+    <!-- Feature Modules -->
+    <script src="/app/modules/birthdays.js?v={{ v }}"></script>
+    <script src="/app/modules/daily_logs.js?v={{ v }}"></script>
+    <script src="/app/modules/tracking.js?v={{ v }}"></script>
+
+    <!-- App Shell & Router -->
     <script src="/app/app.js?v={{ v }}"></script>
 </body>
 </html>
