@@ -126,7 +126,7 @@ async def check_and_send_daily_birthday_greetings(context: ContextTypes.DEFAULT_
             name = b.get("name", "Friend")
             raw_date = str(b.get("date", "")).strip()
 
-            # Robust comparison across formats (MM-DD, M-D, etc.)
+            # Comparison across both zero-padded and single-digit forms (MM-DD, M-D)
             is_birthday_today = False
             try:
                 parts = raw_date.split("-")
