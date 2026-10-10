@@ -32,6 +32,8 @@ from features.word_game import register_word_game_handlers
 from features.menu import kuya_b_menu, menu_callback_handler
 from features.business.assistant import handle_business_message
 from features.downloader import api_download_link_to_vault
+
+# BIRTHDAY IMPORTS
 from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
@@ -39,7 +41,9 @@ from features.BirthDay.Birthdays import (
     api_edit_birthday,
     check_and_send_daily_birthday_greetings,
     command_add_birthday,
+    command_trigger_bulletin,
 )
+
 from features.daily_logs.daily_logs import (
     api_get_daily_logs,
     api_save_daily_log,
