@@ -118,3 +118,32 @@
 
             <div id="vaultItemsList"></div>
         </div>
+
+<!-- Render Status Tile -->
+<div class="feature-card" onclick="window.checkRenderDeploy()" style="
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 12px;
+    border-radius: 18px;
+    background: var(--bg-card, #1e293b);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    text-align: center;
+">
+    <div style="
+        font-size: 2.2rem;
+        margin-bottom: 10px;
+        width: 54px;
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(234, 179, 8, 0.12);
+        border-radius: 14px;
+    ">⚡</div>
+    <div style="font-weight: 600; font-size: 0.92rem; color: #fff;">Deploy Status</div>
+    <div style="font-size: 0.75rem; color: var(--text-muted, #94a3b8); margin-top: 2px;">Render Build Logs</div>
+</div>
