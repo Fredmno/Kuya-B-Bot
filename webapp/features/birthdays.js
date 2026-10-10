@@ -1,5 +1,6 @@
 /* =========================================================
-   KUYA B — BIRTHDAYS FEATURE MODULE
+   KUYA B — BIRTHDAYS MODULE
+   Matches webapp/index.html layout and element IDs exactly
    ========================================================= */
 
 (function () {
@@ -8,61 +9,63 @@
     window.KuyaB = window.KuyaB || {};
     window.KuyaB.features = window.KuyaB.features || {};
 
-    var birthdaysFeature = {};
+    var birthdays = {};
 
-    birthdaysFeature.loadBirthdays = async function () {
+    birthdays.fetchList = async function () {
         try {
             var res = await fetch("/api/birthdays?t=" + Date.now());
             var data = await res.json();
             return data.birthdays || [];
         } catch (e) {
-            console.error("Failed to fetch birthdays", e);
+            console.error("Failed to load birthdays", e);
             return [];
         }
     };
 
-    birthdaysFeature.render = async function () {
+    birthdays.render = async function () {
         var container = document.getElementById("birthdaysList");
         if (!container) return;
 
-        container.innerHTML = '<div style="text-align:center; padding: 20px; color: #64748b;">Loading birthdays...</div>';
-        var list = await birthdaysFeature.loadBirthdays();
+        container.innerHTML = '<div style="text-align: center; padding: 24px; color: var(--text-muted, #94a3b8);">Loading birthdays...</div>';
+        var list = await birthdays.fetchList();
 
         if (!list || list.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding: 20px; color: #94a3b8;">No birthdays added yet.</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 32px 16px; color: var(--text-muted, #94a3b8);"><div style="font-size: 2rem; margin-bottom: 8px;">🎂</div>No birthdays registered yet. Tap + to add one.</div>';
             return;
         }
 
-        var html = "";
+        var html = '<div style="padding: 12px 16px;">';
         list.forEach(function (b) {
-            html += '<div class="birthday-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">' +
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; margin-bottom: 10px; background: var(--bg-card, #1e293b); border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">' +
                 '<div>' +
-                    '<strong style="color:#1e293b; display:block; font-size:0.95rem;">' + (b.name || "Unknown") + '</strong>' +
-                    '<span style="font-size:0.85rem; color:#64748b;">🎂 ' + (b.date || "") + '</span>' +
+                    '<div style="font-weight: 600; font-size: 0.95rem; color: #fff;">' + (b.name || "Unknown") + '</div>' +
+                    '<div style="font-size: 0.82rem; color: #38bdf8; margin-top: 2px;">🎂 ' + (b.date || "") + '</div>' +
                 '</div>' +
-                '<button type="button" class="btn-soft delete" data-action="delete-bday" data-id="' + b.id + '" style="padding:6px 12px; font-size:0.8rem; background:#fee2e2; color:#ef4444; border:none; border-radius:6px; cursor:pointer;">Delete</button>' +
+                '<button type="button" class="btn-soft cancel" data-action="delete-bday" data-id="' + b.id + '" style="padding: 6px 12px; font-size: 0.8rem; background: rgba(239,68,68,0.15); color: #f87171; border: none; border-radius: 8px; cursor: pointer;">Delete</button>' +
             '</div>';
         });
+        html += '</div>';
 
         container.innerHTML = html;
     };
 
-    birthdaysFeature.addBirthday = async function () {
-        var nameInput = document.getElementById("bdayNameInput");
-        var dateInput = document.getElementById("bdayDateInput");
-        var submitBtn = document.getElementById("btnAddBday");
+    birthdays.save = async function () {
+        var nameInput = document.getElementById("birthdayName");
+        var dateInput = document.getElementById("birthdayDate");
+        var saveBtn = document.getElementById("saveBirthdayButton");
+        var formBox = document.getElementById("birthdayForm");
 
         var name = nameInput ? nameInput.value.trim() : "";
         var date = dateInput ? dateInput.value.trim() : "";
 
         if (!name || !date) {
-            alert("Please enter both a name and a date (MM-DD).");
+            alert("Please provide both name and date (MM-DD).");
             return;
         }
 
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Adding...";
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerText = "Saving...";
         }
 
         try {
@@ -75,22 +78,25 @@
             if (data.success) {
                 if (nameInput) nameInput.value = "";
                 if (dateInput) dateInput.value = "";
-                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("success");
-                await birthdaysFeature.render();
+                if (formBox) formBox.style.display = "none";
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                    window.Telegram.WebApp.HapticFeedback.notificationOccurred("success");
+                }
+                await birthdays.render();
             } else {
-                alert("Failed to add birthday: " + (data.error || "Unknown server error"));
+                alert("Failed: " + (data.error || "Could not save birthday."));
             }
         } catch (e) {
-            alert("Network error: Could not reach server to add birthday.");
+            alert("Network error saving birthday.");
         } finally {
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Add Birthday";
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Save";
             }
         }
     };
 
-    birthdaysFeature.deleteBirthday = async function (id) {
+    birthdays.delete = async function (id) {
         if (!id) return;
         if (!confirm("Are you sure you want to delete this birthday?")) return;
 
@@ -102,33 +108,53 @@
             });
             var data = await res.json();
             if (data.success) {
-                if (window.KuyaB.triggerHaptic) window.KuyaB.triggerHaptic("light");
-                await birthdaysFeature.render();
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred("light");
+                }
+                await birthdays.render();
             } else {
-                alert("Could not delete birthday: " + (data.error || "Unknown error"));
+                alert("Could not delete: " + (data.error || "Server error."));
             }
         } catch (e) {
-            alert("Network error: Could not reach server to delete birthday.");
+            alert("Network error deleting birthday.");
         }
     };
 
-    // Attach click handlers using event delegation
+    // Attach event listeners directly to the exact HTML IDs
     document.addEventListener("click", function (e) {
-        var addBtn = e.target.closest("#btnAddBday");
+        var addBtn = e.target.closest("#addBirthdayButton");
         if (addBtn) {
             e.preventDefault();
-            birthdaysFeature.addBirthday();
+            var form = document.getElementById("birthdayForm");
+            if (form) {
+                form.style.display = form.style.display === "none" ? "block" : "none";
+            }
             return;
         }
 
-        var delBtn = e.target.closest('[data-action="delete-bday"]');
-        if (delBtn) {
+        var cancelBtn = e.target.closest("#cancelBirthdayButton");
+        if (cancelBtn) {
             e.preventDefault();
-            var bId = delBtn.getAttribute("data-id");
-            birthdaysFeature.deleteBirthday(bId);
+            var form = document.getElementById("birthdayForm");
+            if (form) form.style.display = "none";
+            return;
+        }
+
+        var saveBtn = e.target.closest("#saveBirthdayButton");
+        if (saveBtn) {
+            e.preventDefault();
+            birthdays.save();
+            return;
+        }
+
+        var deleteBtn = e.target.closest('[data-action="delete-bday"]');
+        if (deleteBtn) {
+            e.preventDefault();
+            var id = deleteBtn.getAttribute("data-id");
+            birthdays.delete(id);
             return;
         }
     });
 
-    window.KuyaB.features.birthdays = birthdaysFeature;
+    window.KuyaB.features.birthdays = birthdays;
 })();
