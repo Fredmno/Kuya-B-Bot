@@ -6,43 +6,103 @@
                 <button type="button" class="btn-icon-add" id="addVaultItemButton">+</button>
             </div>
 
-            <!-- "OTHER" FOLDER ACTIONS (Word Game, Committer, User Activity) -->
-            <div id="otherActionsBar" style="padding: 0 16px 14px 16px; display: none;">
-                <!-- Word Scramble Game Card -->
-                <button type="button" class="feature-card-full" id="gameButton" style="margin-bottom: 10px;">
-                    <div class="card-left">
-                        <span class="card-icon">🎮</span>
-                        <div>
-                            <div class="card-title">Word Scramble</div>
-                            <div class="card-desc">Play mini word game in chat</div>
-                        </div>
+            <!-- "OTHER" FOLDER APPS GRID (iOS Style Tiles) -->
+            <div id="otherActionsBar" style="padding: 0 16px 20px 16px; display: none;">
+                <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted, #94a3b8); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Tools & Apps
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;">
+                    <!-- 1. Word Scramble Game Tile -->
+                    <div class="feature-card" id="gameButton" style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 20px 12px;
+                        border-radius: 18px;
+                        background: var(--bg-card, #1e293b);
+                        border: 1px solid rgba(255, 255, 255, 0.07);
+                        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+                        cursor: pointer;
+                        text-align: center;
+                        transition: transform 0.15s ease, box-shadow 0.15s ease;
+                    ">
+                        <div style="
+                            font-size: 2.2rem;
+                            margin-bottom: 10px;
+                            width: 54px;
+                            height: 54px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: rgba(56, 189, 248, 0.12);
+                            border-radius: 14px;
+                        ">🎮</div>
+                        <div style="font-weight: 600; font-size: 0.92rem; color: #fff;">Word Game</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted, #94a3b8); margin-top: 2px;">Play in Chat</div>
                     </div>
-                    <div class="card-arrow">›</div>
-                </button>
 
-                <!-- File Committer Card -->
-                <button type="button" class="feature-card-full" id="btnAdminUpdater" style="margin-bottom: 10px;">
-                    <div class="card-left">
-                        <span class="card-icon">🚀</span>
-                        <div>
-                            <div class="card-title">File Committer</div>
-                            <div class="card-desc">Edit code and deploy updates</div>
-                        </div>
+                    <!-- 2. File Committer Tile -->
+                    <div class="feature-card" id="btnAdminUpdater" style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 20px 12px;
+                        border-radius: 18px;
+                        background: var(--bg-card, #1e293b);
+                        border: 1px solid rgba(255, 255, 255, 0.07);
+                        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+                        cursor: pointer;
+                        text-align: center;
+                        transition: transform 0.15s ease, box-shadow 0.15s ease;
+                    ">
+                        <div style="
+                            font-size: 2.2rem;
+                            margin-bottom: 10px;
+                            width: 54px;
+                            height: 54px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: rgba(168, 85, 247, 0.12);
+                            border-radius: 14px;
+                        ">🚀</div>
+                        <div style="font-weight: 600; font-size: 0.92rem; color: #fff;">Committer</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted, #94a3b8); margin-top: 2px;">Deploy Updates</div>
                     </div>
-                    <div class="card-arrow">›</div>
-                </button>
 
-                <!-- User Activity Card -->
-                <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="margin-bottom: 0;">
-                    <div class="card-left">
-                        <span class="card-icon">👥</span>
-                        <div>
-                            <div class="card-title">User Activity</div>
-                            <div class="card-desc">View users who accessed Kuya B</div>
-                        </div>
+                    <!-- 3. User Activity Tile -->
+                    <div class="feature-card" id="btnOpenUserTracking" style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 20px 12px;
+                        border-radius: 18px;
+                        background: var(--bg-card, #1e293b);
+                        border: 1px solid rgba(255, 255, 255, 0.07);
+                        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+                        cursor: pointer;
+                        text-align: center;
+                        transition: transform 0.15s ease, box-shadow 0.15s ease;
+                    ">
+                        <div style="
+                            font-size: 2.2rem;
+                            margin-bottom: 10px;
+                            width: 54px;
+                            height: 54px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: rgba(34, 197, 94, 0.12);
+                            border-radius: 14px;
+                        ">👥</div>
+                        <div style="font-weight: 600; font-size: 0.92rem; color: #fff;">Activity</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted, #94a3b8); margin-top: 2px;">User Tracking</div>
                     </div>
-                    <div class="card-arrow">›</div>
-                </button>
+                </div>
             </div>
 
             <!-- Upload Media / Add Content Form -->
