@@ -204,6 +204,8 @@ application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
 application.add_handler(CommandHandler("bday", command_add_birthday))
 application.add_handler(CallbackQueryHandler(menu_callback_handler))
 application.add_handler(MessageHandler(filters.UpdateType.BUSINESS_MESSAGE, handle_business_message))
+application.add_handler(CommandHandler("trigger_greetings", command_trigger_bulletin))
+
 
 register_word_game_handlers(application)
 
