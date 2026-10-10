@@ -1,208 +1,34 @@
-<div id="vaultPage" style="display: none;">
-    <!-- Top Navigation Bar -->
-    <div class="top-bar">
-        <button type="button" class="btn-icon-back" id="vaultBackButton">←</button>
-        <h2 id="vaultPageTitle">📁 Vault</h2>
-        <button type="button" class="btn-icon-add" id="addVaultItemButton">+</button>
-    </div>
-
-    <!-- Active Folder Breadcrumb Bar -->
-    <div id="vaultFolderBreadcrumb" style="display: none; align-items: center; justify-content: space-between; margin-bottom: 14px; padding: 4px 6px;">
-        <button type="button" class="btn-soft cancel" id="btnBackToFolders" style="flex: none; padding: 6px 12px; font-size: 0.82rem; border-radius: 8px;">
-            ← All Folders
-        </button>
-        <span id="activeFolderHeader" style="font-weight: 700; font-size: 0.95rem; color: var(--primary, #2563eb);"></span>
-    </div>
-
-    <!-- Actions Bar (Visible only inside 'Other' section) -->
-    <div id="otherActionsBar" style="padding: 0 0 16px 0; display: none; width: 100%;">
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; width: 86%; margin: 0 auto;">
-            <!-- 1. User Activity -->
-            <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="width: 100%; margin: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between;">
-                <div class="card-left" style="display: flex; align-items: center; gap: 12px; text-align: left;">
-                    <span class="card-icon">👥</span>
-                    <div style="text-align: left;">
-                        <div class="card-title" style="text-align: left;">User Activity</div>
-                        <div class="card-desc" style="text-align: left;">View users who accessed Kuya B</div>
-                    </div>
-                </div>
-                <div class="card-arrow">›</div>
-            </button>
-
-            <!-- 2. Word Scramble Game -->
-            <button type="button" class="feature-card-full" id="gameButton" style="width: 100%; margin: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between;">
-                <div class="card-left" style="display: flex; align-items: center; gap: 12px; text-align: left;">
-                    <span class="card-icon">🎮</span>
-                    <div style="text-align: left;">
-                        <div class="card-title" style="text-align: left;">Word Scramble</div>
-                        <div class="card-desc" style="text-align: left;">Take a quick break</div>
-                    </div>
-                </div>
-                <div class="card-arrow">›</div>
-            </button>
-
-            <!-- 3. Admin File Committer Button -->
-            <button type="button" class="feature-card-full" id="btnAdminUpdater" style="width: 100%; margin: 0; box-sizing: border-box; display: none; align-items: center; justify-content: space-between;">
-                <div class="card-left" style="display: flex; align-items: center; gap: 12px; text-align: left;">
-                    <span class="card-icon">⚡</span>
-                    <div style="text-align: left;">
-                        <div class="card-title" style="text-align: left;">File Committer</div>
-                        <div class="card-desc" style="text-align: left;">Update and auto-deploy code</div>
-                    </div>
-                </div>
-                <div class="card-arrow">›</div>
-            </button>
-        </div>
-    </div>
-
-    <!-- Inline Upload Media Form -->
-    <form id="vaultUploadForm" class="form-box" style="display: none;">
-        <input type="text" class="neu-input" id="vaultItemTitle" placeholder="Title / Caption" style="margin-bottom: 12px;">
-        <input type="text" class="neu-input" id="vaultItemFolder" placeholder="Folder (e.g. Work, Trips, Receipts)" style="margin-bottom: 12px;">
-
-        <div style="position: relative; margin-bottom: 16px;">
-            <input type="file" id="vaultItemFile" accept="image/*,video/*" style="opacity: 0; position: absolute; z-index: -1; width: 0.1px; height: 0.1px; overflow: hidden;">
-            <label for="vaultItemFile" style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                width: 100%;
-                padding: 8px 10px;
-                border-radius: 14px;
-                background: #e6ecf5;
-                box-shadow: inset 3px 3px 6px #cad5e2, inset -3px -3px 6px #ffffff;
-                cursor: pointer;
-                box-sizing: border-box;
-            ">
-                <span style="
-                    background: #2563eb;
-                    color: #ffffff;
-                    font-size: 0.82rem;
-                    font-weight: 600;
-                    padding: 8px 14px;
-                    border-radius: 10px;
-                    box-shadow: 2px 2px 5px rgba(37, 99, 235, 0.35);
-                    white-space: nowrap;
-                ">Choose File</span>
-                <span id="selectedFileName" style="
-                    font-size: 0.88rem;
-                    color: #64748b;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                ">No file chosen</span>
-            </label>
-        </div>
-
-        <!-- Inline Progress Bar Container -->
-        <div id="inlineUploadProgressContainer" style="display: none; width: 100%; margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px;">
-                <span id="inlineUploadStatusText">Uploading...</span>
-                <span id="inlineUploadPercentText">0%</span>
+        <!-- VAULT PAGE (PICTURES, VIDEOS, OTHER) -->
+        <div id="vaultPage" style="display: none;">
+            <div class="top-bar">
+                <button type="button" class="btn-icon-back" id="vaultBackButton">←</button>
+                <h2 id="vaultPageTitle">📁 Vault</h2>
+                <button type="button" class="btn-icon-add" id="addVaultItemButton">+</button>
             </div>
-            <div style="
-                width: 100%;
-                height: 10px;
-                background: #dbe4f0;
-                border-radius: 999px;
-                overflow: hidden;
-                box-shadow: inset 1px 1px 3px rgba(0,0,0,0.15);
-            ">
-                <div id="inlineUploadProgressBar" style="
-                    width: 0%;
-                    height: 100%;
-                    background: linear-gradient(90deg, #3b82f6, #2563eb);
-                    border-radius: 999px;
-                    transition: width 0.15s ease;
-                "></div>
+
+            <div id="otherActionsBar" style="padding: 0 16px 12px 16px; display: none;">
+                <button type="button" class="feature-card-full" id="btnOpenUserTracking" style="margin-bottom: 0;">
+                    <div class="card-left">
+                        <span class="card-icon">👥</span>
+                        <div>
+                            <div class="card-title">User Activity</div>
+                            <div class="card-desc">View users who accessed Kuya B</div>
+                        </div>
+                    </div>
+                    <div class="card-arrow">›</div>
+                </button>
             </div>
+
+            <!-- Upload Media Form -->
+            <form id="vaultUploadForm" class="form-box" style="display: none;">
+                <input type="text" class="neu-input" id="vaultItemTitle" placeholder="Title / Caption" style="margin-bottom: 12px;">
+                <input type="text" class="neu-input" id="vaultItemFolder" placeholder="Folder (e.g. Work, Trips, Receipts)" style="margin-bottom: 12px;">
+                <input type="file" class="neu-input" id="vaultItemFile" accept="image/*,video/*" style="margin-bottom: 16px;">
+                <div class="form-actions">
+                    <button type="button" class="btn-soft cancel" id="cancelVaultItemButton">Cancel</button>
+                    <button type="button" class="btn-soft save" id="btnUploadMedia" onclick="window.KuyaB.uploadMediaToVault()">Upload</button>
+                </div>
+            </form>
+
+            <div id="vaultItemsList"></div>
         </div>
-
-        <div class="form-actions">
-            <button type="button" class="btn-soft cancel" id="cancelVaultItemButton">Cancel</button>
-            <button type="button" class="btn-soft save" id="btnUploadMedia" onclick="window.KuyaB.uploadMediaToVault()">Upload</button>
-        </div>
-    </form>
-
-    <!-- Folders Directory List -->
-    <div id="vaultFoldersContainer"></div>
-
-    <!-- Inside-Folder Items List -->
-    <div id="vaultItemsContainer" style="display: none; flex-direction: column; gap: 12px; width: 100%; box-sizing: border-box;"></div>
-</div>
-
-<!-- USER ACTIVITY PAGE -->
-<div id="userTrackingPage" style="display: none;">
-    <div class="top-bar">
-        <button type="button" class="btn-icon-back" id="userTrackingBackButton">←</button>
-        <h2>👥 User Activity</h2>
-        <div style="width: 40px;"></div>
-    </div>
-    <div id="usersListContainer" style="padding: 16px;">
-        <p class="empty-state">Loading user activity...</p>
-    </div>
-</div>
-
-<!-- MEDIA LIGHTBOX / VIDEO PLAYER MODAL -->
-<div id="mediaModal" style="
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(15, 23, 42, 0.88);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 99999;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    padding: 20px;
-">
-    <div style="
-        width: 100%;
-        max-width: 440px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        padding: 0 4px;
-    ">
-        <span id="modalMediaTitle" style="
-            font-weight: 700;
-            font-size: 1rem;
-            color: #ffffff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 80%;
-        ">Media</span>
-        <button type="button" onclick="document.getElementById('mediaModal').style.display='none'; document.getElementById('modalMediaContainer').innerHTML='';" style="
-            border: none;
-            background: rgba(255,255,255,0.2);
-            color: #ffffff;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        ">✕</button>
-    </div>
-
-    <div id="modalMediaContainer" style="
-        width: 100%;
-        max-width: 440px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 16px;
-        overflow: hidden;
-        background: #000000;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    "></div>
-</div>
