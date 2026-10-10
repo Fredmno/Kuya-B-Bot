@@ -1,72 +1,73 @@
-<div id="dailyLogsPage" style="display: none;">
-    <div class="top-bar">
-        <button type="button" class="btn-icon-back" id="dailyLogsBackButton">←</button>
-        <h2>📅 Daily Logs</h2>
-        <button type="button" class="btn-icon-add" id="addLogButton">+</button>
-    </div>
+        <!-- DAILY LOGS PAGE -->
+        <div id="dailyLogsPage" style="display: none;">
+            <div class="top-bar">
+                <button type="button" class="btn-icon-back" id="dailyLogsBackButton">←</button>
+                <h2>📅 Daily Logs</h2>
+                <button type="button" class="btn-icon-add" id="addLogButton">+</button>
+            </div>
 
-    <div class="form-box" id="logForm" style="display: none;">
-        <div class="mood-selector-label">How are you feeling?</div>
-        <div class="mood-selector" id="moodSelectorContainer">
-            <button type="button" class="mood-pill selected" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😊')">
-                <span class="mood-emoji">😊</span><span class="mood-label">Happy</span>
-            </button>
-            <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😔')">
-                <span class="mood-emoji">😔</span><span class="mood-label">Sad</span>
-            </button>
-            <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '🥺')">
-                <span class="mood-emoji">🥺</span><span class="mood-label">Lonely</span>
-            </button>
-            <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😡')">
-                <span class="mood-emoji">😡</span><span class="mood-label">Angry</span>
-            </button>
-            <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😴')">
-                <span class="mood-emoji">😴</span><span class="mood-label">Tired</span>
-            </button>
-            <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '✨')">
-                <span class="mood-emoji">✨</span><span class="mood-label">Excited</span>
-            </button>
-            <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '🧘')">
-                <span class="mood-emoji">🧘</span><span class="mood-label">Calm</span>
-            </button>
+            <div class="form-box" id="logForm" style="display: none;">
+                <div class="mood-selector-label">How are you feeling?</div>
+                <div class="mood-selector" id="moodSelectorContainer">
+                    <button type="button" class="mood-pill selected" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😊')">
+                        <span class="mood-emoji">😊</span><span class="mood-label">Happy</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😔')">
+                        <span class="mood-emoji">😔</span><span class="mood-label">Sad</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '🥺')">
+                        <span class="mood-emoji">🥺</span><span class="mood-label">Lonely</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😡')">
+                        <span class="mood-emoji">😡</span><span class="mood-label">Angry</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '😴')">
+                        <span class="mood-emoji">😴</span><span class="mood-label">Tired</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '✨')">
+                        <span class="mood-emoji">✨</span><span class="mood-label">Excited</span>
+                    </button>
+                    <button type="button" class="mood-pill" onclick="window.KuyaB.features.dailyLogs.selectMood(this, '🧘')">
+                        <span class="mood-emoji">🧘</span><span class="mood-label">Calm</span>
+                    </button>
+                </div>
+
+                <div class="mood-selector-label" style="margin-top: 14px;">Habits Completed</div>
+                <div class="habit-chips-grid" id="habitsContainer">
+                    <button type="button" class="habit-chip" data-habit="💧 2L Water" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">💧</span> 2L Water
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="🏃 Workout" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">🏃</span> Workout
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="📖 Read" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">📖</span> Read
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="💊 Vitamins" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">💊</span> Vitamins
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="💻 Deep Work" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">💻</span> Deep Work
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="🧘 Meditation" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">🧘</span> Meditation
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="🥗 Clean Eating" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">🥗</span> Clean Eating
+                    </button>
+                    <button type="button" class="habit-chip" data-habit="😴 7+ hrs Sleep" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
+                        <span class="habit-icon">😴</span> 7+ hrs Sleep
+                    </button>
+                </div>
+
+                <div class="mood-selector-label" style="margin-top: 14px;">Thoughts & Reflections</div>
+                <textarea class="neu-input" id="logContent" placeholder="Write any notes or thoughts (optional)..." rows="3"></textarea>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-soft cancel" onclick="document.getElementById('logForm').style.display='none'">Cancel</button>
+                    <button type="button" class="btn-soft save" id="saveLogButton" onclick="window.KuyaB.features.dailyLogs.save(event)">Save</button>
+                </div>
+            </div>
+
+            <div id="dailyLogsList"></div>
         </div>
-
-        <div class="mood-selector-label" style="margin-top: 14px;">Habits Completed</div>
-        <div class="habit-chips-grid" id="habitsContainer">
-            <button type="button" class="habit-chip" data-habit="💧 2L Water" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
-                <span class="habit-icon">💧</span> 2L Water
-            </button>
-            <button type="button" class="habit-chip" data-habit="🏃 Workout" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
-                <span class="habit-icon">🏃</span> Workout
-            </button>
-            <button type="button" class="habit-chip" data-habit="📖 Read" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
-                <span class="habit-icon">📖</span> Read
-            </button>
-            <button type="button" class="habit-chip" data-habit="💊 Vitamins" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
-                <span class="habit-icon">💊</span> Vitamins
-            </button>
-            <button type="button" class="habit-chip" data-habit="💻 Deep Work" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
-                <span class="habit-icon">💻</span> Deep Work
-            </button>
-            <button type="button" class="habit-chip" data-habit="🧘 Meditation" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
-                <span class="habit-icon">🧘</span> Meditation
-            </button>
-            <button type="button" class="habit-chip" data-habit="🥗 Clean Eating" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
-                <span class="habit-icon">🥗</span> Clean Eating
-            </button>
-            <button type="button" class="habit-chip" data-habit="😴 7+ hrs Sleep" onclick="window.KuyaB.features.dailyLogs.toggleHabit(this)">
-                <span class="habit-icon">😴</span> 7+ hrs Sleep
-            </button>
-        </div>
-
-        <div class="mood-selector-label" style="margin-top: 14px;">Thoughts & Reflections</div>
-        <textarea class="neu-input" id="logContent" placeholder="Write any notes or thoughts (optional)..." rows="3"></textarea>
-        
-        <div class="form-actions">
-            <button type="button" class="btn-soft cancel" onclick="document.getElementById('logForm').style.display='none'">Cancel</button>
-            <button type="button" class="btn-soft save" id="saveLogButton" onclick="window.KuyaB.features.dailyLogs.save(event)">Save</button>
-        </div>
-    </div>
-
-    <div id="dailyLogsList"></div>
-</div>
