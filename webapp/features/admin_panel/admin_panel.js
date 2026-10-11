@@ -14,7 +14,7 @@ function mountAdminButton() {
     let adminBtn = document.getElementById("admin-panel-btn");
     if (!adminBtn) return;
 
-    // Locate the search bar
+    // Locate the search bar on your dashboard
     const searchInput = document.querySelector('input[placeholder*="Search" i]') || 
                         document.querySelector('input[type="text"]') ||
                         document.querySelector('input[type="search"]');
@@ -26,12 +26,12 @@ function mountAdminButton() {
                                 searchInput.parentElement;
 
         if (searchContainer && searchContainer.parentElement) {
-            // Create wrapper if needed to ensure upper-right alignment above search
+            // Container to align button neatly to the upper right above the search box
             let headerWrapper = document.getElementById("admin-btn-wrapper");
             if (!headerWrapper) {
                 headerWrapper = document.createElement("div");
                 headerWrapper.id = "admin-btn-wrapper";
-                headerWrapper.style.cssText = "display: flex; justify-content: flex-end; width: 100%; margin-bottom: 6px;";
+                headerWrapper.style.cssText = "display: flex; justify-content: flex-end; width: 100%; margin-bottom: 8px;";
                 searchContainer.parentElement.insertBefore(headerWrapper, searchContainer);
             }
             headerWrapper.appendChild(adminBtn);
