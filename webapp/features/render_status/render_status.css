@@ -1,5 +1,74 @@
+/* =========================================================
+   KUYA B — RENDER STATUS & DEPLOYMENT HISTORY
+   webapp/features/render_status/render_status.css
+   ========================================================= */
+
 #render-status-view {
     padding: 10px 0;
+}
+
+.view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.view-header h2 {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-main, #1a2530);
+    margin: 0;
+    text-align: center;
+    flex: 1;
+}
+
+/* Left Back Button */
+.btn-back {
+    background: var(--bg-color, #e6ecf5);
+    border: none;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary-accent, #2481cc);
+    cursor: pointer;
+    box-shadow: 4px 4px 8px var(--shadow-dark, #c5d0e0), 
+               -4px -4px 8px var(--shadow-light, #ffffff);
+    transition: transform 0.1s ease;
+    white-space: nowrap;
+}
+
+.btn-back:active {
+    box-shadow: inset 2px 2px 4px var(--shadow-dark, #c5d0e0), 
+                inset -2px -2px 4px var(--shadow-light, #ffffff);
+    transform: scale(0.97);
+}
+
+/* Standout Blue Committer Button (Right Header) */
+.btn-committer {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background-color: var(--primary-accent, #2481cc) !important;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(36, 129, 204, 0.35);
+    transition: transform 0.1s ease, opacity 0.1s ease;
+    white-space: nowrap;
+}
+
+.btn-committer:active {
+    transform: scale(0.96);
+    opacity: 0.9;
 }
 
 .render-live-banner {
@@ -94,7 +163,7 @@
     color: #991b1b;
 }
 
-/* Modal Styling */
+/* Modal styling */
 .modal-overlay {
     position: fixed;
     top: 0;
