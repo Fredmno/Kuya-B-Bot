@@ -106,4 +106,68 @@ h1 {
 }
 
 .search-container input::placeholder {
-  color: #9cb0c6
+  color: #9cb0c6;
+}
+
+/* Section Headings */
+h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 16px 0 10px;
+}
+
+/* Neumorphic Card Grid */
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+/* Neumorphic Raised Card */
+.card {
+  background: var(--bg-color);
+  border-radius: 18px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 6px 6px 12px var(--shadow-dark), 
+             -6px -6px 12px var(--shadow-light);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.card:active {
+  box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+              inset -3px -3px 6px var(--shadow-light);
+  transform: scale(0.98);
+}
+
+.card .icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.card .title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.card .desc {
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-top: 3px;
+}
+
+/* Footer text */
+.footer-text {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-top: 24px;
+}
