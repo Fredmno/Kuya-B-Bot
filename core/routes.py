@@ -1,6 +1,7 @@
 import os
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
+from features.tasks import get_tasks_routes
 
 # Feature route imports
 from features.views.view_renderer import serve_index
@@ -70,8 +71,9 @@ def get_all_routes(health_check_handler, webhook_handler, cleanup_handler, webho
         Route("/api/admin/commit-file", api_admin_commit_file, methods=["POST"]),
         Route("/api/cleanup-message", cleanup_handler, methods=["POST"]),
 
-        # Feature Sub-routes (Daily Logs, etc.)
+        # Feature Sub-routes (Daily Logs, Tasks, etc.)
         *get_daily_logs_routes(),
+        *get_tasks_routes(),
     ]
     
     # Mount optional feature static directories if present
