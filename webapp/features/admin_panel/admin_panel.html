@@ -1,12 +1,14 @@
 <!-- Kuya B — Admin Panel View -->
-<div id="admin-panel-view" class="view-container neu-view" style="display: none; padding-bottom: 30px;">
-    <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-        <button type="button" class="btn-icon-back" onclick="window.closeAdminPanel ? window.closeAdminPanel() : window.showDashboardView()">←</button>
+<div id="admin-panel-view" class="view-container neu-view" style="display: none; padding: 14px 16px 30px;">
+    <!-- Top Navigation Header -->
+    <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <button type="button" class="btn-icon-back" onclick="window.showDashboardView()" style="background: #e2e8f0; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.95rem; font-weight: 700; color: #334155;">← Back</button>
         <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">⚙️ Admin Panel</h2>
         <div style="width: 32px;"></div>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 10px;">
+    <!-- Admin Action Cards -->
+    <div style="display: flex; flex-direction: column; gap: 12px;">
         <!-- GitHub Form Action Card -->
         <div class="neu-card" onclick="window.openGitHubFormView()" style="cursor: pointer; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 14px; background: #e6ecf5; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -32,7 +34,7 @@
         </div>
 
         <!-- Repo Tree Card -->
-        <div class="neu-card" onclick="window.KuyaB.openTreeView && window.KuyaB.openTreeView()" style="cursor: pointer; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 14px; background: #e6ecf5; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+        <div class="neu-card" onclick="window.KuyaB && window.KuyaB.openTreeView ? window.KuyaB.openTreeView() : null" style="cursor: pointer; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 14px; background: #e6ecf5; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 1.5rem;">🌳</span>
                 <div>
