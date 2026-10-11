@@ -9,7 +9,7 @@ from telegram.ext import (
 from features.menu import kuya_b_menu, menu_callback_handler
 from features.business.assistant import handle_business_message
 from features.word_game import register_word_game_handlers
-from features.daily_logs.routes import register_daily_logs_handlers
+#from features.daily_logs.routes import #register_daily_logs_handlers
 from features.BirthDay.Birthdays import (
     command_add_birthday,
     command_trigger_bulletin,
@@ -35,4 +35,4 @@ def register_all_handlers(application: Application, start_handler):
 
     # Sub-feature modular handlers
     register_word_game_handlers(application)
-    register_daily_logs_handlers(application)
+    #register_daily_logs_handlers(application)
