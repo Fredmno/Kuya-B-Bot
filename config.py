@@ -2,7 +2,22 @@ import os
 
 # Automatic cache-busting versioning:
 # Uses Render's git commit hash if available, otherwise falls back to a dev timestamp
-APP_VERSION = os.getenv("RENDER_GIT_COMMIT", "dev")[:7]
+
+import os
+import time
+
+# --- DYNAMIC APP VERSION ---
+# 1. Check if Render provided the commit hash
+git_commit = os.getenv("RENDER_GIT_COMMIT")
+
+if git_commit:
+    # Use the first 7 characters of the Git commit SHA (e.g., 'va558f1')
+    APP_VERSION = f"v{git_commit[:7]}"
+else:
+    # Fallback for local development or environments without Git info
+    # Generates a timestamp-based version on server start
+    APP_VERSION = f"v{int(time.time())}"
+
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
