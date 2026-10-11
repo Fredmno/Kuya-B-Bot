@@ -39,21 +39,20 @@ except ImportError:
         from index_consolidator import serve_index
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
-GITHUB_REPO = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "Fredmno/Kuya-B-Bot")
 GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
 
 def get_clean_repo():
-    repo = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
+    repo = GITHUB_REPO
     if "github.com/" in repo:
         repo = repo.split("github.com/")[-1].replace(".git", "").strip("/")
     return repo.strip()
 
 def get_disk_files():
-    """Scans the local filesystem to guarantee a complete file list."""
+    """Scans the local filesystem to guarantee a complete file list fallback."""
     found = []
     exclude = {".git", "__pycache__", ".pytest_cache", "venv", ".venv", "node_modules", ".cache"}
     valid_exts = (".py", ".html", ".css", ".js", ".json", ".md", ".txt", ".yml", ".yaml", ".sh")
-    
     for root, dirs, files in os.walk(REPO_ROOT):
         dirs[:] = [d for d in dirs if d not in exclude and not d.startswith(".")]
         for f in files:
@@ -63,14 +62,16 @@ def get_disk_files():
     found.sort()
     return found
 
-# --- Committer Endpoints ---
+# --- Committer & Tree Endpoints ---
+
 async def repo_tree_endpoint(request: Request):
+    """Feeds the Committer file autocomplete list."""
     token = os.environ.get("GITHUB_TOKEN")
     repo = get_clean_repo()
     branch = os.environ.get("GITHUB_BRANCH", "main")
     files = []
 
-    # 1. Try reading from cached repo_tree.json if available
+    # 1. Try reading from cached repo_tree.json
     if os.path.exists(TREE_JSON_PATH):
         try:
             with open(TREE_JSON_PATH, "r", encoding="utf-8") as fp:
@@ -82,12 +83,11 @@ async def repo_tree_endpoint(request: Request):
                         elif isinstance(item, str):
                             files.append(item)
                     if files:
-                        files = sorted(list(set(files)))
-                        return JSONResponse({"files": files, "ok": True, "count": len(files)})
+                        return JSONResponse({"files": sorted(list(set(files))), "ok": True})
         except Exception:
             pass
 
-    # 2. Try GitHub Git Trees API with User-Agent
+    # 2. Try GitHub Git Trees API
     if token:
         headers = {
             "Authorization": f"Bearer {token}",
@@ -105,17 +105,17 @@ async def repo_tree_endpoint(request: Request):
                         item["path"] for item in tree_data.get("tree", [])
                         if item.get("type") == "blob" and item["path"].endswith(valid_exts)
                     ]
-                    files.sort()
                     if files:
-                        return JSONResponse({"files": files, "ok": True, "count": len(files)})
-        except Exception as e:
-            print(f"GitHub API tree fetch failed: {e}")
+                        return JSONResponse({"files": sorted(files), "ok": True})
+        except Exception:
+            pass
 
-    # 3. Fallback to local disk files
+    # 3. Disk fallback
     files = get_disk_files()
-    return JSONResponse({"files": files, "ok": True, "count": len(files)})
+    return JSONResponse({"files": files, "ok": True})
 
 async def file_content_endpoint(request: Request):
+    """Loads file content for the editor."""
     rel_path = request.query_params.get("path", "").strip().lstrip("/")
     if not rel_path or ".." in rel_path:
         return JSONResponse({"error": "Invalid path", "ok": False}, status_code=400)
@@ -152,24 +152,37 @@ async def file_content_endpoint(request: Request):
     return JSONResponse({"error": "File not found", "ok": False}, status_code=404)
 
 async def commit_file_endpoint(request: Request):
+    """Handles creating or updating repository files directly on GitHub."""
     try:
         data = await request.json()
     except Exception:
         return JSONResponse({"error": "Invalid JSON body", "ok": False}, status_code=400)
 
+    # Check if a nested JSON string was submitted in the content parameter
+    content_str = data.get("content", "")
+    if isinstance(content_str, str) and content_str.strip().startswith("{") and content_str.strip().endswith("}"):
+        try:
+            nested = json.loads(content_str.strip())
+            if "path" in nested or "file_path" in nested:
+                data = nested
+                content_str = data.get("content", "")
+        except Exception:
+            pass
+
     rel_path = (data.get("file_path") or data.get("path") or "").strip().lstrip("/")
     commit_msg = (data.get("commit_message") or data.get("message") or "").strip()
-    content_str = data.get("content", "")
 
-    if not rel_path or not commit_msg:
-        return JSONResponse({"error": "File path and commit message are required", "ok": False}, status_code=400)
+    if not rel_path:
+        return JSONResponse({"error": "Target file path is required", "ok": False}, status_code=400)
+    if not commit_msg:
+        commit_msg = f"Update {rel_path}"
 
     token = os.environ.get("GITHUB_TOKEN")
     repo = get_clean_repo()
     branch = os.environ.get("GITHUB_BRANCH", "main")
 
     if not token:
-        return JSONResponse({"error": "GITHUB_TOKEN is missing on Render", "ok": False}, status_code=500)
+        return JSONResponse({"error": "GITHUB_TOKEN is missing on server", "ok": False}, status_code=500)
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -181,7 +194,8 @@ async def commit_file_endpoint(request: Request):
     try:
         async with httpx.AsyncClient() as client:
             sha = None
-            get_res = await client.get(f"{api_url}?ref={branch}", headers=headers, timeout=10.0)
+            # Retrieve existing SHA if updating an existing file
+            get_res = await client.get(f"{api_url}?ref={branch}", headers=headers, timeout=12.0)
             if get_res.status_code == 200:
                 sha = get_res.json().get("sha")
 
@@ -194,13 +208,18 @@ async def commit_file_endpoint(request: Request):
             if sha:
                 payload["sha"] = sha
 
-            put_res = await client.put(api_url, json=payload, headers=headers, timeout=15.0)
+            put_res = await client.put(api_url, json=payload, headers=headers, timeout=20.0)
             if put_res.status_code in (200, 201):
-                return JSONResponse({"ok": True, "message": "Commit pushed successfully"})
+                res_data = put_res.json()
+                commit_sha = res_data.get("commit", {}).get("sha", "")[:7]
+                return JSONResponse({
+                    "ok": True,
+                    "sha": commit_sha,
+                    "message": f"Successfully committed {rel_path} ({commit_sha})"
+                })
             else:
                 try:
-                    err_json = put_res.json()
-                    err_msg = err_json.get("message", put_res.text)
+                    err_msg = put_res.json().get("message", put_res.text)
                 except Exception:
                     err_msg = put_res.text
                 return JSONResponse({"error": f"GitHub API: {err_msg}", "ok": False}, status_code=put_res.status_code)
@@ -208,6 +227,7 @@ async def commit_file_endpoint(request: Request):
         return JSONResponse({"error": str(e), "ok": False}, status_code=500)
 
 # --- Tree Feature Endpoints ---
+
 async def generate_and_save_tree():
     token = os.environ.get("GITHUB_TOKEN")
     repo = get_clean_repo()
@@ -292,7 +312,8 @@ async def regenerate_tree_endpoint(request: Request):
     res = await generate_and_save_tree()
     return JSONResponse(res)
 
-# --- Deployments Endpoint ---
+# --- Deployments History Endpoint ---
+
 async def get_deployments_endpoint(request: Request):
     token = os.environ.get("GITHUB_TOKEN")
     repo = get_clean_repo()
@@ -356,18 +377,19 @@ async def webhook_dummy(request: Request):
     return JSONResponse({"status": "received", "ok": True})
 
 # --- Route Registry ---
+
 def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, webhook_path="/webhook"):
     routes = [
         Route("/app", endpoint=serve_index, methods=["GET"]),
         Mount("/app/core", StaticFiles(directory=CORE_DIR), name="core"),
 
-        # Deployments
+        # Deployments Endpoints
         Route("/api/deployment-history", endpoint=get_deployments_endpoint, methods=["GET"]),
         Route("/app/api/deployment-history", endpoint=get_deployments_endpoint, methods=["GET"]),
         Route("/api/github-webhook", endpoint=webhook_dummy, methods=["POST"]),
         Route("/api/render-webhook", endpoint=webhook_dummy, methods=["POST"]),
 
-        # Committer Endpoints
+        # Committer Endpoints & Aliases
         Route("/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
         Route("/app/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
         Route("/api/file-content", endpoint=file_content_endpoint, methods=["GET"]),
@@ -384,16 +406,20 @@ def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, web
         Route("/app/api/regenerate-tree", endpoint=regenerate_tree_endpoint, methods=["POST"]),
     ]
 
+    # Mount static feature directories
+    committer_dir = os.path.join(WEBAPP_DIR, "committer")
+    dashboard_dir = os.path.join(WEBAPP_DIR, "dashboard")
     features_dir = os.path.join(WEBAPP_DIR, "features")
     modules_dir = os.path.join(WEBAPP_DIR, "modules")
-    root_dashboard_dir = os.path.join(WEBAPP_DIR, "dashboard")
 
+    if os.path.exists(committer_dir):
+        routes.append(Mount("/app/committer", StaticFiles(directory=committer_dir), name="committer"))
+    if os.path.exists(dashboard_dir):
+        routes.append(Mount("/app/dashboard", StaticFiles(directory=dashboard_dir), name="dashboard"))
     if os.path.exists(features_dir):
         routes.append(Mount("/app/features", StaticFiles(directory=features_dir), name="features"))
     if os.path.exists(modules_dir):
         routes.append(Mount("/app/modules", StaticFiles(directory=modules_dir), name="modules"))
-    if os.path.exists(root_dashboard_dir):
-        routes.append(Mount("/app/dashboard", StaticFiles(directory=root_dashboard_dir), name="root_dashboard"))
 
     if health_check_handler:
         routes.append(Route("/health", endpoint=health_check_handler, methods=["GET"]))
