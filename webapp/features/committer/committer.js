@@ -16,15 +16,19 @@
     }
 
     async function safeFetchJson(url, options = {}) {
-        const res = await fetch(url, options);
-        const text = await res.text();
-        let data = {};
         try {
-            data = JSON.parse(text);
-        } catch (e) {
-            data = { error: text.slice(0, 150) || `HTTP ${res.status}` };
+            const res = await fetch(url, options);
+            const text = await res.text();
+            let data = {};
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                data = { error: text.slice(0, 150) || `HTTP ${res.status}` };
+            }
+            return { res, data, status: res.status };
+        } catch (err) {
+            return { res: { ok: false }, data: { error: err.message }, status: 0 };
         }
-        return { res, data, status: res.status };
     }
 
     window.openCommitterView = function () {
@@ -77,24 +81,28 @@
 
     window.KuyaB.loadRepoTree = async function () {
         const statusEl = document.getElementById("repoScanStatus");
-        if (statusEl) statusEl.innerText = "Loading repo tree...";
+        if (statusEl) statusEl.innerText = "Loading repo files...";
 
-        try {
-            let { res, data } = await safeFetchJson("/api/repo-tree");
-            if (!res.ok) {
-                const retry = await safeFetchJson("/app/api/repo-tree");
+        let { res, data } = await safeFetchJson("/api/repo-tree?_t=" + Date.now());
+        if (!res.ok || !data.files) {
+            const retry = await safeFetchJson("/app/api/repo-tree?_t=" + Date.now());
+            if (retry.res.ok && retry.data.files) {
                 res = retry.res;
                 data = retry.data;
             }
+        }
 
-            if (res.ok && data.files) {
-                cachedRepoFiles = data.files;
-                if (statusEl) statusEl.innerText = `${cachedRepoFiles.length} files found`;
-            } else {
-                if (statusEl) statusEl.innerText = data.error || "Failed to load files";
+        if (res.ok && Array.isArray(data.files) && data.files.length > 0) {
+            cachedRepoFiles = data.files;
+            if (statusEl) statusEl.innerText = `${cachedRepoFiles.length} files available`;
+            
+            // Re-render suggestions if user had already typed something
+            const searchInput = document.getElementById("fileSearchInput");
+            if (searchInput && searchInput.value.trim()) {
+                window.KuyaB.filterRepoFiles(searchInput.value);
             }
-        } catch (err) {
-            if (statusEl) statusEl.innerText = "Connection error";
+        } else {
+            if (statusEl) statusEl.innerText = data.error || "0 files loaded (check GITHUB_TOKEN)";
         }
     };
 
@@ -103,15 +111,21 @@
         if (!listEl) return;
 
         const val = (query || "").trim().toLowerCase();
-        if (!val || cachedRepoFiles.length === 0) {
+        if (!val) {
             listEl.innerHTML = "";
             listEl.style.display = "none";
             return;
         }
 
+        if (cachedRepoFiles.length === 0) {
+            listEl.innerHTML = '<div style="padding: 10px 14px; font-size: 11px; color: #ef4444;">No file list cached. Tap 🔄 Refresh above.</div>';
+            listEl.style.display = "block";
+            return;
+        }
+
         const matches = cachedRepoFiles.filter(p => p.toLowerCase().includes(val)).slice(0, 30);
         if (matches.length === 0) {
-            listEl.innerHTML = '<div style="padding: 10px 14px; font-size: 0.8rem; color: #94a3b8;">No matching files</div>';
+            listEl.innerHTML = '<div style="padding: 10px 14px; font-size: 11px; color: #94a3b8;">No matching files found</div>';
             listEl.style.display = "block";
             return;
         }
@@ -119,7 +133,7 @@
         listEl.innerHTML = matches.map(filePath => `
             <div 
                 onclick="window.KuyaB.selectFileSuggestion('${filePath.replace(/'/g, "\\'")}')" 
-                style="padding: 9px 14px; font-size: 0.82rem; color: #1e293b; cursor: pointer; border-bottom: 1px solid #f1f5f9;"
+                style="padding: 9px 14px; font-size: 11px; color: #1e293b; cursor: pointer; border-bottom: 1px solid #f1f5f9; text-align: left;"
                 onmouseover="this.style.background='#f8fafc'" 
                 onmouseout="this.style.background='transparent'"
             >
@@ -143,24 +157,22 @@
         if (pathInput) pathInput.value = filePath;
         if (listEl) listEl.style.display = "none";
 
-        if (statusEl) statusEl.innerText = "Loading content...";
+        if (statusEl) statusEl.innerText = "Loading file content...";
 
-        try {
-            let { res, data } = await safeFetchJson(`/api/file-content?path=${encodeURIComponent(filePath)}`);
-            if (!res.ok) {
-                const retry = await safeFetchJson(`/app/api/file-content?path=${encodeURIComponent(filePath)}`);
+        let { res, data } = await safeFetchJson(`/api/file-content?path=${encodeURIComponent(filePath)}`);
+        if (!res.ok) {
+            const retry = await safeFetchJson(`/app/api/file-content?path=${encodeURIComponent(filePath)}`);
+            if (retry.res.ok) {
                 res = retry.res;
                 data = retry.data;
             }
+        }
 
-            if (res.ok && data.content !== undefined) {
-                if (contentInput) contentInput.value = data.content;
-                if (statusEl) statusEl.innerText = "Loaded";
-            } else {
-                if (statusEl) statusEl.innerText = data.error || "Failed to load";
-            }
-        } catch (e) {
-            if (statusEl) statusEl.innerText = "Network error";
+        if (res.ok && data.content !== undefined) {
+            if (contentInput) contentInput.value = data.content;
+            if (statusEl) statusEl.innerText = "✓ Loaded";
+        } else {
+            if (statusEl) statusEl.innerText = data.error || "Failed to load content";
         }
     };
 
@@ -185,7 +197,7 @@
         const filePath = document.getElementById("commitFilePath")?.value.trim();
         const commitMsg = document.getElementById("commitMsgInput")?.value.trim();
         const content = document.getElementById("commitContentInput")?.value;
-        const btn = document.getElementById("btnSubmitCommit") || document.querySelector("button[onclick*='submitFileCommit']");
+        const btn = document.getElementById("btnSubmitCommit");
 
         if (!filePath) {
             alert("Please specify Target File Path.");
@@ -223,22 +235,18 @@
         let lastError = "Unable to reach commit endpoint";
 
         for (const ep of endpoints) {
-            try {
-                const { res, data } = await safeFetchJson(ep, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: payload
-                });
+            const { res, data } = await safeFetchJson(ep, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: payload
+            });
 
-                if (res.ok && data.ok) {
-                    success = true;
-                    break;
-                } else if (res.status !== 404) {
-                    lastError = data.error || data.message || `HTTP ${res.status}`;
-                    break;
-                }
-            } catch (err) {
-                lastError = err.message;
+            if (res.ok && data.ok) {
+                success = true;
+                break;
+            } else if (res.status !== 404 && res.status !== 0) {
+                lastError = data.error || data.message || `HTTP ${res.status}`;
+                break;
             }
         }
 
