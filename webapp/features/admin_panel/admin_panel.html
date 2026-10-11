@@ -10,23 +10,23 @@
         <h2>Admin Management</h2>
     </div>
 
-    <div class="admin-content-grid">
-        <div class="admin-tool-card" onclick="openRenderStatusView()">
-            <div class="tool-icon">🟢</div>
-            <div class="tool-name">Deployment Status</div>
-            <div class="tool-desc">View deployment logs & history</div>
-        </div>
+    <div class="admin-card-grid">
+        <button type="button" class="admin-card" onclick="openRenderStatusView()">
+            <div class="icon">🟢</div>
+            <div class="title">Deployments</div>
+            <div class="desc">Render status & history</div>
+        </button>
 
-        <div class="admin-tool-card" onclick="triggerRegenerateTree()">
-            <div class="tool-icon">📁</div>
-            <div class="tool-name">Update STRUCTURE.md</div>
-            <div class="tool-desc">Rebuild directory tree markdown</div>
-        </div>
+        <button type="button" class="admin-card" onclick="triggerRegenerateTree()">
+            <div class="icon">📁</div>
+            <div class="title">STRUCTURE.md</div>
+            <div class="desc">Sync directory tree</div>
+        </button>
 
-        <div class="admin-tool-card" onclick="checkServerHealth()">
-            <div class="tool-icon">🩺</div>
-            <div class="tool-name">Server Health</div>
-            <div class="tool-desc">Verify backend API status</div>
-        </div>
+        <button type="button" class="admin-card" onclick="checkServerHealth()">
+            <div class="icon">🩺</div>
+            <div class="title">Server Health</div>
+            <div class="desc">Verify backend API</div>
+        </button>
     </div>
 </div>
