@@ -12,15 +12,13 @@ WEBAPP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 CORE_DIR = os.path.join(WEBAPP_DIR, "core")
 
 def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, webhook_path="/webhook"):
-    features_dir = os.path.join(WEBAPP_DIR, "features")
-    modules_dir = os.path.join(WEBAPP_DIR, "modules")
-
     routes = [
         Route("/app", endpoint=serve_index, methods=["GET"]),
-        
-        # Mount the core folder so /app/core/dashboard/dashboard.css is reachable
         Mount("/app/core", StaticFiles(directory=CORE_DIR), name="core"),
     ]
+
+    features_dir = os.path.join(WEBAPP_DIR, "features")
+    modules_dir = os.path.join(WEBAPP_DIR, "modules")
 
     if os.path.exists(features_dir):
         routes.append(Mount("/app/features", StaticFiles(directory=features_dir), name="features"))
