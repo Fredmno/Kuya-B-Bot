@@ -7,6 +7,8 @@
     "use strict";
 
     window.KuyaB = window.KuyaB || {};
+    let allRepoFiles = [];
+    let loadTimeout = null;
 
     function haptic(type) {
         if (window.Telegram?.WebApp?.HapticFeedback) {
@@ -14,7 +16,6 @@
         }
     }
 
-    // Open Committer View
     window.openCommitterView = function () {
         haptic("light");
 
@@ -29,27 +30,24 @@
         const view = document.getElementById("committer-view");
         if (view) {
             view.style.display = "block";
-            fetchRepoTree();
+            window.fetchRepoTree();
         }
     };
 
-    // Close Committer View (return to previous screen)
     window.closeCommitterView = function () {
         haptic("light");
 
         const view = document.getElementById("committer-view");
         if (view) view.style.display = "none";
 
-        // Return to admin panel if active, else restore prior screen
-        const adminView = document.getElementById("admin-panel-view");
         const deployView = document.getElementById("render-status-view");
-
         if (deployView && deployView.dataset.openedFromHere === "true") {
             deployView.style.display = "block";
             delete deployView.dataset.openedFromHere;
             return;
         }
 
+        const adminView = document.getElementById("admin-panel-view");
         if (adminView) {
             adminView.style.display = "block";
             return;
@@ -67,52 +65,52 @@
         const pathEl = document.getElementById("committerFilePath");
         const msgEl = document.getElementById("committerCommitMsg");
         const contentEl = document.getElementById("committerContent");
-        const selectEl = document.getElementById("committerFileSelect");
         const statusEl = document.getElementById("committerFileStatus");
 
         if (pathEl) pathEl.value = "";
         if (msgEl) msgEl.value = "";
         if (contentEl) contentEl.value = "";
-        if (selectEl) selectEl.value = "";
         if (statusEl) statusEl.innerText = "Ready";
     };
 
-    // Populate dropdown with repository files
     window.fetchRepoTree = async function () {
-        const selectEl = document.getElementById("committerFileSelect");
+        const dataList = document.getElementById("repoFileList");
         const statusEl = document.getElementById("committerFileStatus");
-        if (!selectEl) return;
-
-        if (statusEl) statusEl.innerText = "Loading repo tree...";
+        if (statusEl) statusEl.innerText = "Loading file index...";
 
         try {
             const res = await fetch("/api/repo-tree");
             if (!res.ok) throw new Error("Status " + res.status);
             const data = await res.json();
-            const files = data.files || [];
+            allRepoFiles = data.files || [];
 
-            selectEl.innerHTML = '<option value="">-- Select an existing file or enter path below --</option>';
-            files.forEach(f => {
-                const opt = document.createElement("option");
-                opt.value = f;
-                opt.textContent = f;
-                selectEl.appendChild(opt);
-            });
-
-            if (statusEl) statusEl.innerText = `${files.length} files loaded`;
+            if (dataList) {
+                dataList.innerHTML = "";
+                allRepoFiles.forEach(f => {
+                    const opt = document.createElement("option");
+                    opt.value = f;
+                    dataList.appendChild(opt);
+                });
+            }
+            if (statusEl) statusEl.innerText = `${allRepoFiles.length} files indexed`;
         } catch (err) {
-            if (statusEl) statusEl.innerText = "Manual path input only";
+            if (statusEl) statusEl.innerText = "Ready (Manual mode)";
         }
     };
 
-    // Selecting a file from the list
-    window.onCommitterFileSelected = async function (filePath) {
-        if (!filePath) return;
-        const pathInput = document.getElementById("committerFilePath");
+    window.handleFilePathInput = function (val) {
+        clearTimeout(loadTimeout);
+        const match = allRepoFiles.find(f => f.toLowerCase() === val.trim().toLowerCase());
+        if (match) {
+            loadTimeout = setTimeout(() => {
+                loadFileContent(match);
+            }, 300);
+        }
+    };
+
+    async function loadFileContent(filePath) {
         const contentArea = document.getElementById("committerContent");
         const statusEl = document.getElementById("committerFileStatus");
-
-        if (pathInput) pathInput.value = filePath;
         if (statusEl) statusEl.innerText = "Fetching content...";
 
         try {
@@ -122,14 +120,13 @@
                 if (contentArea) contentArea.value = data.content || "";
                 if (statusEl) statusEl.innerText = "File loaded";
             } else {
-                if (statusEl) statusEl.innerText = "New file or fetch error";
+                if (statusEl) statusEl.innerText = "Ready (New file)";
             }
         } catch (e) {
             if (statusEl) statusEl.innerText = "Ready";
         }
-    };
+    }
 
-    // Submit and push commit
     window.submitCommit = async function () {
         const path = document.getElementById("committerFilePath")?.value.trim();
         const message = document.getElementById("committerCommitMsg")?.value.trim();
@@ -137,7 +134,7 @@
         const btn = document.getElementById("btnSubmitCommit");
 
         if (!path) {
-            alert("Please specify a file path.");
+            alert("Please specify a target file path.");
             return;
         }
 
@@ -166,7 +163,7 @@
             const result = await res.json();
             if (res.ok && result.ok) {
                 haptic("heavy");
-                alert("Commit pushed successfully! GitHub and Render webhooks will trigger automatically.");
+                alert("Commit pushed successfully! GitHub and Render will trigger automatically.");
                 window.closeCommitterView();
             } else {
                 alert("Commit failed: " + (result.error || "Unknown error"));
@@ -181,7 +178,6 @@
         }
     };
 
-    // Expose aliases for backwards compatibility with earlier buttons
     window.KuyaB.openCommitterView = window.openCommitterView;
     window.KuyaB.clearFileCommitterForm = window.clearCommitterForm;
     window.KuyaB.loadRepoTree = window.fetchRepoTree;
