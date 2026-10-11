@@ -5,7 +5,7 @@ from webapp.features.tasks.routes import get_tasks_routes
 
 # Feature route imports
 from webapp.core.index_consolidator import serve_index
-from features.daily_logs.routes import get_daily_logs_routes
+from webapp.features.daily_logs.routes import get_daily_logs_routes
 from features.BirthDay.Birthdays import (
     api_get_birthdays,
     api_add_birthday,
