@@ -9,15 +9,15 @@
     let cachedDeployments = [];
 
     function triggerHaptic(type) {
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+        if (window.Telegram?.WebApp?.HapticFeedback) {
             window.Telegram.WebApp.HapticFeedback.impactOccurred(type || "light");
         }
     }
 
     async function fetchDeployments() {
         const container = document.getElementById("deploymentList");
-        if (container && cachedDeployments.length === 0) {
-            container.innerHTML = '<div style="text-align: center; color: var(--text-sub); font-size: 12px; padding: 12px;">Loading deployments...</div>';
+        if (container) {
+            container.innerHTML = '<div style="text-align: center; color: var(--text-sub, #64748b); font-size: 12px; padding: 14px;">Fetching live deployment data...</div>';
         }
 
         try {
@@ -38,25 +38,30 @@
         if (!container) return;
 
         if (cachedDeployments.length === 0) {
-            container.innerHTML = '<div style="text-align: center; color: var(--text-sub); font-size: 12px; padding: 16px;">No recent deployment events recorded yet. Push a commit or trigger a deploy to populate logs.</div>';
+            container.innerHTML = `
+                <div style="text-align: center; color: var(--text-sub, #64748b); font-size: 12px; padding: 20px;">
+                    No recent deployments found.<br>
+                    <span style="font-size: 11px; opacity: 0.8;">Make sure RENDER_API_KEY and RENDER_SERVICE_ID are set, or push a commit to trigger logging.</span>
+                </div>`;
             return;
         }
 
         container.innerHTML = "";
         cachedDeployments.forEach(item => {
-            const badgeClass = item.status === "Live" 
+            const statusLower = (item.status || "").toLowerCase();
+            const badgeClass = statusLower === "live" || statusLower === "succeeded"
                 ? "badge-live" 
-                : (item.status === "Building" ? "badge-success" : "badge-failed");
+                : (statusLower === "building" ? "badge-success" : "badge-failed");
 
             const div = document.createElement("div");
             div.className = "deploy-item";
             div.onclick = () => openDeployModal(item);
             div.innerHTML = `
                 <div class="deploy-info">
-                    <div class="deploy-name">${item.name}</div>
-                    <div class="deploy-date">📅 ${item.date}</div>
+                    <div class="deploy-name">${item.name || "Deployment"}</div>
+                    <div class="deploy-date">📅 ${item.date || "Recent"}</div>
                 </div>
-                <span class="deploy-badge ${badgeClass}">${item.status}</span>
+                <span class="deploy-badge ${badgeClass}">${item.status || "Live"}</span>
             `;
             container.appendChild(div);
         });
@@ -110,11 +115,6 @@
 
         if (window.openCommitterView) {
             window.openCommitterView();
-        } else {
-            const committerView = document.getElementById("committer-view") || 
-                                  document.getElementById("adminUpdaterPage");
-            if (committerView) committerView.style.display = "block";
-            if (window.fetchRepoTree) window.fetchRepoTree();
         }
     };
 
@@ -128,12 +128,12 @@
         const authorEl = document.getElementById("modalDeployAuthor");
         const messageEl = document.getElementById("modalDeployMessage");
 
-        if (nameEl) nameEl.innerText = deploy.name;
-        if (statusEl) statusEl.innerText = deploy.status;
-        if (dateEl) dateEl.innerText = deploy.date;
-        if (commitEl) commitEl.innerText = deploy.commit;
-        if (authorEl) authorEl.innerText = deploy.author || "Git Push";
-        if (messageEl) messageEl.innerText = deploy.message;
+        if (nameEl) nameEl.innerText = deploy.name || "Deploy Details";
+        if (statusEl) statusEl.innerText = deploy.status || "Unknown";
+        if (dateEl) dateEl.innerText = deploy.date || "N/A";
+        if (commitEl) commitEl.innerText = deploy.commit || "N/A";
+        if (authorEl) authorEl.innerText = deploy.author || "Render / Git";
+        if (messageEl) messageEl.innerText = deploy.message || "No commit message";
 
         const modal = document.getElementById("deploymentDetailModal");
         if (modal) modal.style.display = "flex";
