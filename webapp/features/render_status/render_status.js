@@ -17,7 +17,7 @@
     async function fetchDeployments() {
         const container = document.getElementById("deploymentList");
         if (container) {
-            container.innerHTML = '<div style="text-align: center; color: var(--text-sub, #64748b); font-size: 12px; padding: 14px;">Fetching live deployment data...</div>';
+            container.innerHTML = '<div style="text-align: center; color: var(--text-sub, #64748b); font-size: 12px; padding: 14px;">Fetching repository commit history...</div>';
         }
 
         try {
@@ -40,8 +40,8 @@
         if (cachedDeployments.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; color: var(--text-sub, #64748b); font-size: 12px; padding: 20px;">
-                    No recent deployments found.<br>
-                    <span style="font-size: 11px; opacity: 0.8;">Make sure RENDER_API_KEY and RENDER_SERVICE_ID are set, or push a commit to trigger logging.</span>
+                    No recent commits or deployments found.<br>
+                    <span style="font-size: 11px; opacity: 0.8;">Ensure GITHUB_TOKEN has access to the repository.</span>
                 </div>`;
             return;
         }
@@ -49,19 +49,19 @@
         container.innerHTML = "";
         cachedDeployments.forEach(item => {
             const statusLower = (item.status || "").toLowerCase();
-            const badgeClass = statusLower === "live" || statusLower === "succeeded"
+            const badgeClass = statusLower === "live"
                 ? "badge-live" 
-                : (statusLower === "building" ? "badge-success" : "badge-failed");
+                : (statusLower === "building" ? "badge-success" : (statusLower === "success" ? "badge-success" : "badge-failed"));
 
             const div = document.createElement("div");
             div.className = "deploy-item";
             div.onclick = () => openDeployModal(item);
             div.innerHTML = `
                 <div class="deploy-info">
-                    <div class="deploy-name">${item.name || "Deployment"}</div>
+                    <div class="deploy-name">${item.name || "Commit"}</div>
                     <div class="deploy-date">📅 ${item.date || "Recent"}</div>
                 </div>
-                <span class="deploy-badge ${badgeClass}">${item.status || "Live"}</span>
+                <span class="deploy-badge ${badgeClass}">${item.status || "Success"}</span>
             `;
             container.appendChild(div);
         });
@@ -132,7 +132,7 @@
         if (statusEl) statusEl.innerText = deploy.status || "Unknown";
         if (dateEl) dateEl.innerText = deploy.date || "N/A";
         if (commitEl) commitEl.innerText = deploy.commit || "N/A";
-        if (authorEl) authorEl.innerText = deploy.author || "Render / Git";
+        if (authorEl) authorEl.innerText = deploy.author || "GitHub";
         if (messageEl) messageEl.innerText = deploy.message || "No commit message";
 
         const modal = document.getElementById("deploymentDetailModal");
