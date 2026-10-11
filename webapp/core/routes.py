@@ -30,8 +30,6 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
 GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
 
-LOCAL_DEPLOYS = []
-
 def get_clean_repo():
     repo = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
     if "github.com/" in repo:
@@ -167,6 +165,66 @@ async def commit_file_endpoint(request: Request):
     except Exception as e:
         return JSONResponse({"error": str(e), "ok": False}, status_code=500)
 
+# --- Enhanced Deployment History (with Files & Logs) ---
+async def get_deployments_endpoint(request: Request):
+    token = os.environ.get("GITHUB_TOKEN")
+    repo = get_clean_repo()
+    branch = os.environ.get("GITHUB_BRANCH", "main")
+
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    url = f"https://api.github.com/repos/{repo}/commits?sha={branch}&per_page=10"
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, headers=headers, timeout=12.0)
+            if res.status_code == 200:
+                raw_commits = res.json()
+                deployments = []
+
+                for idx, item in enumerate(raw_commits):
+                    commit_info = item.get("commit", {})
+                    author_info = commit_info.get("author", {})
+                    sha = item.get("sha", "")
+                    short_sha = sha[:7]
+                    raw_msg = commit_info.get("message", "No commit message").strip()
+                    first_line = raw_msg.splitlines()[0] if raw_msg else "Update"
+                    date_str = author_info.get("date", "")[:16].replace("T", " ") if author_info.get("date") else "Recent"
+
+                    files_changed = []
+                    detail_url = f"https://api.github.com/repos/{repo}/commits/{sha}"
+                    try:
+                        detail_res = await client.get(detail_url, headers=headers, timeout=6.0)
+                        if detail_res.status_code == 200:
+                            detail_json = detail_res.json()
+                            for f in detail_json.get("files", []):
+                                files_changed.append({
+                                    "filename": f.get("filename", ""),
+                                    "status": f.get("status", "modified"),
+                                    "additions": f.get("additions", 0),
+                                    "deletions": f.get("deletions", 0),
+                                    "patch": f.get("patch", "")
+                                })
+                    except Exception:
+                        pass
+
+                    deployments.append({
+                        "id": f"commit-{short_sha}",
+                        "name": f"Deploy: {first_line[:40]}",
+                        "date": date_str,
+                        "status": "Live" if idx == 0 else "Success",
+                        "commit": short_sha,
+                        "author": author_info.get("name", "GitHub"),
+                        "message": raw_msg,
+                        "files": files_changed
+                    })
+
+                return JSONResponse({"deployments": deployments, "ok": True})
+            return JSONResponse({"deployments": [], "error": res.text, "ok": False}, status_code=res.status_code)
+    except Exception as e:
+        return JSONResponse({"deployments": [], "error": str(e), "ok": False}, status_code=500)
+
 # --- Tree Feature Endpoints ---
 async def generate_and_save_tree():
     token = os.environ.get("GITHUB_TOKEN")
@@ -252,45 +310,6 @@ async def regenerate_tree_endpoint(request: Request):
     res = await generate_and_save_tree()
     return JSONResponse(res)
 
-# --- Deployments Endpoint ---
-async def get_deployments_endpoint(request: Request):
-    token = os.environ.get("GITHUB_TOKEN")
-    repo = get_clean_repo()
-    branch = os.environ.get("GITHUB_BRANCH", "main")
-
-    headers = {"Accept": "application/vnd.github.v3+json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-
-    url = f"https://api.github.com/repos/{repo}/commits?sha={branch}&per_page=15"
-    try:
-        async with httpx.AsyncClient() as client:
-            res = await client.get(url, headers=headers, timeout=10.0)
-            if res.status_code == 200:
-                raw_commits = res.json()
-                formatted = []
-                for idx, item in enumerate(raw_commits):
-                    commit_info = item.get("commit", {})
-                    author_info = commit_info.get("author", {})
-                    sha = item.get("sha", "")[:7]
-                    raw_msg = commit_info.get("message", "No commit message").strip()
-                    date_str = author_info.get("date", "")[:16].replace("T", " ") if author_info.get("date") else "Recent"
-
-                    formatted.append({
-                        "id": f"commit-{sha}",
-                        "name": f"Push #{len(raw_commits) - idx}: {raw_msg.splitlines()[0][:40]}",
-                        "date": date_str,
-                        "status": "Live" if idx == 0 else "Success",
-                        "commit": sha,
-                        "author": author_info.get("name", "GitHub"),
-                        "message": raw_msg
-                    })
-                return JSONResponse({"deployments": formatted, "ok": True})
-    except Exception as e:
-        print(f"Error fetching deployments: {e}")
-
-    return JSONResponse({"deployments": LOCAL_DEPLOYS, "ok": True})
-
 async def webhook_dummy(request: Request):
     return JSONResponse({"status": "received", "ok": True})
 
@@ -306,7 +325,7 @@ def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, web
         Route("/api/github-webhook", endpoint=webhook_dummy, methods=["POST"]),
         Route("/api/render-webhook", endpoint=webhook_dummy, methods=["POST"]),
 
-        # Committer Endpoints (root and /app prefix aliases)
+        # Committer Endpoints
         Route("/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
         Route("/app/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
         Route("/api/file-content", endpoint=file_content_endpoint, methods=["GET"]),
@@ -316,7 +335,7 @@ def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, web
         Route("/api/commit", endpoint=commit_file_endpoint, methods=["POST"]),
         Route("/app/api/commit", endpoint=commit_file_endpoint, methods=["POST"]),
 
-        # Tree Endpoints (root and /app prefix aliases)
+        # Tree Endpoints
         Route("/api/repo-tree-details", endpoint=get_tree_endpoint, methods=["GET"]),
         Route("/app/api/repo-tree-details", endpoint=get_tree_endpoint, methods=["GET"]),
         Route("/api/regenerate-tree", endpoint=regenerate_tree_endpoint, methods=["POST"]),
