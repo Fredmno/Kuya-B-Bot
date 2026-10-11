@@ -1,68 +1,114 @@
 import os
-import glob
+import time
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
-from config import APP_VERSION
 
-# Current file is in webapp/core/, so the webapp root is one level up
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-WEBAPP_ROOT = os.path.dirname(CURRENT_DIR)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
-def generate_consolidated_index_html() -> str:
+def read_file_safe(path: str) -> str:
+    """Reads a text file safely if it exists."""
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
+
+
+def collect_assets(extension: str) -> list:
+    """Recursively collects relative web paths for assets (.css or .js)."""
+    collected = []
+    for root, _, files in os.walk(BASE_DIR):
+        for file in files:
+            if file.endswith(extension):
+                full_path = os.path.join(root, file)
+                rel_path = os.path.relpath(full_path, BASE_DIR).replace(
+                    "\\", "/"
+                )
+                collected.append(f"/app/{rel_path}")
+    return collected
+
+
+def sort_scripts(scripts: list) -> list:
     """
-    Automatically scans all .html partials inside webapp/,
-    orders them structurally, and merges them into a single index.html.
+    Ensures correct loading hierarchy:
+    1. Third-party / core modules (utils, router, etc.)
+    2. Feature logic (admin, render_status, tasks, etc.)
+    3. App entry points (app.js)
     """
-    head_parts = []
-    modal_parts = []
-    dashboard_parts = []
-    feature_parts = []
-    footer_parts = []
 
-    # Find all .html files inside webapp and its subfolders
-    html_files = glob.glob(os.path.join(WEBAPP_ROOT, "**", "*.html"), recursive=True)
+    def priority(path: str):
+        if "utils" in path:
+            return 10
+        if "router" in path:
+            return 20
+        if "modules/" in path:
+            return 30
+        if "features/" in path:
+            return 50
+        if "app.js" in path:
+            return 90
+        return 40
 
-    for file_path in html_files:
-        filename = os.path.basename(file_path).lower()
+    return sorted(scripts, key=priority)
 
-        # Deterministic sequence: Head -> Modals -> Dashboard -> Features -> Scripts
-        if "base_head" in filename or "head" in filename:
-            head_parts.append(file_path)
-        elif "modal" in filename:
-            modal_parts.append(file_path)
-        elif "dashboard" in filename:
-            dashboard_parts.append(file_path)
-        elif "script" in filename or "footer" in filename:
-            footer_parts.append(file_path)
-        else:
-            feature_parts.append(file_path)
 
-    # Sort alphabetically inside each category
-    head_parts.sort()
-    modal_parts.sort()
-    dashboard_parts.sort()
-    feature_parts.sort()
-    footer_parts.sort()
+def build_consolidated_index() -> str:
+    """Compiles head, styles, feature views, and scripts into one page."""
+    version = int(time.time())
 
-    ordered_files = head_parts + modal_parts + dashboard_parts + feature_parts + footer_parts
+    # 1. Discover all CSS stylesheets automatically
+    css_files = collect_assets(".css")
+    css_tags = "\n    ".join(
+        [
+            f'<link rel="stylesheet" href="{css}?v={version}">'
+            for css in css_files
+        ]
+    )
 
-    content_pieces = []
-    for path in ordered_files:
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                content_pieces.append(f.read())
-        except Exception as e:
-            print(f"[IndexConsolidator] Error reading {path}: {e}")
+    # 2. Discover all JavaScript files automatically
+    js_files = sort_scripts(collect_assets(".js"))
+    js_tags = "\n    ".join(
+        [
+            f'<script src="{script}?v={version}"></script>'
+            for script in js_files
+        ]
+    )
 
-    return "\n\n".join(content_pieces)
+    # 3. Collect dashboard and feature HTML views
+    views_html = ""
+    dashboard_path = os.path.join(BASE_DIR, "dashboard", "dashboard.html")
+    if os.path.exists(dashboard_path):
+        views_html += read_file_safe(dashboard_path) + "\n"
+
+    features_dir = os.path.join(BASE_DIR, "features")
+    if os.path.exists(features_dir):
+        for root, _, files in os.walk(features_dir):
+            for file in sorted(files):
+                if file.endswith(".html"):
+                    view_path = os.path.join(root, file)
+                    views_html += f"\n<!-- Feature View: {file} -->\n"
+                    views_html += read_file_safe(view_path) + "\n"
+
+    # 4. Construct the complete single-page HTML
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kuya B Hub</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    {css_tags}
+</head>
+<body>
+    <div id="app">
+{views_html}
+    </div>
+    {js_tags}
+</body>
+</html>"""
 
 
 async def serve_index(request: Request):
-    """
-    Endpoint that renders the dynamically consolidated index.html
-    with cache-busting for the current app version.
-    """
-    html = generate_consolidated_index_html()
-    rendered = html.replace("{{ v }}", str(APP_VERSION))
-    return HTMLResponse(rendered)
+    """Starlette route handler returning the consolidated HTML."""
+    html = build_consolidated_index()
+    return HTMLResponse(html)
