@@ -122,7 +122,18 @@
             }
 
             // 3. BACK NAVIGATION BUTTONS
-            if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton")) {
+            if (target.closest("#tasksBackButton")) {
+                e.preventDefault();
+                triggerHaptic("light");
+                if (feats.tasks && feats.tasks.getActiveFolder && feats.tasks.getActiveFolder()) {
+                    feats.tasks.backToFolders();
+                } else {
+                    if (r.showDashboard) r.showDashboard();
+                }
+                return;
+            }
+
+            if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #remindersBackButton")) {
                 e.preventDefault();
                 triggerHaptic("light");
                 if (r.showDashboard) r.showDashboard();
@@ -170,12 +181,24 @@
                 if (form) form.style.display = "none";
                 return;
             }
-        });
-    }
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initDashboardButtons);
-    } else {
-        initDashboardButtons();
-    }
-})();
+            // 5. TASKS ADD (+) & CANCEL BUTTONS
+            if (target.closest("#addTaskButton")) {
+                e.preventDefault();
+                triggerHaptic("light");
+                var taskForm = document.getElementById("taskForm");
+                if (taskForm) {
+                    var isHidden = (taskForm.style.display === "none" || !taskForm.style.display);
+                    taskForm.style.display = isHidden ? "block" : "none";
+                    if (isHidden) {
+                        var titleInput = document.getElementById("taskTitle");
+                        if (titleInput) titleInput.focus();
+                    }
+                }
+                return;
+            }
+
+            if (target.closest("#cancelTaskButton")) {
+                e.preventDefault();
+                var taskFormToCancel = document.getElementById("taskForm");
+                if (taskFormToCancel)
