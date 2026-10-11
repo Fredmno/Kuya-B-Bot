@@ -185,90 +185,39 @@
         const contentInput = document.getElementById("commitContentInput");
         try {
             const text = await navigator.clipboard.readText();
-            if (contentInput && text) contentInput.value = text;
+            if (contentInput && text) {
+                contentInput.value = text;
+                // Run unpacker in case full JSON was pasted
+                window.KuyaB.tryUnpackJsonPayload();
+            }
         } catch (err) {
             alert("Clipboard permission denied. Please paste manually into the editor.");
         }
     };
 
-    window.KuyaB.submitFileCommit = async function () {
-        const filePath = document.getElementById("commitFilePath")?.value.trim();
-        const commitMsg = document.getElementById("commitMsgInput")?.value.trim() || `Update ${filePath}`;
-        const content = document.getElementById("commitContentInput")?.value;
-        const btn = document.getElementById("btnSubmitCommit");
+    // Auto-detects if full JSON was pasted and automatically fills in the inputs
+    window.KuyaB.tryUnpackJsonPayload = function () {
+        const contentInput = document.getElementById("commitContentInput");
+        const pathInput = document.getElementById("commitFilePath");
+        const msgInput = document.getElementById("commitMsgInput");
+        if (!contentInput) return;
 
-        if (!filePath) {
-            alert("Please specify the Target File Path (e.g. webapp/core/routes.py).");
-            return;
+        let raw = contentInput.value.trim();
+        if (raw.startsWith("```")) {
+            const lines = raw.split("\n");
+            if (lines[0].startsWith("```")) lines.shift();
+            if (lines.length && lines[lines.length - 1].startsWith("```")) lines.pop();
+            raw = lines.join("\n").trim();
         }
 
-        triggerHaptic("medium");
-        const originalText = btn ? btn.innerText : "Commit & Deploy 🚀";
-        if (btn) {
-            btn.disabled = true;
-            btn.innerText = "Deploying to GitHub...";
-        }
-
-        const payload = JSON.stringify({
-            file_path: filePath,
-            commit_message: commitMsg,
-            content: content
-        });
-
-        const endpoints = ["/api/commit-file", "/app/api/commit-file"];
-        let success = false;
-        let resultMsg = "";
-
-        for (const ep of endpoints) {
-            const { res, data } = await safeFetchJson(ep, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: payload
-            });
-
-            if (res.ok && data.ok) {
-                success = true;
-                resultMsg = data.message || "Commit pushed successfully";
-                break;
-            } else if (res.status !== 404 && res.status !== 0) {
-                resultMsg = data.error || `HTTP ${res.status}`;
-                break;
-            }
-        }
-
-        if (btn) {
-            btn.disabled = false;
-            btn.innerText = originalText;
-        }
-
-        if (success) {
-            triggerHaptic("heavy");
-            alert(`🚀 ${resultMsg}\n\nRender deployment has been triggered.`);
-            window.closeCommitterView();
-        } else {
-            alert("Commit failed: " + (resultMsg || "Could not reach server endpoint"));
-        }
-    };
-
-    function bindCommitterEvents() {
-        const backBtn = document.getElementById("adminUpdaterBackButton");
-        if (backBtn) backBtn.onclick = window.closeCommitterView;
-
-        const cancelBtn = document.getElementById("cancelAdminUpdaterButton");
-        if (cancelBtn) cancelBtn.onclick = window.closeCommitterView;
-
-        document.addEventListener("click", function (e) {
-            const listEl = document.getElementById("fileSuggestionsList");
-            const searchInput = document.getElementById("fileSearchInput");
-            if (listEl && e.target !== listEl && e.target !== searchInput) {
-                listEl.style.display = "none";
-            }
-        });
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", bindCommitterEvents);
-    } else {
-        bindCommitterEvents();
-    }
-})();
+        if (raw.startsWith("{") && raw.endsWith("}")) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (parsed.path || parsed.file_path || parsed.action === "commit_file") {
+                    if (pathInput && (parsed.path || parsed.file_path)) {
+                        pathInput.value = parsed.path || parsed.file_path;
+                    }
+                    if (msgInput && (parsed.message || parsed.commit_message)) {
+                        msgInput.value = parsed.message || parsed.commit_message;
+                    }
+                    if (parsed
