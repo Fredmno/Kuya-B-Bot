@@ -47,7 +47,7 @@
     transform: scale(0.97);
 }
 
-/* Standout Blue Committer Button (Right Header) */
+/* Standout Solid Blue Committer Button (Right Header) */
 .btn-committer {
     display: inline-flex !important;
     align-items: center;
@@ -69,6 +69,24 @@
 .btn-committer:active {
     transform: scale(0.96);
     opacity: 0.9;
+}
+
+.btn-action-small {
+    background: var(--bg-color, #e6ecf5);
+    border: none;
+    border-radius: 10px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary-accent, #2481cc);
+    cursor: pointer;
+    box-shadow: 3px 3px 6px var(--shadow-dark, #c5d0e0), 
+               -3px -3px 6px var(--shadow-light, #ffffff);
+}
+
+.btn-action-small:active {
+    box-shadow: inset 2px 2px 4px var(--shadow-dark, #c5d0e0), 
+                inset -2px -2px 4px var(--shadow-light, #ffffff);
 }
 
 .render-live-banner {
