@@ -31,6 +31,18 @@
         }
     }
 
+    // Helper: Normalize file list items to strings
+    function normalizeFileList(rawList) {
+        if (!Array.isArray(rawList)) return [];
+        return rawList.map(item => {
+            if (typeof item === "string") return item;
+            if (item && typeof item === "object") {
+                return item.file || item.path || item.filename || "";
+            }
+            return "";
+        }).filter(p => p.length > 0);
+    }
+
     window.openCommitterView = function () {
         triggerHaptic("light");
 
@@ -83,34 +95,36 @@
         const statusEl = document.getElementById("repoScanStatus");
         if (statusEl) statusEl.innerText = "Loading files...";
 
+        let rawFiles = [];
+
         // 1. Try standard /api/repo-tree endpoint
         let { res, data } = await safeFetchJson("/api/repo-tree?_t=" + Date.now());
-        if (!res.ok || !data.files || data.files.length === 0) {
+        if (res.ok && data.files && data.files.length > 0) {
+            rawFiles = data.files;
+        } else {
+            // Try /app/api/repo-tree alias
             const retry = await safeFetchJson("/app/api/repo-tree?_t=" + Date.now());
             if (retry.res.ok && retry.data.files && retry.data.files.length > 0) {
-                res = retry.res;
-                data = retry.data;
+                rawFiles = retry.data.files;
             }
         }
 
         // 2. Fallback to /api/repo-tree-details (the Tree feature data source)
-        if (!res.ok || !data.files || data.files.length === 0) {
+        if (rawFiles.length === 0) {
             let treeRes = await safeFetchJson("/api/repo-tree-details?_t=" + Date.now());
             if (!treeRes.res.ok) {
                 treeRes = await safeFetchJson("/app/api/repo-tree-details?_t=" + Date.now());
             }
 
             if (treeRes.res.ok && treeRes.data?.data?.files) {
-                const list = treeRes.data.data.files.map(item => item.file || item).filter(Boolean);
-                if (list.length > 0) {
-                    data = { files: list, source: "tree_cache" };
-                    res = { ok: true };
-                }
+                rawFiles = treeRes.data.data.files;
             }
         }
 
-        if (res.ok && Array.isArray(data.files) && data.files.length > 0) {
-            cachedRepoFiles = data.files;
+        const normalized = normalizeFileList(rawFiles);
+        if (normalized.length > 0) {
+            // Remove duplicates and sort
+            cachedRepoFiles = Array.from(new Set(normalized)).sort();
             if (statusEl) statusEl.innerText = `${cachedRepoFiles.length} files available`;
 
             const searchInput = document.getElementById("fileSearchInput");
@@ -118,7 +132,7 @@
                 window.KuyaB.filterRepoFiles(searchInput.value);
             }
         } else {
-            if (statusEl) statusEl.innerText = data.error || "0 files loaded";
+            if (statusEl) statusEl.innerText = "0 files found";
         }
     };
 
@@ -134,11 +148,16 @@
 
         const val = (query || "").trim().toLowerCase();
         let matches = [];
+
         if (!val) {
-            // Display first 25 files on focus before typing
+            // Show the first 25 files on focus before typing
             matches = cachedRepoFiles.slice(0, 25);
         } else {
-            matches = cachedRepoFiles.filter(p => p.toLowerCase().includes(val)).slice(0, 30);
+            // Case-insensitive substring match
+            matches = cachedRepoFiles.filter(item => {
+                const str = String(item).toLowerCase();
+                return str.includes(val);
+            }).slice(0, 30);
         }
 
         if (matches.length === 0) {
@@ -147,14 +166,18 @@
             return;
         }
 
-        listEl.innerHTML = matches.map(filePath => `
-            <div 
-                class="neu-dropdown-item"
-                onclick="window.KuyaB.selectFileSuggestion('${filePath.replace(/'/g, "\\'")}')"
-            >
-                📄 ${filePath}
-            </div>
-        `).join("");
+        listEl.innerHTML = matches.map(filePath => {
+            const escapedPath = filePath.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+            return `
+                <div 
+                    class="neu-dropdown-item"
+                    style="padding: 10px 14px; font-size: 11.5px; cursor: pointer; text-align: left; word-break: break-all;"
+                    onmousedown="event.preventDefault(); window.KuyaB.selectFileSuggestion('${escapedPath}')"
+                >
+                    📄 ${filePath}
+                </div>
+            `;
+        }).join("");
 
         listEl.style.display = "block";
     };
@@ -279,6 +302,7 @@
         }
     };
 
+    // Close suggestions on outside click
     document.addEventListener("click", function (e) {
         const listEl = document.getElementById("fileSuggestionsList");
         const searchInput = document.getElementById("fileSearchInput");
