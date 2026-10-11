@@ -1,56 +1,73 @@
 <!-- Kuya B — File Committer Feature View -->
-<div id="committer-view" class="view-container" style="display: none;">
+<div id="committer-view" class="view-container" style="display: none; padding-bottom: 30px;">
     <div class="view-header">
         <button type="button" class="btn-back" onclick="closeCommitterView()">← Back</button>
-        <h2>File Committer</h2>
-        <button type="button" class="btn-action-small" onclick="fetchRepoTree()">🔄 Refresh</button>
+        <h2>⚡ File Committer</h2>
+        <button type="button" class="btn-action-small" onclick="window.KuyaB.loadRepoTree(true)" title="Refresh file list">🔄 Refresh</button>
     </div>
 
-    <!-- Live Typing / Auto-suggest File Input -->
-    <div class="committer-section">
-        <label class="committer-label" for="committerFilePath">Target File (Type to filter)</label>
-        <input 
-            type="text" 
-            id="committerFilePath" 
-            list="repoFileList"
-            class="committer-text-input" 
-            placeholder="Type file path (e.g., admin_panel.css)..."
-            autocomplete="off"
-            spellcheck="false"
-            oninput="handleFilePathInput(this.value)"
-        >
-        <datalist id="repoFileList"></datalist>
-    </div>
-
-    <!-- Commit Message Input -->
-    <div class="committer-section">
-        <label class="committer-label" for="committerCommitMsg">Commit Message</label>
-        <input 
-            type="text" 
-            id="committerCommitMsg" 
-            class="committer-text-input" 
-            placeholder="e.g. style(admin_panel): update action grid"
-            autocomplete="off"
-        >
-    </div>
-
-    <!-- File Content Editor -->
-    <div class="committer-section">
-        <div class="editor-header-bar">
-            <label class="committer-label" for="committerContent">File Content</label>
-            <span id="committerFileStatus" class="editor-status-tag">Ready</span>
+    <div class="form-box" style="display: block; margin-top: 14px; position: relative;">
+        <!-- Search File Autocomplete Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-sub, #64748b);">Search File Name</label>
+            <span id="repoScanStatus" style="font-size: 0.75rem; color: #2563eb; font-weight: 600;"></span>
         </div>
-        <textarea 
-            id="committerContent" 
-            class="committer-textarea" 
-            placeholder="Paste or write your updated code/markup here..." 
-            spellcheck="false"
-        ></textarea>
-    </div>
 
-    <!-- Action Buttons -->
-    <div class="committer-actions-grid">
-        <button type="button" class="btn-committer-secondary" onclick="clearCommitterForm()">Clear</button>
-        <button type="button" id="btnSubmitCommit" class="btn-committer-primary" onclick="submitCommit()">🚀 Push Commit</button>
+        <!-- Floating Autocomplete Input and Container -->
+        <div style="position: relative; margin-bottom: 14px; z-index: 50;">
+            <input 
+                type="text" 
+                class="committer-text-input" 
+                id="fileSearchInput" 
+                placeholder="Type file name (e.g. tracking, vault, app)..." 
+                autocomplete="off"
+                spellcheck="false"
+                oninput="window.KuyaB.filterRepoFiles(this.value)"
+                onfocus="window.KuyaB.filterRepoFiles(this.value)"
+                style="width: 100%; box-sizing: border-box;"
+            >
+            <!-- Floating Autocomplete Dropdown List -->
+            <div id="fileSuggestionsList" style="
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                max-height: 220px;
+                overflow-y: auto;
+                background: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+                z-index: 9999;
+                margin-top: 6px;
+                border: 1px solid #cbd5e1;
+                box-sizing: border-box;
+            "></div>
+        </div>
+
+        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-sub, #64748b); margin-bottom: 6px;">Target File Path</label>
+        <input type="text" class="committer-text-input" id="commitFilePath" placeholder="e.g. webapp/modules/tracking.js" style="margin-bottom: 14px;">
+
+        <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-sub, #64748b); margin-bottom: 6px;">Commit Message</label>
+        <input type="text" class="committer-text-input" id="commitMsgInput" placeholder="e.g. Fix user activity counter" style="margin-bottom: 14px;">
+
+        <!-- Textarea Header Row with Action Buttons -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-sub, #64748b);">New File Content</label>
+                <span id="fileLoadStatus" style="font-size: 0.72rem; color: #2563eb; font-weight: 600;"></span>
+            </div>
+            <div style="display: flex; gap: 6px;">
+                <button type="button" onclick="window.KuyaB.clearCommitterContent()" class="btn-small-tool">🗑️ Clear</button>
+                <button type="button" onclick="window.KuyaB.pasteCommitterContent()" class="btn-small-tool primary">📋 Paste</button>
+            </div>
+        </div>
+
+        <textarea class="committer-textarea" id="commitContentInput" placeholder="Select a file above or paste new code here..." rows="13"></textarea>
+
+        <div class="committer-actions-grid" style="margin-top: 16px;">
+            <button type="button" class="btn-committer-secondary" onclick="closeCommitterView()">Cancel</button>
+            <button type="button" class="btn-committer-primary" id="btnSubmitCommit" onclick="window.KuyaB.submitFileCommit()">Commit & Deploy 🚀</button>
+        </div>
     </div>
 </div>
