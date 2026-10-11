@@ -1,0 +1,76 @@
+/* =========================================================
+   KUYA B — REPOSITORY TREE VIEW (NEUMORPHIC THEME)
+   webapp/features/tree/tree.css
+   ========================================================= */
+
+#tree-view {
+    padding: 10px 0 30px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tree-status-banner {
+    background: var(--bg-color, #e6ecf5);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 4px 4px 8px var(--shadow-dark, #c5d0e0), 
+               -4px -4px 8px var(--shadow-light, #ffffff);
+    margin-bottom: 12px;
+}
+
+.tree-badge {
+    background: rgba(37, 99, 235, 0.12);
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
+.tree-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.tree-file-item {
+    background: var(--bg-color, #e6ecf5);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 4px 4px 8px var(--shadow-dark, #c5d0e0), 
+               -4px -4px 8px var(--shadow-light, #ffffff);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.tree-file-item:active {
+    box-shadow: inset 2px 2px 4px var(--shadow-dark, #c5d0e0), 
+                inset -2px -2px 4px var(--shadow-light, #ffffff);
+    transform: scale(0.98);
+}
+
+.tree-file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-width: 80%;
+}
+
+.tree-file-path {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-main, #1a2530);
+    word-break: break-all;
+}
+
+.tree-file-meta {
+    font-size: 10px;
+    color: var(--text-sub, #64748b);
+}
