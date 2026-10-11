@@ -31,7 +31,6 @@
         }
     }
 
-    // Helper: Normalize file list items to strings
     function normalizeFileList(rawList) {
         if (!Array.isArray(rawList)) return [];
         return rawList.map(item => {
@@ -97,25 +96,24 @@
 
         let rawFiles = [];
 
-        // 1. Try standard /api/repo-tree endpoint
+        // 1. Try /api/repo-tree
         let { res, data } = await safeFetchJson("/api/repo-tree?_t=" + Date.now());
         if (res.ok && data.files && data.files.length > 0) {
             rawFiles = data.files;
         } else {
-            // Try /app/api/repo-tree alias
+            // 2. Try /app/api/repo-tree alias
             const retry = await safeFetchJson("/app/api/repo-tree?_t=" + Date.now());
             if (retry.res.ok && retry.data.files && retry.data.files.length > 0) {
                 rawFiles = retry.data.files;
             }
         }
 
-        // 2. Fallback to /api/repo-tree-details (the Tree feature data source)
+        // 3. Fallback to /api/repo-tree-details
         if (rawFiles.length === 0) {
             let treeRes = await safeFetchJson("/api/repo-tree-details?_t=" + Date.now());
             if (!treeRes.res.ok) {
                 treeRes = await safeFetchJson("/app/api/repo-tree-details?_t=" + Date.now());
             }
-
             if (treeRes.res.ok && treeRes.data?.data?.files) {
                 rawFiles = treeRes.data.data.files;
             }
@@ -123,7 +121,6 @@
 
         const normalized = normalizeFileList(rawFiles);
         if (normalized.length > 0) {
-            // Remove duplicates and sort
             cachedRepoFiles = Array.from(new Set(normalized)).sort();
             if (statusEl) statusEl.innerText = `${cachedRepoFiles.length} files available`;
 
@@ -150,13 +147,10 @@
         let matches = [];
 
         if (!val) {
-            // Show the first 25 files on focus before typing
             matches = cachedRepoFiles.slice(0, 25);
         } else {
-            // Case-insensitive substring match
             matches = cachedRepoFiles.filter(item => {
-                const str = String(item).toLowerCase();
-                return str.includes(val);
+                return String(item).toLowerCase().includes(val);
             }).slice(0, 30);
         }
 
@@ -302,7 +296,6 @@
         }
     };
 
-    // Close suggestions on outside click
     document.addEventListener("click", function (e) {
         const listEl = document.getElementById("fileSuggestionsList");
         const searchInput = document.getElementById("fileSearchInput");
