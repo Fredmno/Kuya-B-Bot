@@ -4,6 +4,7 @@ import json
 import base64
 import logging
 import asyncio
+from contextlib import asynccontextmanager
 import httpx
 import uvicorn
 from starlette.applications import Starlette
@@ -43,7 +44,7 @@ except ImportError:
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID", "7698531657")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
-GITHUB_REPO = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "Fredmno/Kuya-B-Bot")
 GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
 PORT = int(os.environ.get("PORT", "10000"))
 WEBHOOK_URL = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("WEBHOOK_URL")
@@ -187,8 +188,9 @@ async def telegram_webhook_handler(request: Request):
         logger.error(f"Error processing webhook: {e}")
         return JSONResponse({"error": str(e)}, status_code=400)
 
+@asynccontextmanager
 async def lifespan(app: Starlette):
-    """Handles startup and shutdown lifecycles."""
+    """Handles startup and shutdown lifecycles using modern async context manager."""
     global tg_app
     if BOT_TOKEN:
         logger.info("Initializing Telegram Bot Application...")
@@ -243,4 +245,4 @@ app = create_application()
 
 if __name__ == "__main__":
     logger.info(f"Starting Kuya B server on port {PORT}...")
-    uvicorn.run("bot.py:app", host="0.0.0.0", port=PORT, reload=False)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
