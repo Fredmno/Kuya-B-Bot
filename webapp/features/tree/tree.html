@@ -1,0 +1,62 @@
+<!-- Kuya B — Repository Tree & Updated Files View -->
+<div id="tree-view" class="view-container" style="display: none; padding-bottom: 30px;">
+    <div class="view-header">
+        <button type="button" class="btn-back" onclick="closeTreeView()">← Back</button>
+        <h2>📁 Updated Files Tree</h2>
+        <button type="button" class="btn-action-small" onclick="window.KuyaB.regenerateTree()" title="Regenerate tree.json">🔄 Sync</button>
+    </div>
+
+    <!-- Tree Sync Banner -->
+    <div class="tree-status-banner">
+        <div>
+            <div style="font-weight: 700; font-size: 13px; color: var(--text-main);">Repo File History</div>
+            <div id="treeLastSyncText" style="font-size: 11px; color: var(--text-sub); margin-top: 2px;">Saved inside features/tree/repo_tree.json</div>
+        </div>
+        <span id="treeFileCountBadge" class="tree-badge">0 files</span>
+    </div>
+
+    <h3 style="margin-top: 16px; font-size: 13px; color: var(--text-main);">Recently Updated Files</h3>
+    <div id="treeFileList" class="tree-file-list">
+        <!-- Rendered by tree.js -->
+    </div>
+
+    <!-- File Update Details Modal -->
+    <div id="treeDetailModal" class="modal-overlay" style="display: none;" onclick="closeTreeDetailModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTreeFileName" style="word-break: break-all; font-size: 14px;">File Details</h3>
+                <button type="button" class="modal-close-btn" onclick="closeTreeDetailModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-val" id="modalTreeStatus">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Commit:</span>
+                    <span class="detail-val" id="modalTreeCommit">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Author:</span>
+                    <span class="detail-val" id="modalTreeAuthor">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Updated:</span>
+                    <span class="detail-val" id="modalTreeDate">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Diff Stats:</span>
+                    <span class="detail-val" id="modalTreeStats">--</span>
+                </div>
+                <div class="detail-row full-width">
+                    <span class="detail-label">Commit Message:</span>
+                    <p class="detail-message" id="modalTreeMessage">--</p>
+                </div>
+                <div class="detail-row full-width" style="margin-top: 6px;">
+                    <span class="detail-label">Recent Patch Preview:</span>
+                    <pre id="modalTreePatch" style="background: rgba(0,0,0,0.05); padding: 8px; border-radius: 8px; font-size: 11px; overflow-x: auto; max-height: 120px; white-space: pre-wrap; font-family: monospace; margin: 4px 0 0 0;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
