@@ -4,18 +4,15 @@ import httpx
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-# Base directory for local reading (local server context)
 BASE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "..")
 )
 
-# GitHub configuration from environment variables
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
 GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
 
 def get_repo_files():
-    """Scans repository files excluding virtualenvs and cache."""
     file_list = []
     exclude_dirs = {".git", "__pycache__", ".pytest_cache", "venv", ".venv"}
     for root, dirs, files in os.walk(BASE_DIR):
@@ -29,7 +26,6 @@ def get_repo_files():
     return file_list
 
 async def repo_tree_endpoint(request: Request):
-    """Returns the list of editable repository files."""
     try:
         files = get_repo_files()
         return JSONResponse({"files": files})
@@ -37,7 +33,6 @@ async def repo_tree_endpoint(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 async def file_content_endpoint(request: Request):
-    """Fetches existing file content."""
     rel_path = request.query_params.get("path", "").strip()
     if not rel_path or ".." in rel_path:
         return JSONResponse({"error": "Invalid path"}, status_code=400)
@@ -54,7 +49,6 @@ async def file_content_endpoint(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 async def commit_file_endpoint(request: Request):
-    """Commits file directly to GitHub via the GitHub Contents API."""
     try:
         data = await request.json()
     except Exception:
@@ -72,7 +66,7 @@ async def commit_file_endpoint(request: Request):
     branch = os.environ.get("GITHUB_BRANCH", "main")
 
     if not token:
-        return JSONResponse({"error": "GITHUB_TOKEN environment variable is not configured on Render"}, status_code=500)
+        return JSONResponse({"error": "GITHUB_TOKEN is missing in Render environment variables"}, status_code=500)
 
     if "github.com/" in repo:
         repo = repo.split("github.com/")[-1].replace(".git", "").strip("/")
