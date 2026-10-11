@@ -9,13 +9,14 @@ VIEW_PARTS = [
     "modals.html",
     "dashboard.html",
     "birthdays.html",
-    "daily_logs.html",
+    "../features/daily_logs/web/daily_logs.html",  # Point to feature folder
     "tasks.html",
     "reminders.html",
     "vault.html",
     "user_tracking.html",
     "scripts.html",
 ]
+
 
 
 async def serve_index(request: Request):
