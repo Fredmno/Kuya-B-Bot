@@ -1,0 +1,41 @@
+<!-- Kuya B — Render Deployments List & Log Modal -->
+<div id="render-status-view" class="view-container neu-view" style="display: none; padding: 14px 16px 30px;">
+    <!-- Header -->
+    <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <button type="button" class="btn-icon-back" onclick="window.closeDeploymentsView()" style="background: #e2e8f0; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.95rem; font-weight: 700; color: #334155;">← Back</button>
+        <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">🟢 Deployments</h2>
+        <button type="button" onclick="window.KuyaB.loadRenderDeployments(true)" style="background: #e2e8f0; border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: #334155;">🔄</button>
+    </div>
+
+    <!-- Status List Container -->
+    <div id="deploymentsLoadingIndicator" style="text-align: center; color: #64748b; font-size: 0.85rem; padding: 20px 0;">Loading Render deployments...</div>
+    <div id="deploymentsListContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+
+    <!-- Deployment Detail Modal -->
+    <div id="deploymentDetailModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; padding: 16px; box-sizing: border-box; overflow-y: auto;">
+        <div style="background: #f8fafc; border-radius: 16px; padding: 16px; max-width: 500px; margin: 20px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                <div>
+                    <h3 id="detailDeployTitle" style="margin: 0; font-size: 1rem; color: #1e293b;">Deploy Details</h3>
+                    <span id="detailDeployStatusBadge" style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #e2e8f0; color: #475569;">Status</span>
+                </div>
+                <button type="button" onclick="window.closeDeployDetailModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">✕</button>
+            </div>
+
+            <!-- Changed / Uploaded Files Section -->
+            <div style="margin-bottom: 14px;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 4px;">📁 Uploaded / Modified Files</div>
+                <div id="detailDeployFiles" style="max-height: 100px; overflow-y: auto; background: #e6ecf5; padding: 8px 12px; border-radius: 8px; font-size: 0.76rem; font-family: monospace; color: #1e293b;">No modified file details</div>
+            </div>
+
+            <!-- Build / Deploy Logs Section -->
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: #475569;">📜 Build & Deploy Logs</span>
+                    <span id="detailLogsStatus" style="font-size: 0.7rem; color: #2563eb;"></span>
+                </div>
+                <pre id="detailDeployLogs" style="background: #0f172a; color: #f8fafc; padding: 12px; border-radius: 10px; font-size: 0.72rem; line-height: 1.4; max-height: 260px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin: 0;">Loading logs...</pre>
+            </div>
+        </div>
+    </div>
+</div>
