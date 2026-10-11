@@ -60,9 +60,49 @@
             var r = getRouter();
             var feats = getFeatures();
 
-            // 1. Dashboard Feature Cards
+            // 1. SPECIFIC TILES INSIDE "OTHER" FOLDER (Checked first to avoid interception)
+            var gameBtn = target.closest("#gameButton");
+            if (gameBtn) {
+                e.preventDefault();
+                triggerHaptic("light");
+                alert("Use /game in chat to play Word Scramble!");
+                return;
+            }
+
+            var committerBtn = target.closest("#btnAdminUpdater");
+            if (committerBtn) {
+                e.preventDefault();
+                triggerHaptic("light");
+                if (window.KuyaB.clearFileCommitterForm) window.KuyaB.clearFileCommitterForm();
+                if (r.showPage) r.showPage("adminUpdaterPage", window.KuyaB.loadRepoTree);
+                return;
+            }
+
+            var trackingBtn = target.closest("#btnOpenUserTracking");
+            if (trackingBtn) {
+                e.preventDefault();
+                triggerHaptic("light");
+                if (r.showPage) r.showPage("userTrackingPage", feats.tracking ? feats.tracking.render : null);
+                return;
+            }
+
+            var deployStatusBtn = target.closest("#btnDeployStatus");
+            if (deployStatusBtn) {
+                e.preventDefault();
+                triggerHaptic("light");
+                if (window.KuyaB.renderStatus && window.KuyaB.renderStatus.check) {
+                    window.KuyaB.renderStatus.check().then(function (res) {
+                        alert("Deploy Status: " + (res.status || "Unknown"));
+                    });
+                } else {
+                    alert("Deploy Status: Operational");
+                }
+                return;
+            }
+
+            // 2. MAIN DASHBOARD FEATURE CARDS (Must have data-feature)
             var card = target.closest(".feature-card");
-            if (card && !card.hasAttribute("data-action")) {
+            if (card && card.hasAttribute("data-feature")) {
                 e.preventDefault();
                 var feature = card.getAttribute("data-feature");
                 triggerHaptic("light");
@@ -81,7 +121,7 @@
                 return;
             }
 
-            // 2. Back Buttons
+            // 3. BACK NAVIGATION BUTTONS
             if (target.closest("#birthdayBackButton, #dailyLogsBackButton, #tasksBackButton, #remindersBackButton")) {
                 e.preventDefault();
                 triggerHaptic("light");
@@ -100,7 +140,22 @@
                 return;
             }
 
-            // 3. Vault Add Button (+) & Cancel Button
+            if (target.closest("#userTrackingBackButton")) {
+                e.preventDefault();
+                triggerHaptic("light");
+                openVaultCategory("other");
+                return;
+            }
+
+            if (target.closest("#adminUpdaterBackButton, #cancelAdminUpdaterButton")) {
+                e.preventDefault();
+                triggerHaptic("light");
+                if (window.KuyaB.clearFileCommitterForm) window.KuyaB.clearFileCommitterForm();
+                openVaultCategory("other");
+                return;
+            }
+
+            // 4. VAULT ADD (+) & CANCEL BUTTONS
             if (target.closest("#addVaultItemButton")) {
                 e.preventDefault();
                 triggerHaptic("light");
@@ -113,46 +168,6 @@
                 e.preventDefault();
                 var form = document.getElementById("vaultUploadForm");
                 if (form) form.style.display = "none";
-                return;
-            }
-
-            // 4. Word Game Card
-            if (target.closest("#gameButton")) {
-                e.preventDefault();
-                triggerHaptic("light");
-                alert("Use /game in chat to play Word Scramble!");
-                return;
-            }
-
-            // 5. User Activity Card
-            if (target.closest("#btnOpenUserTracking")) {
-                e.preventDefault();
-                triggerHaptic("light");
-                if (r.showPage) r.showPage("userTrackingPage", feats.tracking ? feats.tracking.render : null);
-                return;
-            }
-
-            if (target.closest("#userTrackingBackButton")) {
-                e.preventDefault();
-                triggerHaptic("light");
-                openVaultCategory("other");
-                return;
-            }
-
-            // 6. File Committer Card
-            if (target.closest("#btnAdminUpdater")) {
-                e.preventDefault();
-                triggerHaptic("light");
-                if (window.KuyaB.clearFileCommitterForm) window.KuyaB.clearFileCommitterForm();
-                if (r.showPage) r.showPage("adminUpdaterPage", window.KuyaB.loadRepoTree);
-                return;
-            }
-
-            if (target.closest("#adminUpdaterBackButton, #cancelAdminUpdaterButton")) {
-                e.preventDefault();
-                triggerHaptic("light");
-                if (window.KuyaB.clearFileCommitterForm) window.KuyaB.clearFileCommitterForm();
-                openVaultCategory("other");
                 return;
             }
         });
