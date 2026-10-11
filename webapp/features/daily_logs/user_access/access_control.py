@@ -1,132 +1,98 @@
-import json
 import logging
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from telegram import Update
 from telegram.ext import ContextTypes
-
-from config import ADMIN_USER_ID
+from config import ADMIN_ID
 from features.registry import get_or_create_registry, update_registry_data
 
 logger = logging.getLogger(__name__)
-
 ACCESS_REGISTRY_KEY = "daily_logs_access"
 
 
-def get_access_data() -> dict:
-    """Retrieves current approved list and pending access requests."""
-    reg = get_or_create_registry(ACCESS_REGISTRY_KEY, default_value={"approved": [], "pending": []})
-    data = reg.get("data")
-    if isinstance(data, str):
-        try:
-            return json.loads(data)
-        except Exception:
-            return {"approved": [], "pending": []}
-    return data or {"approved": [], "pending": []}
-
-
-def is_user_authorized(user_id: str) -> bool:
-    """Checks if a user is the owner or an approved viewer."""
-    if not user_id:
-        return False
-    user_id_str = str(user_id)
-    if str(ADMIN_USER_ID) == user_id_str:
-        return True
-    access_data = get_access_data()
-    return user_id_str in [str(u) for u in access_data.get("approved", [])]
+def _get_access_list() -> list:
+    reg = get_or_create_registry(ACCESS_REGISTRY_KEY, default_value=[])
+    data = reg.get("data", [])
+    if isinstance(data, list):
+        return data
+    return []
 
 
 async def api_request_daily_logs_access(request: Request):
-    """Submits an access request and alerts the admin via Telegram."""
+    """Handles an access request submitted from the WebApp lock screen."""
     try:
-        data = await request.json()
-        user_id = str(data.get("user_id", ""))
-        user_name = data.get("name", "Unknown User")
-        username = data.get("username", "")
+        body = await request.json()
+        user_id = str(body.get("user_id") or "").strip()
+        user_name = body.get("name") or "Anonymous"
 
         if not user_id:
-            return JSONResponse({"success": False, "error": "User ID missing"}, status_code=400)
+            return JSONResponse({"success": False, "error": "User ID required"}, status_code=400)
 
-        if is_user_authorized(user_id):
-            return JSONResponse({"success": True, "status": "already_approved"})
+        # Auto-grant access if the user is the admin
+        if str(user_id) == str(ADMIN_ID):
+            access_list = _get_access_list()
+            if user_id not in access_list:
+                access_list.append(user_id)
+                update_registry_data(ACCESS_REGISTRY_KEY, access_list)
+            return JSONResponse({"success": True, "status": "approved"})
 
-        access_data = get_access_data()
-        pending = access_data.get("pending", [])
+        access_list = _get_access_list()
+        if user_id in access_list:
+            return JSONResponse({"success": True, "status": "approved"})
 
-        existing = next((p for p in pending if str(p.get("id")) == user_id), None)
-        if not existing:
-            pending.append({
-                "id": user_id,
-                "name": user_name,
-                "username": username
-            })
-            access_data["pending"] = pending
-            update_registry_data(ACCESS_REGISTRY_KEY, access_data)
-
-        # Alert the Admin in Telegram
-        tg_app = getattr(request.app.state, "telegram_app", None)
-        if tg_app and ADMIN_USER_ID:
+        # Send an approval request message to Admin via Telegram
+        app = request.app.state.telegram_app
+        if app and ADMIN_ID:
             msg = (
                 f"🔒 *Daily Logs Access Request*\n\n"
-                f"👤 *User:* {user_name} (@{username if username else 'N/A'})\n"
-                f"🆔 *ID:* `{user_id}`\n\n"
-                f"Reply `/approve_logs {user_id}` to grant access."
+                f"• *User:* {user_name}\n"
+                f"• *ID:* `{user_id}`\n\n"
+                f"To approve, reply or run:\n`/approve_logs {user_id}`"
             )
-            try:
-                await tg_app.bot.send_message(chat_id=int(ADMIN_USER_ID), text=msg, parse_mode="Markdown")
-            except Exception as e:
-                logger.warning(f"Failed to send access request alert: {e}")
+            await app.bot.send_message(chat_id=ADMIN_ID, text=msg, parse_mode="Markdown")
 
         return JSONResponse({"success": True, "status": "pending"})
     except Exception as e:
+        logger.error(f"Error in api_request_daily_logs_access: {e}")
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 
 async def api_approve_daily_logs_access(request: Request):
-    """API endpoint to approve access for a specific user ID."""
+    """Admin endpoint to approve user access."""
     try:
-        data = await request.json()
-        admin_id = str(data.get("admin_id", ""))
-        target_user_id = str(data.get("user_id", ""))
+        body = await request.json()
+        user_id = str(body.get("user_id") or "").strip()
+        admin_key = str(body.get("admin_id") or "").strip()
 
-        if admin_id != str(ADMIN_USER_ID):
+        if admin_key != str(ADMIN_ID):
             return JSONResponse({"success": False, "error": "Unauthorized"}, status_code=403)
 
-        access_data = get_access_data()
-        approved = access_data.get("approved", [])
-        pending = access_data.get("pending", [])
+        access_list = _get_access_list()
+        if user_id and user_id not in access_list:
+            access_list.append(user_id)
+            update_registry_data(ACCESS_REGISTRY_KEY, access_list)
 
-        if target_user_id not in approved:
-            approved.append(target_user_id)
-
-        access_data["pending"] = [p for p in pending if str(p.get("id")) != target_user_id]
-        access_data["approved"] = approved
-        update_registry_data(ACCESS_REGISTRY_KEY, access_data)
-
-        return JSONResponse({"success": True, "approved_user": target_user_id})
+        return JSONResponse({"success": True, "approved": user_id})
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 
 async def command_approve_logs(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Admin command handler (/approve_logs <user_id>) in Telegram chat."""
-    user_id = str(update.effective_user.id)
-    if user_id != str(ADMIN_USER_ID):
+    """Telegram bot command: /approve_logs <user_id>"""
+    sender_id = str(update.effective_user.id)
+    if sender_id != str(ADMIN_ID):
+        await update.message.reply_text("⛔ Unauthorized command.")
         return
 
     if not context.args:
         await update.message.reply_text("Usage: `/approve_logs <user_id>`", parse_mode="Markdown")
         return
 
-    target_id = context.args[0]
-    access_data = get_access_data()
-    approved = access_data.get("approved", [])
+    target_id = str(context.args[0]).strip()
+    access_list = _get_access_list()
 
-    if target_id not in approved:
-        approved.append(target_id)
+    if target_id not in access_list:
+        access_list.append(target_id)
+        update_registry_data(ACCESS_REGISTRY_KEY, access_list)
 
-    access_data["approved"] = approved
-    access_data["pending"] = [p for p in access_data.get("pending", []) if str(p.get("id")) != target_id]
-    update_registry_data(ACCESS_REGISTRY_KEY, access_data)
-
-    await update.message.reply_text(f"✅ Access granted to user `{target_id}`.", parse_mode="Markdown")
+    await update.message.reply_text(f"✅ User `{target_id}` has been granted access to Daily Logs.", parse_mode="Markdown")
