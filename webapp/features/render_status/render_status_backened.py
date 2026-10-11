@@ -7,10 +7,10 @@ from starlette.responses import JSONResponse
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 ADMIN_CHAT_ID = "7698531657"
 
-RENDER_API_KEY = os.environ.get("RENDER_API_KEY")
-RENDER_SERVICE_ID = os.environ.get("RENDER_SERVICE_ID")  # e.g., srv-xxxxxxxxxxxx
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
+GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
 
-# In-memory backup queue
 LOCAL_DEPLOYS = []
 
 async def send_tg_message(text: str):
@@ -30,42 +30,52 @@ async def send_tg_message(text: str):
         print(f"Error sending TG notification: {e}")
 
 async def get_deployments_endpoint(request: Request):
-    """Fetches real deployment history from Render API or local queue."""
-    # Method 1: Query Render API directly if configured
-    if RENDER_API_KEY and RENDER_SERVICE_ID:
+    """Fetches real commits and deployment history using GITHUB_TOKEN."""
+    token = os.environ.get("GITHUB_TOKEN")
+    repo = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
+    branch = os.environ.get("GITHUB_BRANCH", "main")
+
+    if "github.com/" in repo:
+        repo = repo.split("github.com/")[-1].replace(".git", "").strip("/")
+
+    if token:
         headers = {
-            "Authorization": f"Bearer {RENDER_API_KEY}",
-            "Accept": "application/json"
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github.v3+json"
         }
-        url = f"https://api.render.com/v1/services/{RENDER_SERVICE_ID}/deploys?limit=15"
+        url = f"https://api.github.com/repos/{repo}/commits?sha={branch}&per_page=15"
         try:
             async with httpx.AsyncClient() as client:
                 res = await client.get(url, headers=headers, timeout=10.0)
                 if res.status_code == 200:
-                    raw_data = res.json()
+                    raw_commits = res.json()
                     formatted = []
-                    for item in raw_data:
-                        deploy = item.get("deploy", item)
-                        commit = deploy.get("commit", {})
-                        status = deploy.get("status", "unknown").capitalize()
-                        
-                        created_at = deploy.get("createdAt", "")
-                        date_str = created_at[:16].replace("T", " ") if created_at else "Just now"
+                    for idx, item in enumerate(raw_commits):
+                        commit_info = item.get("commit", {})
+                        author_info = commit_info.get("author", {})
+                        sha = item.get("sha", "")[:7]
+                        raw_msg = commit_info.get("message", "No commit message")
+                        first_line = raw_msg.splitlines()[0] if raw_msg else "Update"
+
+                        raw_date = author_info.get("date", "")
+                        date_str = raw_date[:16].replace("T", " ") if raw_date else "Recent"
+
+                        # Mark most recent commit as Live, rest as Success
+                        status_label = "Live" if idx == 0 else "Success"
 
                         formatted.append({
-                            "id": deploy.get("id", ""),
-                            "name": f"Deploy: {commit.get('message', 'Update')[:40]}",
+                            "id": f"commit-{sha}",
+                            "name": f"Deploy #{len(raw_commits) - idx} — {first_line[:40]}",
                             "date": date_str,
-                            "status": "Live" if status.lower() == "live" else status,
-                            "commit": commit.get("id", "")[:7],
-                            "author": "Render API",
-                            "message": commit.get("message", "No commit message")
+                            "status": status_label,
+                            "commit": sha,
+                            "author": author_info.get("name", "GitHub"),
+                            "message": raw_msg
                         })
                     return JSONResponse({"deployments": formatted})
         except Exception as e:
-            print(f"Error fetching from Render API: {e}")
+            print(f"Error fetching commits from GitHub: {e}")
 
-    # Method 2: Fallback to local memory queue if Render API credentials are not set
     return JSONResponse({"deployments": LOCAL_DEPLOYS})
 
 async def github_webhook_handler(request: Request):
