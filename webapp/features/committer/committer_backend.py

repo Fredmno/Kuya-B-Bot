@@ -1,11 +1,19 @@
 import os
-import subprocess
+import base64
+import httpx
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+# Base directory for local reading (local server context)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+# GitHub configuration from environment variables
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")  # e.g. "username/repo"
+GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
+
 def get_repo_files():
+    """Scans repository files excluding virtualenvs and cache."""
     file_list = []
     exclude_dirs = {".git", "__pycache__", ".pytest_cache", "venv", ".venv"}
     for root, dirs, files in os.walk(BASE_DIR):
@@ -19,6 +27,7 @@ def get_repo_files():
     return file_list
 
 async def repo_tree_endpoint(request: Request):
+    """Returns the list of editable repository files."""
     try:
         files = get_repo_files()
         return JSONResponse({"files": files})
@@ -26,14 +35,15 @@ async def repo_tree_endpoint(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 async def file_content_endpoint(request: Request):
+    """Fetches existing file content."""
     rel_path = request.query_params.get("path", "").strip()
     if not rel_path or ".." in rel_path:
         return JSONResponse({"error": "Invalid path"}, status_code=400)
-    
+
     full_path = os.path.join(BASE_DIR, rel_path)
     if not os.path.isfile(full_path):
         return JSONResponse({"error": "File not found"}, status_code=404)
-        
+
     try:
         with open(full_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -42,33 +52,64 @@ async def file_content_endpoint(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 async def commit_file_endpoint(request: Request):
+    """Commits file directly to GitHub via the GitHub Contents API."""
     try:
         data = await request.json()
     except Exception:
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
 
-    rel_path = data.get("file_path", "").strip()
+    rel_path = data.get("file_path", "").strip().lstrip("/")
     commit_msg = data.get("commit_message", "").strip()
-    content = data.get("content", "")
+    content_str = data.get("content", "")
 
     if not rel_path or not commit_msg:
         return JSONResponse({"error": "File path and commit message are required"}, status_code=400)
 
-    if ".." in rel_path:
-        return JSONResponse({"error": "Invalid file path"}, status_code=400)
+    token = os.environ.get("GITHUB_TOKEN")
+    repo = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
+    branch = os.environ.get("GITHUB_BRANCH", "main")
 
-    full_path = os.path.join(BASE_DIR, rel_path)
-    try:
-        os.makedirs(os.path.dirname(full_path), exist_ok=True)
-        with open(full_path, "w", encoding="utf-8") as f:
-            f.write(content)
+    if not token:
+        return JSONResponse({"error": "GITHUB_TOKEN environment variable is not configured on Render"}, status_code=500)
 
-        subprocess.run(["git", "add", rel_path], cwd=BASE_DIR, check=True)
-        subprocess.run(["git", "commit", "-m", commit_msg], cwd=BASE_DIR, check=True)
-        subprocess.run(["git", "push"], cwd=BASE_DIR, check=True)
+    # Clean repo slug in case a full URL was provided
+    if "github.com/" in repo:
+        repo = repo.split("github.com/")[-1].replace(".git", "").strip("/")
 
-        return JSONResponse({"ok": True, "message": "Commit pushed successfully"})
-    except subprocess.CalledProcessError as e:
-        return JSONResponse({"error": f"Git command failed: {e}"}, status_code=500)
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    api_url = f"https://api.github.com/repos/{repo}/contents/{rel_path}"
+
+    async with httpx.AsyncClient() as client:
+        # Step 1: Check if the file already exists on GitHub to grab its SHA
+        sha = None
+        get_res = await client.get(f"{api_url}?ref={branch}", headers=headers)
+        if get_res.status_code == 200:
+            sha = get_res.json().get("sha")
+
+        # Step 2: Base64 encode the updated file content
+        encoded_content = base64.b64encode(content_str.encode("utf-8")).decode("utf-8")
+
+        payload = {
+            "message": commit_msg,
+            "content": encoded_content,
+            "branch": branch
+        }
+        if sha:
+            payload["sha"] = sha
+
+        # Step 3: PUT request to create or update the file on GitHub
+        put_res = await client.put(api_url, json=payload, headers=headers)
+
+        if put_res.status_code in (200, 201):
+            return JSONResponse({"ok": True, "message": "Commit pushed successfully to GitHub"})
+        else:
+            try:
+                err_data = put_res.json()
+                error_msg = err_data.get("message", put_res.text)
+            except Exception:
+                error_msg = put_res.text
+            return JSONResponse({"error": f"GitHub API error: {error_msg}"}, status_code=put_res.status_code)
