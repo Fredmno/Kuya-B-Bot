@@ -1,0 +1,90 @@
+/* =========================================================
+   KUYA B — AUTO-COMPLETE & COMMITTER COMPONENT STYLES
+   webapp/committer/auto_complete/auto_complete.css
+   ========================================================= */
+
+.committer-container {
+    color: #1e293b;
+    font-family: inherit;
+}
+
+.committer-container .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.committer-container .top-bar h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+    color: #1e293b;
+}
+
+.committer-container .btn-icon-back,
+.committer-container .btn-icon-add {
+    background: #e2e8f0;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+    transition: background 0.15s ease;
+}
+
+.committer-container .btn-icon-back:active,
+.committer-container .btn-icon-add:active {
+    background: #cbd5e1;
+}
+
+.committer-container .neu-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #1e293b;
+    outline: none;
+    font-size: 0.85rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.committer-container .neu-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.committer-container .form-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.committer-container .btn-soft {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.committer-container .btn-soft:active {
+    opacity: 0.85;
+}
+
+.committer-container .btn-soft.cancel {
+    flex: 1;
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.committer-container .btn-soft.save {
+    flex: 2;
+    background: #2563eb;
+    color: #ffffff;
+}
