@@ -14,24 +14,20 @@ function mountAdminButton() {
     let adminBtn = document.getElementById("admin-panel-btn");
     if (!adminBtn) return;
 
-    // Locate the search bar on your dashboard
     const searchInput = document.querySelector('input[placeholder*="Search" i]') || 
                         document.querySelector('input[type="text"]') ||
                         document.querySelector('input[type="search"]');
 
     if (searchInput) {
-        const searchContainer = searchInput.closest('.search-box') || 
-                                searchInput.closest('.search-container') || 
-                                searchInput.closest('.search-bar') ||
+        const searchContainer = searchInput.closest('.search-container') || 
+                                searchInput.closest('.search-box') || 
                                 searchInput.parentElement;
 
         if (searchContainer && searchContainer.parentElement) {
-            // Container to align button neatly to the upper right above the search box
             let headerWrapper = document.getElementById("admin-btn-wrapper");
             if (!headerWrapper) {
                 headerWrapper = document.createElement("div");
                 headerWrapper.id = "admin-btn-wrapper";
-                headerWrapper.style.cssText = "display: flex; justify-content: flex-end; width: 100%; margin-bottom: 8px;";
                 searchContainer.parentElement.insertBefore(headerWrapper, searchContainer);
             }
             headerWrapper.appendChild(adminBtn);
