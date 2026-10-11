@@ -306,7 +306,7 @@ def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, web
         Route("/api/github-webhook", endpoint=webhook_dummy, methods=["POST"]),
         Route("/api/render-webhook", endpoint=webhook_dummy, methods=["POST"]),
 
-        # Committer Endpoints (includes /api/commit, /api/commit-file, and /app/api aliases)
+        # Committer Endpoints (root and /app prefix aliases)
         Route("/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
         Route("/app/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
         Route("/api/file-content", endpoint=file_content_endpoint, methods=["GET"]),
@@ -316,7 +316,7 @@ def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, web
         Route("/api/commit", endpoint=commit_file_endpoint, methods=["POST"]),
         Route("/app/api/commit", endpoint=commit_file_endpoint, methods=["POST"]),
 
-        # Tree Endpoints
+        # Tree Endpoints (root and /app prefix aliases)
         Route("/api/repo-tree-details", endpoint=get_tree_endpoint, methods=["GET"]),
         Route("/app/api/repo-tree-details", endpoint=get_tree_endpoint, methods=["GET"]),
         Route("/api/regenerate-tree", endpoint=regenerate_tree_endpoint, methods=["POST"]),
