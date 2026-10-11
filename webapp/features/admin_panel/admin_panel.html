@@ -1,0 +1,28 @@
+<!-- Admin Dashboard Card (Injected into Dashboard via index_consolidator) -->
+<div id="admin-panel-card" class="dashboard-card admin-only-card" style="display: none;" onclick="openAdminPanel()">
+    <div class="card-icon">⚙️</div>
+    <div class="card-title">Admin Panel</div>
+    <div class="card-subtitle">Manage Mini App & Server</div>
+</div>
+
+<!-- Admin Panel Dedicated View Container -->
+<div id="admin-panel-view" class="view-container" style="display: none;">
+    <div class="view-header">
+        <button type="button" class="btn-back" onclick="closeAdminPanel()">← Back</button>
+        <h2>Admin Management</h2>
+    </div>
+
+    <div class="admin-content-grid">
+        <div class="admin-tool-card" onclick="triggerRegenerateTree()">
+            <div class="tool-icon">📁</div>
+            <div class="tool-name">Update STRUCTURE.md</div>
+            <div class="tool-desc">Rebuild directory tree markdown</div>
+        </div>
+
+        <div class="admin-tool-card" onclick="checkServerHealth()">
+            <div class="tool-icon">🟢</div>
+            <div class="tool-name">Server Health</div>
+            <div class="tool-desc">Verify backend & webhook status</div>
+        </div>
+    </div>
+</div>
