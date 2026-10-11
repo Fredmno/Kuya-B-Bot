@@ -21,7 +21,6 @@
         }
 
         try {
-            // Append timestamp query parameter to bypass webview caching
             let res = await fetch("/api/deployment-history?_t=" + Date.now());
             if (!res.ok) {
                 res = await fetch("/app/api/deployment-history?_t=" + Date.now());
@@ -168,7 +167,6 @@
 
         const patchStr = decodeURIComponent(encodedPatch);
 
-        // Try /api/file-content first, then fallback to /app/api/file-content
         try {
             let res = await fetch(`/api/file-content?path=${encodeURIComponent(filename)}`);
             if (!res.ok) {
@@ -186,7 +184,6 @@
             console.warn("Could not fetch full content, falling back to patch diff.");
         }
 
-        // Fallback to diff patch
         viewerTitle.innerText = `📄 ${filename} (Commit Diff Patch)`;
         viewerContent.innerText = patchStr || "No diff preview available for this file.";
     };
