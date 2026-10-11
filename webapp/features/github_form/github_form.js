@@ -59,12 +59,14 @@
         if (dashboard) dashboard.style.display = "block";
     };
 
-    window.KuyaB.clearGitHubFormContent = function () {
+    // Cancel action: clears the form and navigates back to admin page
+    window.cancelGitHubForm = function () {
         triggerHaptic("light");
         const input = document.getElementById("githubCommitContentInput");
         const statusEl = document.getElementById("githubFileLoadStatus");
         if (input) input.value = "";
         if (statusEl) statusEl.innerText = "";
+        window.closeGitHubFormView();
     };
 
     function cleanJsonString(raw) {
@@ -131,10 +133,10 @@
         }
 
         triggerHaptic("medium");
-        const originalText = btn ? btn.innerText : "Push to GitHub 🚀";
+        const originalText = btn ? btn.innerText : "Submit";
         if (btn) {
             btn.disabled = true;
-            btn.innerText = "Submitting to GitHub...";
+            btn.innerText = "Submitting...";
         }
 
         const payload = JSON.stringify({
@@ -180,7 +182,7 @@
         if (success) {
             triggerHaptic("heavy");
             alert(`🚀 ${resultMsg}\n\nRender deployment initiated.`);
-            window.closeGitHubFormView();
+            window.cancelGitHubForm();
         } else {
             alert("Push failed: " + (resultMsg || "Could not reach commit endpoint"));
         }
