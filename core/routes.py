@@ -1,7 +1,7 @@
 import os
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
-from features.tasks import get_tasks_routes
+from webapp.features.tasks.routes import get_tasks_routes
 
 # Feature route imports
 from webapp.core.index_consolidator import serve_index
