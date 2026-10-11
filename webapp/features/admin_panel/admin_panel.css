@@ -1,10 +1,8 @@
 #admin-panel-btn {
     display: none;
-    align-self: flex-end;
-    margin-left: auto;
-    margin-right: 4px;
-    margin-bottom: 8px;
-    padding: 6px 12px;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
     font-size: 12px;
     font-weight: 600;
     color: #ffffff;
@@ -12,14 +10,40 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
 #admin-panel-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
     opacity: 0.9;
 }
 
-#admin-panel-view {
-    padding: 16px;
+.admin-content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.admin-tool-card {
+    padding: 14px;
+    border-radius: 10px;
+    background: var(--tg-theme-secondary-bg-color, #232e3c);
+    color: var(--tg-theme-text-color, #ffffff);
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-tool-card:hover {
+    transform: translateY(-2px);
+}
+
+.btn-back {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    background: var(--tg-theme-button-color, #2481cc);
+    color: var(--tg-theme-button-text-color, #ffffff);
+    cursor: pointer;
 }
