@@ -1,19 +1,28 @@
-.admin-only-card {
-    display: flex;
-    flex-direction: column;
+.admin-top-btn {
+    align-self: flex-end;
+    margin-left: auto;
+    margin-bottom: 8px;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255, 193, 7, 0.4);
-    background: rgba(255, 193, 7, 0.05);
+    gap: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: var(--tg-theme-button-color, #2481cc);
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
-    border-radius: 12px;
-    padding: 16px;
-    transition: border-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transition: opacity 0.2s ease, transform 0.1s ease;
 }
 
-.admin-only-card:hover {
-    border-color: #ffc107;
-    transform: translateY(-2px);
+.admin-top-btn:hover {
+    opacity: 0.9;
+}
+
+.admin-top-btn:active {
+    transform: scale(0.96);
 }
 
 .admin-content-grid {
