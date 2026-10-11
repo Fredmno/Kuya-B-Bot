@@ -6,32 +6,7 @@
 (function () {
     "use strict";
 
-    const DEPLOYMENTS = [
-        {
-            id: "dep-103",
-            name: "Deploy #103 — Neomorphic & Dashboard Relocation",
-            date: "2026-10-11 21:04",
-            status: "Live",
-            commit: "c3f82a1",
-            message: "Consolidated dashboard into core/dashboard with neomorphic styles and fixed admin button positioning."
-        },
-        {
-            id: "dep-102",
-            name: "Deploy #102 — Fix Start Handler TypeError",
-            date: "2026-10-11 18:48",
-            status: "Success",
-            commit: "a810f9e",
-            message: "Provided start_command callback to register_all_handlers in bot.py."
-        },
-        {
-            id: "dep-101",
-            name: "Deploy #101 — Routes Reorganization",
-            date: "2026-10-11 18:45",
-            status: "Success",
-            commit: "54b209d",
-            message: "Cleaned up webapp.core.routes import in bot.py."
-        }
-    ];
+    let cachedDeployments = [];
 
     function triggerHaptic(type) {
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
@@ -39,15 +14,39 @@
         }
     }
 
+    async function fetchDeployments() {
+        const container = document.getElementById("deploymentList");
+        if (container && cachedDeployments.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: var(--text-sub); font-size: 12px; padding: 12px;">Loading deployments...</div>';
+        }
+
+        try {
+            const res = await fetch("/api/deployment-history");
+            if (res.ok) {
+                const data = await res.json();
+                cachedDeployments = data.deployments || [];
+            }
+        } catch (e) {
+            console.error("Error fetching deployments:", e);
+        }
+
+        renderDeploymentList();
+    }
+
     function renderDeploymentList() {
         const container = document.getElementById("deploymentList");
         if (!container) return;
 
+        if (cachedDeployments.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: var(--text-sub); font-size: 12px; padding: 16px;">No recent deployment events recorded yet. Push a commit or trigger a deploy to populate logs.</div>';
+            return;
+        }
+
         container.innerHTML = "";
-        DEPLOYMENTS.forEach(item => {
+        cachedDeployments.forEach(item => {
             const badgeClass = item.status === "Live" 
                 ? "badge-live" 
-                : (item.status === "Success" ? "badge-success" : "badge-failed");
+                : (item.status === "Building" ? "badge-success" : "badge-failed");
 
             const div = document.createElement("div");
             div.className = "deploy-item";
@@ -63,7 +62,6 @@
         });
     }
 
-    // Open Render Status Full View
     window.openRenderStatusView = function () {
         triggerHaptic("light");
 
@@ -78,11 +76,10 @@
         const view = document.getElementById("render-status-view");
         if (view) {
             view.style.display = "block";
-            renderDeploymentList();
+            fetchDeployments();
         }
     };
 
-    // Close Render Status View & Return to Admin Panel or Dashboard
     window.closeRenderStatusView = function () {
         triggerHaptic("light");
 
@@ -102,7 +99,6 @@
         }
     };
 
-    // Open Committer Directly from the Deployment Header Button
     window.openCommitterFromDeploy = function () {
         triggerHaptic("light");
 
@@ -122,7 +118,6 @@
         }
     };
 
-    // Open Modal Details for Selected Deploy
     window.openDeployModal = function (deploy) {
         triggerHaptic("light");
 
@@ -130,19 +125,20 @@
         const statusEl = document.getElementById("modalDeployStatus");
         const dateEl = document.getElementById("modalDeployDate");
         const commitEl = document.getElementById("modalDeployCommit");
+        const authorEl = document.getElementById("modalDeployAuthor");
         const messageEl = document.getElementById("modalDeployMessage");
 
         if (nameEl) nameEl.innerText = deploy.name;
         if (statusEl) statusEl.innerText = deploy.status;
         if (dateEl) dateEl.innerText = deploy.date;
         if (commitEl) commitEl.innerText = deploy.commit;
+        if (authorEl) authorEl.innerText = deploy.author || "Git Push";
         if (messageEl) messageEl.innerText = deploy.message;
 
         const modal = document.getElementById("deploymentDetailModal");
         if (modal) modal.style.display = "flex";
     };
 
-    // Close Modal Details
     window.closeDeployModal = function () {
         const modal = document.getElementById("deploymentDetailModal");
         if (modal) modal.style.display = "none";
@@ -151,6 +147,7 @@
     window.KuyaB = window.KuyaB || {};
     window.KuyaB.renderStatus = {
         open: window.openRenderStatusView,
+        refresh: fetchDeployments,
         check: async function () {
             window.openRenderStatusView();
             return { status: "Operational" };
@@ -158,8 +155,8 @@
     };
 
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", renderDeploymentList);
+        document.addEventListener("DOMContentLoaded", fetchDeployments);
     } else {
-        renderDeploymentList();
+        fetchDeployments();
     }
 })();
