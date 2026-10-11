@@ -1,102 +1,184 @@
 /* =========================================================
-   KUYA B — FILE COMMITTER FEATURE (AUTOCOMPLETE THEME)
+   KUYA B — FILE COMMITTER (NEUMORPHIC THEME)
    webapp/features/committer/committer.css
    ========================================================= */
 
-#committer-view {
-    padding: 10px 0 30px;
-    width: 100%;
-    box-sizing: border-box;
+:root {
+    --neu-bg: #e6ecf5;
+    --neu-shadow-dark: #c5d0e0;
+    --neu-shadow-light: #ffffff;
+    --neu-text-main: #1e293b;
+    --neu-text-muted: #64748b;
+    --neu-accent: #2563eb;
 }
 
-.committer-text-input {
-    width: 100%;
-    background-color: var(--bg-color, #e6ecf5);
-    border: none;
-    border-radius: 12px;
-    color: var(--text-main, #1a2530);
-    font-size: 13px;
-    padding: 11px 14px;
-    outline: none;
-    box-shadow: inset 3px 3px 6px var(--shadow-dark, #c5d0e0), 
-                inset -3px -3px 6px var(--shadow-light, #ffffff);
-    box-sizing: border-box;
+.neu-view {
+    color: var(--neu-text-main);
+    font-family: inherit;
 }
 
-.committer-textarea {
-    width: 100%;
-    background-color: var(--bg-color, #e6ecf5);
-    border: none;
-    border-radius: 14px;
-    color: var(--text-main, #1a2530);
-    padding: 12px 14px;
-    outline: none;
-    box-shadow: inset 3px 3px 6px var(--shadow-dark, #c5d0e0), 
-                inset -3px -3px 6px var(--shadow-light, #ffffff);
-    box-sizing: border-box;
-    font-family: monospace;
+.neu-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--neu-text-main);
+    margin: 0;
+}
+
+.neu-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.neu-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.neu-label {
     font-size: 12px;
-    line-height: 1.4;
-    resize: vertical;
-    white-space: pre;
+    font-weight: 600;
+    color: var(--neu-text-main);
+    display: block;
+    margin-bottom: 6px;
 }
 
-.committer-actions-grid {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
+.neu-subtext {
+    font-size: 11px;
+    color: var(--neu-text-muted);
+}
+
+.neu-badge-info {
+    font-size: 11px;
+    color: var(--neu-accent);
+    font-weight: 600;
+}
+
+/* Inset Neumorphic Fields */
+.neu-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    background: var(--neu-bg);
+    color: var(--neu-text-main);
+    font-size: 13px;
+    box-shadow: inset 3px 3px 6px var(--neu-shadow-dark),
+                inset -3px -3px 6px var(--neu-shadow-light);
+    transition: box-shadow 0.2s ease;
+}
+
+.neu-input:focus {
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+.neu-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 220px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: none;
+    outline: none;
+    background: var(--neu-bg);
+    color: var(--neu-text-main);
+    font-family: monospace;
+    font-size: 11.5px;
+    line-height: 1.45;
+    resize: vertical;
+    box-shadow: inset 3px 3px 6px var(--neu-shadow-dark),
+                inset -3px -3px 6px var(--neu-shadow-light);
+}
+
+.neu-textarea:focus {
+    box-shadow: inset 4px 4px 8px var(--neu-shadow-dark),
+                inset -4px -4px 8px var(--neu-shadow-light);
+}
+
+/* Embossed Neumorphic Buttons */
+.neu-btn {
+    border: none;
+    outline: none;
+    background: var(--neu-bg);
+    color: var(--neu-text-main);
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 4px 4px 8px var(--neu-shadow-dark),
+               -4px -4px 8px var(--neu-shadow-light);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.neu-btn:active {
+    box-shadow: inset 2px 2px 5px var(--neu-shadow-dark),
+                inset -2px -2px 5px var(--neu-shadow-light);
+    transform: scale(0.98);
+}
+
+.neu-btn-sm {
+    padding: 6px 12px;
+    font-size: 11.5px;
+    border-radius: 10px;
+}
+
+.neu-btn-xs {
+    padding: 4px 8px;
+    font-size: 10.5px;
+    border-radius: 8px;
+}
+
+.neu-btn-row {
+    display: flex;
     gap: 12px;
 }
 
-.btn-committer-secondary {
-    background: var(--bg-color, #e6ecf5);
-    border: none;
-    border-radius: 12px;
+.neu-btn-cancel {
+    flex: 1;
     padding: 12px;
     font-size: 13px;
-    font-weight: 700;
-    color: var(--text-sub, #64748b);
-    cursor: pointer;
-    box-shadow: 4px 4px 8px var(--shadow-dark, #c5d0e0), 
-               -4px -4px 8px var(--shadow-light, #ffffff);
+    color: var(--neu-text-muted);
 }
 
-.btn-committer-secondary:active {
-    box-shadow: inset 2px 2px 4px var(--shadow-dark, #c5d0e0), 
-                inset -2px -2px 4px var(--shadow-light, #ffffff);
-    transform: scale(0.98);
-}
-
-.btn-committer-primary {
-    background: var(--primary-accent, #2481cc);
-    border: none;
-    border-radius: 12px;
+.neu-btn-submit {
+    flex: 2;
     padding: 12px;
     font-size: 13px;
-    font-weight: 700;
-    color: #ffffff;
+    color: var(--neu-accent);
+}
+
+/* Dropdown list with soft elevation */
+.neu-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 6px;
+    background: var(--neu-bg);
+    border-radius: 14px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 999;
+    box-shadow: 6px 6px 14px var(--neu-shadow-dark),
+               -6px -6px 14px var(--neu-shadow-light);
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.neu-dropdown-item {
+    padding: 9px 12px;
+    font-size: 11.5px;
+    color: var(--neu-text-main);
+    border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(36, 129, 204, 0.35);
+    transition: background 0.15s ease;
 }
 
-.btn-committer-primary:active {
-    transform: scale(0.98);
-    opacity: 0.92;
-}
-
-.btn-small-tool {
-    border: none;
-    background: #e2e8f0;
-    color: #475569;
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.08);
-}
-
-.btn-small-tool.primary {
-    background: #2563eb;
-    color: #ffffff;
-    box-shadow: 1px 1px 3px rgba(37,99,235,0.3);
+.neu-dropdown-item:hover,
+.neu-dropdown-item:active {
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--neu-accent);
 }
