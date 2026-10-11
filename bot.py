@@ -1,4 +1,3 @@
-import os
 import logging
 from datetime import time
 from zoneinfo import ZoneInfo
@@ -8,65 +7,18 @@ import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse, JSONResponse
-from starlette.routing import Route, Mount
-from starlette.staticfiles import StaticFiles
-from features.admin.render_status import api_get_deploy_status
-
 
 from telegram import Update, BotCommand, BotCommandScopeDefault
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-    ContextTypes,
-)
+from telegram.ext import Application, ContextTypes
 
-from config import APP_VERSION, BOT_TOKEN, WEBHOOK_URL, WEBHOOK_PATH, PORT, ADMIN_USER_ID
+from config import APP_VERSION, BOT_TOKEN, WEBHOOK_URL, WEBHOOK_PATH, PORT
 from database import init_db
 
-# Shared registry helpers
-from features.registry import get_or_create_registry, update_registry_data
+# Core General Registries
+from core import get_all_routes, register_all_handlers
 
-# View Renderer
-from features.views.view_renderer import serve_index
-
-# Feature Imports
-from features.word_game import register_word_game_handlers
-from features.menu import kuya_b_menu, menu_callback_handler
-from features.business.assistant import handle_business_message
-from features.downloader import api_download_link_to_vault
-from features.remote_sync import api_remote_sync_file
-from features.BirthDay.Birthdays import (
-    api_get_birthdays,
-    api_add_birthday,
-    api_delete_birthday,
-    api_edit_birthday,
-    check_and_send_daily_birthday_greetings,
-    command_add_birthday,
-    command_trigger_bulletin,
-)
-from features.daily_logs.daily_logs import (
-    api_get_daily_logs,
-    api_save_daily_log,
-    api_delete_daily_log,
-)
-from features.tracking.tracking import (
-    api_track_user,
-    api_get_users,
-)
-from features.vault import (
-    api_upload_vault_media,
-    api_get_vault_media_file,
-    api_get_vault_items,
-    api_delete_vault_item,
-)
-from features.admin.github_sync import (
-    api_admin_commit_file,
-    api_admin_get_repo_tree,
-    api_admin_get_file_content,
-)
+# Background Jobs
+from features.BirthDay.Birthdays import check_and_send_daily_birthday_greetings
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -77,7 +29,7 @@ application = Application.builder().token(BOT_TOKEN).build()
 
 
 # ---------------------------------------------------------
-# BOT COMMANDS & WEBHOOKS
+# BOT CORE ACTIONS & WEBHOOK
 # ---------------------------------------------------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -95,7 +47,7 @@ async def telegram_webhook(request: Request):
 
 
 async def health_check(request: Request):
-    return PlainTextResponse(f"Kuya B Bot v{APP_VERSION} is operational.")
+    return PlainTextResponse(f"Kuya B Bot {APP_VERSION} is operational.")
 
 
 async def api_cleanup_message(request: Request):
@@ -108,25 +60,6 @@ async def api_cleanup_message(request: Request):
         return JSONResponse({"success": True})
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=200)
-
-
-async def api_send_birthday_greeting(request: Request):
-    try:
-        data = await request.json()
-        chat_id = data.get("chat_id")
-        name = data.get("name", "Friend")
-        if not chat_id:
-            return JSONResponse({"error": "No chat_id provided"}, status_code=400)
-
-        greeting_text = (
-            f"🎉🎂 **Happy Birthday, {name}!** 🎂🎉\n\n"
-            "Wishing you good health, endless happiness, and many blessings ahead! ✨\n\n"
-            "— *Kuya B Hub*"
-        )
-        await application.bot.send_message(chat_id=int(chat_id), text=greeting_text, parse_mode="Markdown")
-        return JSONResponse({"success": True})
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 # ---------------------------------------------------------
@@ -186,71 +119,19 @@ async def lifespan(app):
 
 
 # ---------------------------------------------------------
-# HANDLER REGISTRATIONS
+# REGISTRATIONS & STARLETTE SETUP
 # ---------------------------------------------------------
-application.add_handler(CommandHandler("start", start))
-application.add_handler(CommandHandler("kuyab", kuya_b_menu))
-application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
-application.add_handler(CommandHandler("bday", command_add_birthday))
-application.add_handler(CommandHandler("trigger_greetings", command_trigger_bulletin))
-application.add_handler(CallbackQueryHandler(menu_callback_handler))
-application.add_handler(MessageHandler(filters.UpdateType.BUSINESS_MESSAGE, handle_business_message))
+register_all_handlers(application, start_handler=start)
 
-register_word_game_handlers(application)
-
-# ---------------------------------------------------------
-# STARLETTE ROUTING TABLE
-# ---------------------------------------------------------
 starlette_app = Starlette(
-    routes=[
-        Route("/", health_check, methods=["GET", "HEAD"]),
-        Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
-
-        # Birthdays
-        Route("/api/birthdays", api_get_birthdays, methods=["GET"]),
-        Route("/api/birthdays", api_add_birthday, methods=["POST"]),
-        Route("/api/birthdays/edit", api_edit_birthday, methods=["POST"]),
-        Route("/api/birthdays/delete", api_delete_birthday, methods=["POST"]),
-        Route("/api/birthdays/greet", api_send_birthday_greeting, methods=["POST"]),
-
-        # Daily Logs
-        Route("/api/logs", api_get_daily_logs, methods=["GET"]),
-        Route("/api/logs", api_save_daily_log, methods=["POST"]),
-        Route("/api/logs/delete", api_delete_daily_log, methods=["POST"]),
-
-        # User Tracking
-        Route("/api/track-user", api_track_user, methods=["POST"]),
-        Route("/api/users", api_get_users, methods=["GET"]),
-
-        # Vault Media & URL Downloader
-        Route("/api/vault/items", api_get_vault_items, methods=["GET"]),
-        Route("/api/vault/upload", api_upload_vault_media, methods=["POST"]),
-        Route("/api/vault/download-url", api_download_link_to_vault, methods=["POST"]),
-        Route("/api/vault/media-file", api_get_vault_media_file, methods=["GET"]),
-        Route("/api/vault/delete", api_delete_vault_item, methods=["POST"]),
-
-        # Dedicated Remote Sync Dispatch Webhook
-        Route("/api/admin/remote-sync", api_remote_sync_file, methods=["POST"]),
-
-        # GitHub Automated File Manager
-        Route("/api/admin/repo-tree", api_admin_get_repo_tree, methods=["GET"]),
-        Route("/api/admin/get-file", api_admin_get_file_content, methods=["GET"]),
-        Route("/api/admin/commit-file", api_admin_commit_file, methods=["POST"]),
-
-        
-        # For Render Status Update
-        Route("/api/admin/deploy-status", api_get_deploy_status, methods=["GET"]),
-
-
-        # Helpers & WebApp Static
-        Route("/api/cleanup-message", api_cleanup_message, methods=["POST"]),
-        Route("/app", serve_index, methods=["GET"]),
-        Route("/app/", serve_index, methods=["GET"]),
-        Mount("/app", StaticFiles(directory="webapp", html=False), name="app"),
-    ],
+    routes=get_all_routes(
+        health_check_handler=health_check,
+        webhook_handler=telegram_webhook,
+        cleanup_handler=api_cleanup_message,
+        webhook_path=WEBHOOK_PATH,
+    ),
     lifespan=lifespan,
 )
 
 if __name__ == "__main__":
     uvicorn.run(starlette_app, host="0.0.0.0", port=PORT)
- 
