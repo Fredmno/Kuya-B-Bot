@@ -1,38 +1,16 @@
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-)
+import os
+import logging
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-from features.menu import kuya_b_menu, menu_callback_handler
-from features.business.assistant import handle_business_message
-from features.word_game import register_word_game_handlers
-#from features.daily_logs.routes import #register_daily_logs_handlers
-from features.BirthDay.Birthdays import (
-    command_add_birthday,
-    command_trigger_bulletin,
-)
+logger = logging.getLogger(__name__)
 
 
-def register_all_handlers(application: Application, start_handler):
-    """
-    Registers all Telegram command and message handlers across features.
-    """
-    # Core bot commands
-    application.add_handler(CommandHandler("start", start_handler))
-    application.add_handler(CommandHandler("kuyab", kuya_b_menu))
-    application.add_handler(CommandHandler("kuya_b", kuya_b_menu))
+async def default_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hello! Kuya B is online.")
 
-    # Birthday commands
-    application.add_handler(CommandHandler("bday", command_add_birthday))
-    application.add_handler(CommandHandler("trigger_greetings", command_trigger_bulletin))
 
-    # Menus and Business
-    application.add_handler(CallbackQueryHandler(menu_callback_handler))
-    application.add_handler(MessageHandler(filters.UpdateType.BUSINESS_MESSAGE, handle_business_message))
-
-    # Sub-feature modular handlers
-    register_word_game_handlers(application)
-    #register_daily_logs_handlers(application)
+def register_all_handlers(application: Application, start_handler=None):
+    """Registers handlers, using default_start if no handler is explicitly provided."""
+    handler = start_handler or default_start
+    application.add_handler(CommandHandler("start", handler))
