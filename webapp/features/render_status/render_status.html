@@ -15,9 +15,13 @@
         <div class="service-meta" id="currentServiceMeta">Service: Kuya-B-Bot-1</div>
     </div>
 
-    <h3 style="margin-top: 18px; font-size: 14px; color: var(--text-main);">Recent Deployments</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; margin-bottom: 8px;">
+        <h3 style="font-size: 14px; color: var(--text-main); margin: 0;">Recent Deployments</h3>
+        <button type="button" class="btn-action-small" onclick="window.KuyaB.renderStatus.refresh()">🔄 Refresh</button>
+    </div>
+
     <div id="deploymentList" class="deployment-list">
-        <!-- Injected via render_status.js -->
+        <!-- Rendered dynamically by render_status.js -->
     </div>
 
     <!-- Deployment Detail Modal -->
