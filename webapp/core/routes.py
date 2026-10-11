@@ -8,8 +8,9 @@ try:
 except ImportError:
     from index_consolidator import serve_index
 
-# Base webapp directory: webapp/core/ -> webapp/
+# webapp/core/ -> webapp/
 WEBAPP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+CORE_DIR = os.path.join(WEBAPP_DIR, "core")
 
 def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, webhook_path="/webhook"):
     """
@@ -17,7 +18,7 @@ def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, web
     """
     features_dir = os.path.join(WEBAPP_DIR, "features")
     modules_dir = os.path.join(WEBAPP_DIR, "modules")
-    dashboard_dir = os.path.join(WEBAPP_DIR, "dashboard")
+    dashboard_dir = os.path.join(CORE_DIR, "dashboard")
 
     routes = [
         # Main dynamic Mini App entry route
