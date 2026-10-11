@@ -1,6 +1,7 @@
 import os
 import uvicorn
-from telegram.ext import ApplicationBuilder
+from telegram import Update
+from telegram.ext import ApplicationBuilder, ContextTypes
 from starlette.applications import Starlette
 
 from core import register_all_handlers
@@ -36,6 +37,11 @@ async def on_startup(application):
             print(f"Failed to send deployment status notification: {e}")
 
 
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Start command handler for Kuya B."""
+    await update.message.reply_text("Hello! Kuya B is online.")
+
+
 async def health_check(request):
     from starlette.responses import PlainTextResponse
     return PlainTextResponse("OK")
@@ -49,7 +55,8 @@ def main():
         .build()
     )
 
-    register_all_handlers(application)
+    # Pass the start_handler argument required by your core registration function
+    register_all_handlers(application, start_command)
 
     routes = get_all_routes(
         health_check_handler=health_check,
