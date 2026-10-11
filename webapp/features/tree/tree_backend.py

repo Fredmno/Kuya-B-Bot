@@ -1,0 +1,102 @@
+import os
+import json
+import httpx
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+FEATURE_DIR = os.path.dirname(os.path.abspath(__file__))
+TREE_JSON_PATH = os.path.join(FEATURE_DIR, "repo_tree.json")
+
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
+GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
+
+def get_clean_repo():
+    repo = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
+    if "github.com/" in repo:
+        repo = repo.split("github.com/")[-1].replace(".git", "").strip("/")
+    return repo
+
+async def generate_and_save_tree():
+    token = os.environ.get("GITHUB_TOKEN")
+    repo = get_clean_repo()
+    branch = os.environ.get("GITHUB_BRANCH", "main")
+
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    recent_files = {}
+
+    try:
+        async with httpx.AsyncClient() as client:
+            commits_url = f"https://api.github.com/repos/{repo}/commits?sha={branch}&per_page=12"
+            res = await client.get(commits_url, headers=headers, timeout=12.0)
+            if res.status_code != 200:
+                return {"ok": False, "error": f"GitHub API error: {res.text}"}
+
+            commits = res.json()
+            if not isinstance(commits, list):
+                return {"ok": False, "error": "Invalid commits response"}
+
+            for c in commits:
+                sha = c.get("sha", "")[:7]
+                commit_meta = c.get("commit", {})
+                author_name = commit_meta.get("author", {}).get("name", "GitHub")
+                date_str = commit_meta.get("author", {}).get("date", "")[:16].replace("T", " ")
+                msg = commit_meta.get("message", "No message")
+
+                detail_url = f"https://api.github.com/repos/{repo}/commits/{c.get('sha')}"
+                c_detail_res = await client.get(detail_url, headers=headers, timeout=12.0)
+                if c_detail_res.status_code == 200:
+                    detail_data = c_detail_res.json()
+                    for f in detail_data.get("files", []):
+                        fname = f.get("filename", "")
+                        if fname not in recent_files:
+                            patch_preview = f.get("patch", "")
+                            if patch_preview and len(patch_preview) > 350:
+                                patch_preview = patch_preview[:350] + "..."
+                            elif not patch_preview:
+                                patch_preview = "Binary / No diff preview"
+
+                            recent_files[fname] = {
+                                "file": fname,
+                                "status": f.get("status", "modified"),
+                                "additions": f.get("additions", 0),
+                                "deletions": f.get("deletions", 0),
+                                "commit": sha,
+                                "author": author_name,
+                                "date": date_str,
+                                "message": msg,
+                                "patch": patch_preview
+                            }
+
+        latest_date = commits[0]["commit"]["author"]["date"][:16].replace("T", " ") if commits else "N/A"
+        tree_data = {
+            "last_updated": latest_date,
+            "files": list(recent_files.values())
+        }
+
+        os.makedirs(FEATURE_DIR, exist_ok=True)
+        with open(TREE_JSON_PATH, "w", encoding="utf-8") as fp:
+            json.dump(tree_data, fp, indent=2)
+
+        return {"ok": True, "data": tree_data}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+async def get_tree_endpoint(request: Request):
+    if os.path.exists(TREE_JSON_PATH):
+        try:
+            with open(TREE_JSON_PATH, "r", encoding="utf-8") as fp:
+                data = json.load(fp)
+            return JSONResponse({"ok": True, "data": data})
+        except Exception:
+            pass
+
+    res = await generate_and_save_tree()
+    return JSONResponse(res)
+
+async def regenerate_tree_endpoint(request: Request):
+    res = await generate_and_save_tree()
+    return JSONResponse(res)
