@@ -67,20 +67,6 @@
         if (statusEl) statusEl.innerText = "";
     };
 
-    window.KuyaB.pasteGitHubFormContent = async function () {
-        triggerHaptic("light");
-        const input = document.getElementById("githubCommitContentInput");
-        try {
-            const text = await navigator.clipboard.readText();
-            if (input && text) {
-                input.value = text;
-                parsePayloadPreview();
-            }
-        } catch (err) {
-            alert("Clipboard permission not granted. Please paste directly into the box.");
-        }
-    };
-
     function cleanJsonString(raw) {
         let text = (raw || "").trim();
         if (text.startsWith("```")) {
