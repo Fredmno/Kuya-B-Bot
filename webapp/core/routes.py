@@ -8,13 +8,24 @@ from starlette.staticfiles import StaticFiles
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-WEBAPP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-CORE_DIR = os.path.join(WEBAPP_DIR, "core")
-BASE_DIR = os.path.abspath(os.path.join(WEBAPP_DIR, ".."))
+# Determine true project root directory
+CURRENT_FILE = os.path.abspath(__file__)
+CORE_DIR = os.path.dirname(CURRENT_FILE)
+WEBAPP_DIR = os.path.abspath(os.path.join(CORE_DIR, ".."))
+SRC_DIR = os.path.abspath(os.path.join(WEBAPP_DIR, ".."))
+
+# If deployed in /opt/render/project/src
+if os.path.exists(os.path.join(SRC_DIR, "bot.py")):
+    REPO_ROOT = SRC_DIR
+elif os.path.exists(os.path.join(os.path.dirname(SRC_DIR), "src", "bot.py")):
+    REPO_ROOT = os.path.join(os.path.dirname(SRC_DIR), "src")
+else:
+    REPO_ROOT = SRC_DIR
+
 TREE_DIR = os.path.join(WEBAPP_DIR, "features", "tree")
 TREE_JSON_PATH = os.path.join(TREE_DIR, "repo_tree.json")
 
-for p in [BASE_DIR, WEBAPP_DIR]:
+for p in [REPO_ROOT, WEBAPP_DIR]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
@@ -30,25 +41,25 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
 GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
 
-LOCAL_DEPLOYS = []
-
 def get_clean_repo():
     repo = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
     if "github.com/" in repo:
         repo = repo.split("github.com/")[-1].replace(".git", "").strip("/")
     return repo.strip()
 
-def get_local_repo_files():
+def get_disk_files():
+    """Scans the local filesystem to always ensure files load even if GitHub API fails."""
     file_list = []
-    exclude_dirs = {".git", "__pycache__", ".pytest_cache", "venv", ".venv", "node_modules"}
+    exclude_dirs = {".git", "__pycache__", ".pytest_cache", "venv", ".venv", "node_modules", ".cache"}
     valid_exts = (".py", ".html", ".css", ".js", ".json", ".md", ".txt", ".yml", ".yaml", ".sh")
-    
-    for root, dirs, files in os.walk(BASE_DIR):
+
+    for root, dirs, files in os.walk(REPO_ROOT):
         dirs[:] = [d for d in dirs if d not in exclude_dirs]
         for f in files:
             if f.endswith(valid_exts):
-                rel = os.path.relpath(os.path.join(root, f), BASE_DIR).replace("\\", "/")
+                rel = os.path.relpath(os.path.join(root, f), REPO_ROOT).replace("\\", "/")
                 file_list.append(rel)
+
     file_list.sort()
     return file_list
 
@@ -59,6 +70,8 @@ async def repo_tree_endpoint(request: Request):
     branch = os.environ.get("GITHUB_BRANCH", "main")
 
     files = []
+    source = "disk"
+
     if token:
         headers = {
             "Authorization": f"Bearer {token}",
@@ -68,7 +81,7 @@ async def repo_tree_endpoint(request: Request):
         url = f"https://api.github.com/repos/{repo}/git/trees/{branch}?recursive=1"
         try:
             async with httpx.AsyncClient() as client:
-                res = await client.get(url, headers=headers, timeout=12.0)
+                res = await client.get(url, headers=headers, timeout=10.0)
                 if res.status_code == 200:
                     data = res.json()
                     valid_exts = (".py", ".html", ".css", ".js", ".json", ".md", ".txt", ".yml", ".yaml", ".sh")
@@ -77,14 +90,15 @@ async def repo_tree_endpoint(request: Request):
                         if item.get("type") == "blob" and item["path"].endswith(valid_exts)
                     ]
                     files.sort()
+                    source = "github_api"
         except Exception as e:
-            print(f"Error fetching GitHub repo tree: {e}")
+            print(f"GitHub API tree fetch failed: {e}")
 
-    # Fallback to scanning local directory if GitHub API is unavailable or returns 0 files
+    # Fallback to scanning local container files if GitHub returned no files
     if not files:
-        files = get_local_repo_files()
+        files = get_disk_files()
 
-    return JSONResponse({"files": files, "ok": True})
+    return JSONResponse({"files": files, "ok": True, "count": len(files), "source": source})
 
 async def file_content_endpoint(request: Request):
     rel_path = request.query_params.get("path", "").strip().lstrip("/")
@@ -112,7 +126,7 @@ async def file_content_endpoint(request: Request):
         except Exception:
             pass
 
-    local_path = os.path.join(BASE_DIR, rel_path)
+    local_path = os.path.join(REPO_ROOT, rel_path)
     if os.path.isfile(local_path):
         try:
             with open(local_path, "r", encoding="utf-8") as f:
@@ -174,7 +188,7 @@ async def commit_file_endpoint(request: Request):
                     err_msg = err_json.get("message", put_res.text)
                 except Exception:
                     err_msg = put_res.text
-                return JSONResponse({"error": f"GitHub API error: {err_msg}", "ok": False}, status_code=put_res.status_code)
+                return JSONResponse({"error": f"GitHub API: {err_msg}", "ok": False}, status_code=put_res.status_code)
     except Exception as e:
         return JSONResponse({"error": str(e), "ok": False}, status_code=500)
 
