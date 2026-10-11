@@ -1,74 +1,42 @@
-<div class="welcome-tag">WELCOME BACK 👋</div>
-<h1>Kuya B</h1>
-<p class="sub-header">Your personal hub</p>
+<!-- Kuya B — Personal Hub Dashboard View -->
+<div id="dashboard-view" class="dashboard-container">
+    <!-- Personal Hub Header Row with Integrated Admin Button -->
+    <div class="personal-hub-header">
+        <div class="hub-profile-info">
+            <div class="hub-avatar">👤</div>
+            <div class="hub-text">
+                <h1 class="hub-title">Your Personal Hub</h1>
+                <p class="hub-subtitle">Manage your daily tasks & tools</p>
+            </div>
+        </div>
 
-<!-- Search Container -->
-<div class="search-container">
-  <input type="text" id="dashboard-search-input" placeholder="Search your vault..." oninput="handleDashboardSearch(this.value)">
+        <!-- Admin Button: opens the admin panel view -->
+        <button type="button" class="btn-admin-header" id="btnAdminPanel" onclick="window.openAdminPanel ? window.openAdminPanel() : (document.getElementById('dashboard-view').style.display='none', document.getElementById('admin-panel-view').style.display='block')">
+            ⚡ Admin
+        </button>
+    </div>
+
+    <!-- Quick Actions / Features Grid -->
+    <div class="hub-grid">
+        <!-- Direct GitHub Form shortcut -->
+        <div class="hub-card" onclick="window.openGitHubFormView ? window.openGitHubFormView() : window.openAdminPanel()">
+            <div class="hub-card-icon">🐙</div>
+            <div class="hub-card-title">GitHub Form</div>
+            <div class="hub-card-desc">Paste JSON or commit code</div>
+        </div>
+
+        <!-- Deployments shortcut -->
+        <div class="hub-card" onclick="window.openRenderStatusView ? window.openRenderStatusView() : null">
+            <div class="hub-card-icon">🟢</div>
+            <div class="hub-card-title">Deployments</div>
+            <div class="hub-card-desc">Check service health & logs</div>
+        </div>
+
+        <!-- Repo Tree shortcut -->
+        <div class="hub-card" onclick="window.KuyaB && window.KuyaB.openTreeView ? window.KuyaB.openTreeView() : null">
+            <div class="hub-card-icon">🌳</div>
+            <div class="hub-card-title">Repo Tree</div>
+            <div class="hub-card-desc">Browse repository structure</div>
+        </div>
+    </div>
 </div>
-
-<h2>Personal</h2>
-<div class="card-grid">
-  <div class="card feature-card" data-feature="daily">
-    <div class="icon">📅</div>
-    <div class="title">Daily Logs</div>
-    <div class="desc">Your days & habits</div>
-  </div>
-  <div class="card feature-card" data-feature="tasks">
-    <div class="icon">✅</div>
-    <div class="title">Tasks</div>
-    <div class="desc">Get things done</div>
-  </div>
-  <div class="card feature-card" data-feature="reminders">
-    <div class="icon">⏰</div>
-    <div class="title">Reminders</div>
-    <div class="desc">Don't forget</div>
-  </div>
-  <div class="card feature-card" data-feature="birthdays">
-    <div class="icon">🎂</div>
-    <div class="title">Birthdays</div>
-    <div class="desc">Important dates</div>
-  </div>
-</div>
-
-<h2>Media & Content</h2>
-<div class="card-grid">
-  <div class="card feature-card" data-feature="videos">
-    <div class="icon">🎥</div>
-    <div class="title">Videos</div>
-    <div class="desc">Your video vault</div>
-  </div>
-  <div class="card feature-card" data-feature="pictures">
-    <div class="icon">🖼️</div>
-    <div class="title">Pictures</div>
-    <div class="desc">Your photo vault</div>
-  </div>
-  <div class="card feature-card" data-feature="other">
-    <div class="icon">📁</div>
-    <div class="title">Other</div>
-    <div class="desc">Files, tools & games</div>
-  </div>
-  <div class="card feature-card" data-feature="search">
-    <div class="icon">🔍</div>
-    <div class="title">Search</div>
-    <div class="desc">Find anything</div>
-  </div>
-</div>
-
-<div class="footer-text">Kuya B Personal Hub</div>
-
-<script>
-  function handleDashboardSearch(query) {
-    const term = query.toLowerCase().trim();
-    const cards = document.querySelectorAll('.card-grid .card');
-    cards.forEach(card => {
-      const title = card.querySelector('.title')?.innerText.toLowerCase() || '';
-      const desc = card.querySelector('.desc')?.innerText.toLowerCase() || '';
-      if (!term || title.includes(term) || desc.includes(term)) {
-        card.style.display = "flex";
-      } else {
-        card.style.display = "none";
-      }
-    });
-  }
-</script>
