@@ -1,11 +1,53 @@
-<!-- Render Status Widget Card -->
-<div id="render-status-card" class="status-card">
-    <div class="status-indicator">
-        <span id="status-dot" class="dot live"></span>
-        <span id="status-text" class="status-label">Checking Render Status...</span>
+<!-- Render Status Deployment Page -->
+<div id="render-status-view" class="view-container" style="display: none;">
+    <div class="view-header">
+        <button type="button" class="btn-back" onclick="closeRenderStatusView()">← Back</button>
+        <h2>Deployment Status</h2>
     </div>
-    <div class="status-details">
-        <span class="detail-item">Commit: <code id="render-commit">Loading...</code></span>
-        <span class="detail-item">Service: <span id="render-service">Kuya B Hub</span></span>
+
+    <!-- Live Status Banner -->
+    <div class="render-live-banner">
+        <div class="status-indicator">
+            <span class="status-dot-pulse"></span>
+            <span id="currentStatusText">Operational (Render Live)</span>
+        </div>
+        <div class="service-meta" id="currentServiceMeta">Service: Kuya B Hub</div>
+    </div>
+
+    <h3 style="margin-top: 18px; font-size: 14px; color: var(--text-main);">Recent Deployments</h3>
+    <div id="deploymentList" class="deployment-list">
+        <!-- Rendered dynamically by render_status.js -->
+    </div>
+
+    <!-- Deployment Detail Modal -->
+    <div id="deploymentDetailModal" class="modal-overlay" style="display: none;" onclick="closeDeployModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalDeployName">Deployment Details</h3>
+                <button type="button" class="modal-close-btn" onclick="closeDeployModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-val" id="modalDeployStatus">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-val" id="modalDeployDate">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Commit:</span>
+                    <span class="detail-val" id="modalDeployCommit">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Triggered By:</span>
+                    <span class="detail-val" id="modalDeployAuthor">Git Push</span>
+                </div>
+                <div class="detail-row full-width">
+                    <span class="detail-label">Message / Notes:</span>
+                    <p class="detail-message" id="modalDeployMessage">--</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
