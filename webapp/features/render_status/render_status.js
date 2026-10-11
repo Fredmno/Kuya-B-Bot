@@ -6,7 +6,6 @@
 (function () {
     "use strict";
 
-    // Recent deployment log history
     const DEPLOYMENTS = [
         {
             id: "dep-103",
@@ -149,7 +148,6 @@
         if (modal) modal.style.display = "none";
     };
 
-    // Global Registry
     window.KuyaB = window.KuyaB || {};
     window.KuyaB.renderStatus = {
         open: window.openRenderStatusView,
