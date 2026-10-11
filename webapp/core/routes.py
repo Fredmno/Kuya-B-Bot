@@ -14,7 +14,6 @@ CORE_DIR = os.path.dirname(CURRENT_FILE)
 WEBAPP_DIR = os.path.abspath(os.path.join(CORE_DIR, ".."))
 SRC_DIR = os.path.abspath(os.path.join(WEBAPP_DIR, ".."))
 
-# If deployed in /opt/render/project/src
 if os.path.exists(os.path.join(SRC_DIR, "bot.py")):
     REPO_ROOT = SRC_DIR
 elif os.path.exists(os.path.join(os.path.dirname(SRC_DIR), "src", "bot.py")):
@@ -48,7 +47,6 @@ def get_clean_repo():
     return repo.strip()
 
 def get_disk_files():
-    """Scans the local filesystem to always ensure files load even if GitHub API fails."""
     file_list = []
     exclude_dirs = {".git", "__pycache__", ".pytest_cache", "venv", ".venv", "node_modules", ".cache"}
     valid_exts = (".py", ".html", ".css", ".js", ".json", ".md", ".txt", ".yml", ".yaml", ".sh")
@@ -65,12 +63,37 @@ def get_disk_files():
 
 # --- Committer Endpoints ---
 async def repo_tree_endpoint(request: Request):
+    """
+    Feeds the Committer file dropdown using the same mechanism as the Tree & Deploy views:
+    1. Loads from cached repo_tree.json if present.
+    2. Falls back to GitHub API git/trees endpoint.
+    3. Falls back to local disk scan.
+    """
+    files = []
+    source = "cache_json"
+
+    # 1. Try reading pre-generated tree json
+    if os.path.exists(TREE_JSON_PATH):
+        try:
+            with open(TREE_JSON_PATH, "r", encoding="utf-8") as fp:
+                data = json.load(fp)
+                if isinstance(data, dict) and "files" in data:
+                    raw_files = data["files"]
+                    for item in raw_files:
+                        if isinstance(item, dict) and "file" in item:
+                            files.append(item["file"])
+                        elif isinstance(item, str):
+                            files.append(item)
+                    if files:
+                        files = sorted(list(set(files)))
+                        return JSONResponse({"files": files, "ok": True, "count": len(files), "source": source})
+        except Exception as e:
+            print(f"Error reading {TREE_JSON_PATH}: {e}")
+
+    # 2. Try GitHub git/trees API
     token = os.environ.get("GITHUB_TOKEN")
     repo = get_clean_repo()
     branch = os.environ.get("GITHUB_BRANCH", "main")
-
-    files = []
-    source = "disk"
 
     if token:
         headers = {
@@ -83,10 +106,10 @@ async def repo_tree_endpoint(request: Request):
             async with httpx.AsyncClient() as client:
                 res = await client.get(url, headers=headers, timeout=10.0)
                 if res.status_code == 200:
-                    data = res.json()
+                    tree_data = res.json()
                     valid_exts = (".py", ".html", ".css", ".js", ".json", ".md", ".txt", ".yml", ".yaml", ".sh")
                     files = [
-                        item["path"] for item in data.get("tree", [])
+                        item["path"] for item in tree_data.get("tree", [])
                         if item.get("type") == "blob" and item["path"].endswith(valid_exts)
                     ]
                     files.sort()
@@ -94,9 +117,10 @@ async def repo_tree_endpoint(request: Request):
         except Exception as e:
             print(f"GitHub API tree fetch failed: {e}")
 
-    # Fallback to scanning local container files if GitHub returned no files
+    # 3. Fallback to scanning local container files
     if not files:
         files = get_disk_files()
+        source = "disk"
 
     return JSONResponse({"files": files, "ok": True, "count": len(files), "source": source})
 
