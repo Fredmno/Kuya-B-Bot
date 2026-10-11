@@ -11,6 +11,12 @@
     </div>
 
     <div class="admin-content-grid">
+        <div class="admin-tool-card" onclick="openRenderStatusView()">
+            <div class="tool-icon">🟢</div>
+            <div class="tool-name">Deployment Status</div>
+            <div class="tool-desc">View deployment logs & history</div>
+        </div>
+
         <div class="admin-tool-card" onclick="triggerRegenerateTree()">
             <div class="tool-icon">📁</div>
             <div class="tool-name">Update STRUCTURE.md</div>
@@ -18,9 +24,9 @@
         </div>
 
         <div class="admin-tool-card" onclick="checkServerHealth()">
-            <div class="tool-icon">🟢</div>
+            <div class="tool-icon">🩺</div>
             <div class="tool-name">Server Health</div>
-            <div class="tool-desc">Verify backend & webhook status</div>
+            <div class="tool-desc">Verify backend API status</div>
         </div>
     </div>
 </div>
