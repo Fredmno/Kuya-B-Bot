@@ -6,7 +6,6 @@
 (function () {
     "use strict";
 
-    // Recent deployment log data
     const DEPLOYMENTS = [
         {
             id: "dep-103",
@@ -82,10 +81,15 @@
         const view = document.getElementById("render-status-view");
         if (view) view.style.display = "none";
 
-        const appRoot = document.getElementById("app") || document.body;
-        for (let child of appRoot.children) {
-            if (child.id !== "render-status-view" && child.tagName !== "SCRIPT") {
-                child.style.display = child.dataset.prevDisplay || "";
+        const adminView = document.getElementById("admin-panel-view");
+        if (adminView) {
+            adminView.style.display = "block";
+        } else {
+            const appRoot = document.getElementById("app") || document.body;
+            for (let child of appRoot.children) {
+                if (child.id !== "render-status-view" && child.tagName !== "SCRIPT") {
+                    child.style.display = child.dataset.prevDisplay || "";
+                }
             }
         }
     };
@@ -106,7 +110,6 @@
         if (modal) modal.style.display = "none";
     };
 
-    // Expose check method to window.KuyaB.renderStatus
     window.KuyaB = window.KuyaB || {};
     window.KuyaB.renderStatus = {
         open: window.openRenderStatusView,
