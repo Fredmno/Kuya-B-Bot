@@ -1,0 +1,58 @@
+.admin-only-card {
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    background: rgba(255, 193, 7, 0.05);
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-only-card:hover {
+    border-color: #ffc107;
+    transform: translateY(-2px);
+}
+
+.admin-content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.admin-tool-card {
+    padding: 14px;
+    border-radius: 10px;
+    background: var(--tg-theme-secondary-bg-color, #232e3c);
+    color: var(--tg-theme-text-color, #ffffff);
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.15s ease;
+}
+
+.admin-tool-card:hover {
+    transform: translateY(-2px);
+}
+
+.admin-tool-card .tool-icon {
+    font-size: 24px;
+    margin-bottom: 6px;
+}
+
+.admin-tool-card .tool-name {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.admin-tool-card .tool-desc {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+.btn-back {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    background: var(--tg-theme-button-color, #2481cc);
+    color: var(--tg-theme-button-text-color, #ffffff);
+    cursor: pointer;
+}
