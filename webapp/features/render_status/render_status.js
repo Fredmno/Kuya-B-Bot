@@ -21,7 +21,12 @@
         }
 
         try {
-            const res = await fetch("/api/deployment-history?_t=" + Date.now());
+            // Append timestamp query parameter to bypass webview caching
+            let res = await fetch("/api/deployment-history?_t=" + Date.now());
+            if (!res.ok) {
+                res = await fetch("/app/api/deployment-history?_t=" + Date.now());
+            }
+
             if (res.ok) {
                 const data = await res.json();
                 cachedDeployments = data.deployments || [];
@@ -135,7 +140,7 @@
             } else {
                 filesListEl.innerHTML = files.map(f => `
                     <div 
-                        onclick="window.KuyaB.viewDeployFileDetails('${f.filename.replace(/'/g, "\\'")}', '${escape(f.patch || "")}')"
+                        onclick="window.KuyaB.viewDeployFileDetails('${f.filename.replace(/'/g, "\\'")}', '${encodeURIComponent(f.patch || "")}')"
                         style="background: #f1f5f9; padding: 8px 10px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0;"
                     >
                         <span style="font-size: 11px; font-weight: 600; color: #1e293b; word-break: break-all;">📄 ${f.filename}</span>
@@ -150,7 +155,7 @@
     };
 
     window.KuyaB = window.KuyaB || {};
-    window.KuyaB.viewDeployFileDetails = async function (filename, escapedPatch) {
+    window.KuyaB.viewDeployFileDetails = async function (filename, encodedPatch) {
         triggerHaptic("light");
         const viewerBox = document.getElementById("modalFileViewerContainer");
         const viewerTitle = document.getElementById("modalViewerFileTitle");
@@ -161,26 +166,29 @@
         viewerTitle.innerText = `📄 ${filename} (Loading full content / diff...)`;
         viewerBox.style.display = "block";
 
-        const unescapedPatch = unescape(escapedPatch);
+        const patchStr = decodeURIComponent(encodedPatch);
 
-        // Attempt to fetch live current file content from /api/file-content
+        // Try /api/file-content first, then fallback to /app/api/file-content
         try {
-            const res = await fetch(`/api/file-content?path=${encodeURIComponent(filename)}`);
+            let res = await fetch(`/api/file-content?path=${encodeURIComponent(filename)}`);
+            if (!res.ok) {
+                res = await fetch(`/app/api/file-content?path=${encodeURIComponent(filename)}`);
+            }
             if (res.ok) {
                 const data = await res.json();
                 if (data.content !== undefined) {
-                    viewerTitle.innerText = `📄 ${filename} (Full Updated Content)`;
+                    viewerTitle.innerText = `📄 ${filename} (Full Content)`;
                     viewerContent.innerText = data.content;
                     return;
                 }
             }
         } catch (e) {
-            console.warn("Could not fetch full file content, displaying diff patch.");
+            console.warn("Could not fetch full content, falling back to patch diff.");
         }
 
-        // Fallback to commit diff patch
+        // Fallback to diff patch
         viewerTitle.innerText = `📄 ${filename} (Commit Diff Patch)`;
-        viewerContent.innerText = unescapedPatch || "No diff preview available for this file.";
+        viewerContent.innerText = patchStr || "No diff preview available for this file.";
     };
 
     window.closeDeployModal = function () {
