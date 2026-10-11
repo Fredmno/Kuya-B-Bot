@@ -2,44 +2,49 @@ import os
 import sys
 import json
 import base64
+import logging
+import asyncio
+import traceback
+from contextlib import asynccontextmanager
 import httpx
-from starlette.routing import Route, Mount
-from starlette.staticfiles import StaticFiles
+import uvicorn
+from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from telegram import Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-WEBAPP_DIR = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
-CORE_DIR = CURRENT_DIR
+# Set up logging to stdout so Render captures all output
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
 
-def get_repo_root():
-    candidate = os.path.abspath(os.path.join(CURRENT_DIR, "../.."))
-    if os.path.exists(os.path.join(candidate, "bot.py")):
-        return candidate
-    candidate_up = os.path.abspath(os.path.join(CURRENT_DIR, "../../.."))
-    if os.path.exists(os.path.join(candidate_up, "bot.py")):
-        return candidate_up
-    return candidate
-
-REPO_ROOT = get_repo_root()
-TREE_DIR = os.path.join(WEBAPP_DIR, "features", "tree")
-TREE_JSON_PATH = os.path.join(TREE_DIR, "repo_tree.json")
-
-for p in [REPO_ROOT, WEBAPP_DIR]:
-    if p not in sys.path:
-        sys.path.insert(0, p)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
 try:
-    from webapp.core.index_consolidator import serve_index
-except ImportError:
-    try:
-        from core.index_consolidator import serve_index
-    except ImportError:
-        from index_consolidator import serve_index
+    from webapp.core.routes import get_all_routes
+except Exception as e:
+    logger.error(f"Failed to import routes: {e}")
+    get_all_routes = None
 
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID", "7698531657")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "Fredmno/Kuya-B-Bot")
 GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
+PORT = int(os.environ.get("PORT", "10000"))
+WEBHOOK_URL = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("WEBHOOK_URL")
 
 def get_clean_repo():
     repo = GITHUB_REPO
@@ -47,136 +52,70 @@ def get_clean_repo():
         repo = repo.split("github.com/")[-1].replace(".git", "").strip("/")
     return repo.strip()
 
-def get_disk_files():
-    found = []
-    exclude = {".git", "__pycache__", ".pytest_cache", "venv", ".venv", "node_modules", ".cache"}
-    valid_exts = (".py", ".html", ".css", ".js", ".json", ".md", ".txt", ".yml", ".yaml", ".sh")
-    for root, dirs, files in os.walk(REPO_ROOT):
-        dirs[:] = [d for d in dirs if d not in exclude and not d.startswith(".")]
-        for f in files:
-            if f.endswith(valid_exts):
-                rel = os.path.relpath(os.path.join(root, f), REPO_ROOT).replace("\\", "/")
-                found.append(rel)
-    found.sort()
-    return found
+# --- Telegram Bot Handlers ---
 
-async def repo_tree_endpoint(request: Request):
-    token = os.environ.get("GITHUB_TOKEN")
-    repo = get_clean_repo()
-    branch = os.environ.get("GITHUB_BRANCH", "main")
-    files = []
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    await update.message.reply_text(
+        f"Kumusta {user.first_name}! Ako si Kuya B. 🤖\n\n"
+        "Ready to assist with management, tasks, and system updates."
+    )
 
-    if os.path.exists(TREE_JSON_PATH):
-        try:
-            with open(TREE_JSON_PATH, "r", encoding="utf-8") as fp:
-                data = json.load(fp)
-                if isinstance(data, dict) and "files" in data:
-                    for item in data["files"]:
-                        if isinstance(item, dict) and "file" in item:
-                            files.append(item["file"])
-                        elif isinstance(item, str):
-                            files.append(item)
-                    if files:
-                        return JSONResponse({"files": sorted(list(set(files))), "ok": True})
-        except Exception:
-            pass
+async def admin_json_committer_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return
 
-    if token:
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github.v3+json",
-            "User-Agent": "KuyaB-Bot-App"
-        }
-        url = f"https://api.github.com/repos/{repo}/git/trees/{branch}?recursive=1"
-        try:
-            async with httpx.AsyncClient() as client:
-                res = await client.get(url, headers=headers, timeout=10.0)
-                if res.status_code == 200:
-                    tree_data = res.json()
-                    valid_exts = (".py", ".html", ".css", ".js", ".json", ".md", ".txt", ".yml", ".yaml", ".sh")
-                    files = [
-                        item["path"] for item in tree_data.get("tree", [])
-                        if item.get("type") == "blob" and item["path"].endswith(valid_exts)
-                    ]
-                    if files:
-                        return JSONResponse({"files": sorted(files), "ok": True})
-        except Exception:
-            pass
+    user_id = str(update.effective_user.id)
+    if user_id != str(ADMIN_CHAT_ID):
+        return
 
-    files = get_disk_files()
-    return JSONResponse({"files": files, "ok": True})
+    raw_text = update.message.text.strip()
+    if raw_text.startswith("```"):
+        lines = raw_text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        raw_text = "\n".join(lines).strip()
 
-async def file_content_endpoint(request: Request):
-    rel_path = request.query_params.get("path", "").strip().lstrip("/")
-    if not rel_path or ".." in rel_path:
-        return JSONResponse({"error": "Invalid path", "ok": False}, status_code=400)
+    if not (raw_text.startswith("{") and raw_text.endswith("}")):
+        return
 
-    token = os.environ.get("GITHUB_TOKEN")
-    repo = get_clean_repo()
-    branch = os.environ.get("GITHUB_BRANCH", "main")
-
-    if token:
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github.v3+json",
-            "User-Agent": "KuyaB-Bot-App"
-        }
-        url = f"https://api.github.com/repos/{repo}/contents/{rel_path}?ref={branch}"
-        try:
-            async with httpx.AsyncClient() as client:
-                res = await client.get(url, headers=headers, timeout=10.0)
-                if res.status_code == 200:
-                    data = res.json()
-                    decoded = base64.b64decode(data.get("content", "")).decode("utf-8", errors="replace")
-                    return JSONResponse({"content": decoded, "ok": True})
-        except Exception:
-            pass
-
-    local_path = os.path.join(REPO_ROOT, rel_path)
-    if os.path.isfile(local_path):
-        try:
-            with open(local_path, "r", encoding="utf-8") as f:
-                return JSONResponse({"content": f.read(), "ok": True})
-        except Exception as e:
-            return JSONResponse({"error": str(e), "ok": False}, status_code=500)
-
-    return JSONResponse({"error": "File not found", "ok": False}, status_code=404)
-
-async def commit_file_endpoint(request: Request):
-    """Handles updating or creating files on GitHub directly from the Mini App."""
     try:
-        data = await request.json()
+        data = json.loads(raw_text)
     except Exception:
-        return JSONResponse({"error": "Invalid JSON body", "ok": False}, status_code=400)
+        return
 
-    rel_path = (data.get("file_path") or data.get("path") or "").strip().lstrip("/")
-    commit_msg = (data.get("commit_message") or data.get("message") or "").strip()
+    if data.get("action") != "commit_file" and not ("path" in data and "content" in data):
+        return
+
+    rel_path = (data.get("path") or data.get("file_path") or "").strip().lstrip("/")
+    commit_msg = (data.get("message") or data.get("commit_message") or f"Update {rel_path}").strip()
     content_str = data.get("content", "")
 
     if not rel_path:
-        return JSONResponse({"error": "Target file path is required", "ok": False}, status_code=400)
-    if not commit_msg:
-        commit_msg = f"Update {rel_path}"
+        await update.message.reply_text("❌ Error: Missing `path` in JSON payload.", parse_mode="Markdown")
+        return
 
-    token = os.environ.get("GITHUB_TOKEN")
+    if not GITHUB_TOKEN:
+        await update.message.reply_text("❌ Error: `GITHUB_TOKEN` is not configured.", parse_mode="Markdown")
+        return
+
     repo = get_clean_repo()
-    branch = os.environ.get("GITHUB_BRANCH", "main")
-
-    if not token:
-        return JSONResponse({"error": "GITHUB_TOKEN is missing on server", "ok": False}, status_code=500)
+    branch = GITHUB_BRANCH
+    status_msg = await update.message.reply_text(f"⏳ Committing `{rel_path}` to GitHub...", parse_mode="Markdown")
 
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": "KuyaB-Bot-App"
     }
-    api_url = f"https://api.github.com/repos/{repo}/contents/{rel_path}"
+    api_url = f"[https://api.github.com/repos/](https://api.github.com/repos/){repo}/contents/{rel_path}"
 
     try:
         async with httpx.AsyncClient() as client:
             sha = None
-            # Check if updating an existing file
-            get_res = await client.get(f"{api_url}?ref={branch}", headers=headers, timeout=10.0)
+            get_res = await client.get(f"{api_url}?ref={branch}", headers=headers, timeout=12.0)
             if get_res.status_code == 200:
                 sha = get_res.json().get("sha")
 
@@ -189,55 +128,126 @@ async def commit_file_endpoint(request: Request):
             if sha:
                 payload["sha"] = sha
 
-            put_res = await client.put(api_url, json=payload, headers=headers, timeout=15.0)
+            put_res = await client.put(api_url, json=payload, headers=headers, timeout=20.0)
             if put_res.status_code in (200, 201):
                 res_data = put_res.json()
                 commit_sha = res_data.get("commit", {}).get("sha", "")[:7]
-                return JSONResponse({
-                    "ok": True,
-                    "sha": commit_sha,
-                    "message": f"Successfully committed {rel_path} ({commit_sha})"
-                })
+                await status_msg.edit_text(
+                    f"🚀 *Commit Pushed Successfully!*\n\n"
+                    f"📄 *File:* `{rel_path}`\n"
+                    f"💬 *Message:* {commit_msg}\n"
+                    f"🔗 *Commit SHA:* `{commit_sha}`\n\n"
+                    "Render deployment automatically triggered.",
+                    parse_mode="Markdown"
+                )
             else:
-                try:
-                    err_msg = put_res.json().get("message", put_res.text)
-                except Exception:
-                    err_msg = put_res.text
-                return JSONResponse({"error": f"GitHub API: {err_msg}", "ok": False}, status_code=put_res.status_code)
+                err_msg = put_res.json().get("message", put_res.text) if put_res.headers.get("content-type", "").startswith("application/json") else put_res.text[:150]
+                await status_msg.edit_text(f"❌ *GitHub API Error (HTTP {put_res.status_code}):*\n`{err_msg}`", parse_mode="Markdown")
     except Exception as e:
-        return JSONResponse({"error": str(e), "ok": False}, status_code=500)
+        logger.error(f"Error during commit: {e}")
+        await status_msg.edit_text(f"❌ *Commit Failed:* `{str(e)}`", parse_mode="Markdown")
 
-async def webhook_dummy(request: Request):
-    return JSONResponse({"status": "received", "ok": True})
+# --- App Initialization & Server Routing ---
 
-def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, webhook_path="/webhook"):
-    routes = [
-        Route("/app", endpoint=serve_index, methods=["GET"]),
-        Mount("/app/core", StaticFiles(directory=CORE_DIR), name="core"),
+tg_app = None
 
-        # Committer Endpoints
-        Route("/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
-        Route("/app/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
-        Route("/api/file-content", endpoint=file_content_endpoint, methods=["GET"]),
-        Route("/app/api/file-content", endpoint=file_content_endpoint, methods=["GET"]),
-        Route("/api/commit-file", endpoint=commit_file_endpoint, methods=["POST"]),
-        Route("/app/api/commit-file", endpoint=commit_file_endpoint, methods=["POST"]),
-    ]
+async def health_handler(request: Request):
+    return JSONResponse({"status": "healthy", "bot": "online", "app": "Kuya B"})
 
-    committer_dir = os.path.join(WEBAPP_DIR, "committer")
-    features_dir = os.path.join(WEBAPP_DIR, "features")
-    modules_dir = os.path.join(WEBAPP_DIR, "modules")
+async def telegram_webhook_handler(request: Request):
+    if tg_app is None:
+        return JSONResponse({"error": "Bot not initialized"}, status_code=500)
+    try:
+        data = await request.json()
+        update = Update.de_json(data, tg_app.bot)
+        await tg_app.process_update(update)
+        return JSONResponse({"ok": True})
+    except Exception as e:
+        logger.error(f"Error processing webhook: {e}")
+        return JSONResponse({"error": str(e)}, status_code=400)
 
-    if os.path.exists(committer_dir):
-        routes.append(Mount("/app/committer", StaticFiles(directory=committer_dir), name="committer"))
-    if os.path.exists(features_dir):
-        routes.append(Mount("/app/features", StaticFiles(directory=features_dir), name="features"))
-    if os.path.exists(modules_dir):
-        routes.append(Mount("/app/modules", StaticFiles(directory=modules_dir), name="modules"))
+@asynccontextmanager
+async def lifespan(app: Starlette):
+    global tg_app
+    if BOT_TOKEN:
+        try:
+            logger.info("Initializing Telegram Bot Application...")
+            tg_app = Application.builder().token(BOT_TOKEN).build()
+            await tg_app.initialize()
 
-    if health_check_handler:
-        routes.append(Route("/health", endpoint=health_check_handler, methods=["GET"]))
-    if telegram_webhook_handler:
-        routes.append(Route(webhook_path, endpoint=telegram_webhook_handler, methods=["POST"]))
+            tg_app.add_handler(CommandHandler("start", start_command))
+            tg_app.add_handler(
+                MessageHandler(filters.TEXT & ~filters.COMMAND, admin_json_committer_handler),
+                group=0
+            )
 
-    return routes
+            await tg_app.start()
+
+            if WEBHOOK_URL:
+                clean_url = WEBHOOK_URL.rstrip("/")
+                webhook_endpoint = f"{clean_url}/webhook"
+                logger.info(f"Setting webhook to {webhook_endpoint}")
+                try:
+                    await tg_app.bot.set_webhook(url=webhook_endpoint)
+                except Exception as e:
+                    logger.warning(f"Failed to set webhook: {e}")
+            else:
+                logger.info("No WEBHOOK_URL specified; webhook not registered.")
+        except Exception as e:
+            logger.error(f"Failed to initialize Telegram Bot: {e}")
+            logger.error(traceback.format_exc())
+    else:
+        logger.error("BOT_TOKEN is missing!")
+
+    yield
+
+    if tg_app:
+        logger.info("Shutting down Telegram Bot...")
+        try:
+            await tg_app.stop()
+            await tg_app.shutdown()
+        except Exception as e:
+            logger.warning(f"Error shutting down Telegram app: {e}")
+
+def create_application() -> Starlette:
+    routes = []
+    if get_all_routes:
+        try:
+            routes = get_all_routes(
+                health_check_handler=health_handler,
+                telegram_webhook_handler=telegram_webhook_handler,
+                webhook_path="/webhook"
+            )
+        except Exception as e:
+            logger.error(f"Failed calling get_all_routes: {e}")
+            logger.error(traceback.format_exc())
+
+    if not routes:
+        from starlette.routing import Route
+        routes = [
+            Route("/health", endpoint=health_handler, methods=["GET"]),
+            Route("/webhook", endpoint=telegram_webhook_handler, methods=["POST"]),
+        ]
+
+    return Starlette(routes=routes, lifespan=lifespan)
+
+app = create_application()
+
+if __name__ == "__main__":
+    logger.info(f"Starting Kuya B server on port {PORT}...")
+    config = uvicorn.Config(
+        app=app,
+        host="0.0.0.0",
+        port=PORT,
+        log_level="info",
+        access_log=True,
+    )
+    server = uvicorn.Server(config)
+    try:
+        asyncio.run(server.serve())
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Server stopped.")
+    except Exception as e:
+        logger.error(f"Server crashed: {e}")
+        traceback.print_exc()
+        sys.exit(1)
