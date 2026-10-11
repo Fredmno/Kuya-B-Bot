@@ -1,11 +1,13 @@
 <!-- Kuya B — Simplified Single-Box GitHub Form Submitter -->
 <div id="githubFormPage" class="github-form-container" style="display: none; padding: 14px 16px 30px;">
-    <!-- Top Header Bar -->
+    <!-- Top Header Bar with Cancel & Submit Actions -->
     <div class="top-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-        <button type="button" class="btn-icon-back" id="githubFormBackButton" onclick="window.closeGitHubFormView()" style="background: #e2e8f0; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.95rem; font-weight: 700; color: #334155;">←</button>
-        <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">🐙 GitHub Form</h2>
-        <div style="display: flex; gap: 6px;">
-            <button type="button" onclick="window.KuyaB.clearGitHubFormContent()" style="border: none; background: #e2e8f0; color: #475569; font-size: 0.76rem; font-weight: 600; padding: 6px 10px; border-radius: 8px; cursor: pointer;">🗑️ Clear</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">🐙 GitHub Form</h2>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-soft cancel" onclick="window.cancelGitHubForm()" style="border: none; background: #e2e8f0; color: #475569; font-size: 0.82rem; font-weight: 600; padding: 7px 12px; border-radius: 8px; cursor: pointer;">Cancel</button>
+            <button type="button" class="btn-soft save" id="btnSubmitGitHubForm" onclick="window.KuyaB.submitGitHubFormCommit()" style="border: none; background: #2563eb; color: #ffffff; font-size: 0.82rem; font-weight: 700; padding: 7px 14px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">Submit</button>
         </div>
     </div>
 
@@ -15,7 +17,7 @@
         <span id="githubFileLoadStatus" style="font-size: 0.75rem; color: #2563eb; font-weight: 600;"></span>
     </div>
 
-    <!-- The Single JSON Input Box (Height Reduced by Half) -->
+    <!-- Single JSON Input Box -->
     <textarea 
         class="neu-input" 
         id="githubCommitContentInput" 
@@ -30,10 +32,4 @@
         rows="8" 
         style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f8fafc; color: #1e293b; font-family: monospace; font-size: 0.82rem; line-height: 1.45; white-space: pre; outline: none; resize: vertical; min-height: 150px;"
     ></textarea>
-
-    <!-- Bottom Actions -->
-    <div class="form-actions" style="margin-top: 16px; display: flex; gap: 10px;">
-        <button type="button" class="btn-soft cancel" id="cancelGitHubFormButton" onclick="window.closeGitHubFormView()" style="flex: 1; padding: 12px; border: none; border-radius: 12px; background: #e2e8f0; color: #475569; font-size: 0.9rem; font-weight: 600; cursor: pointer;">Cancel</button>
-        <button type="button" class="btn-soft save" id="btnSubmitGitHubForm" onclick="window.KuyaB.submitGitHubFormCommit()" style="flex: 2; padding: 12px; border: none; border-radius: 12px; background: #2563eb; color: #ffffff; font-size: 0.9rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,0.25);">Push to GitHub 🚀</button>
-    </div>
 </div>
