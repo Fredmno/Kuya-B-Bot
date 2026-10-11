@@ -81,10 +81,12 @@
 
     window.KuyaB.loadRepoTree = async function () {
         const statusEl = document.getElementById("repoScanStatus");
-        if (statusEl) statusEl.innerText = "Loading repo files...";
+        if (statusEl) statusEl.innerText = "Scanning files...";
 
+        // Try /api/repo-tree first
         let { res, data } = await safeFetchJson("/api/repo-tree?_t=" + Date.now());
         if (!res.ok || !data.files || data.files.length === 0) {
+            // Fallback to /app/api/repo-tree
             const retry = await safeFetchJson("/app/api/repo-tree?_t=" + Date.now());
             if (retry.res.ok && retry.data.files && retry.data.files.length > 0) {
                 res = retry.res;
@@ -94,14 +96,14 @@
 
         if (res.ok && Array.isArray(data.files) && data.files.length > 0) {
             cachedRepoFiles = data.files;
-            if (statusEl) statusEl.innerText = `${cachedRepoFiles.length} files available`;
+            if (statusEl) statusEl.innerText = `${cachedRepoFiles.length} files (${data.source || "ok"})`;
             
             const searchInput = document.getElementById("fileSearchInput");
             if (searchInput && document.activeElement === searchInput) {
                 window.KuyaB.filterRepoFiles(searchInput.value);
             }
         } else {
-            if (statusEl) statusEl.innerText = data.error || "0 files loaded";
+            if (statusEl) statusEl.innerText = data.error || "0 files found";
         }
     };
 
@@ -110,7 +112,7 @@
         if (!listEl) return;
 
         if (cachedRepoFiles.length === 0) {
-            listEl.innerHTML = '<div class="neu-dropdown-item" style="color: #ef4444;">No files loaded. Tap 🔄 Refresh above.</div>';
+            listEl.innerHTML = '<div class="neu-dropdown-item" style="color: #ef4444; padding: 10px;">No files cached. Tap 🔄 Refresh above.</div>';
             listEl.style.display = "block";
             return;
         }
@@ -118,14 +120,14 @@
         const val = (query || "").trim().toLowerCase();
         let matches = [];
         if (!val) {
-            // Show first 25 files on focus before typing
-            matches = cachedRepoFiles.slice(0, 25);
+            // Present first 30 files on click/focus
+            matches = cachedRepoFiles.slice(0, 30);
         } else {
             matches = cachedRepoFiles.filter(p => p.toLowerCase().includes(val)).slice(0, 30);
         }
 
         if (matches.length === 0) {
-            listEl.innerHTML = '<div class="neu-dropdown-item" style="color: var(--neu-text-muted);">No matching files found</div>';
+            listEl.innerHTML = '<div class="neu-dropdown-item" style="color: var(--neu-text-muted); padding: 10px;">No matching files found</div>';
             listEl.style.display = "block";
             return;
         }
@@ -133,6 +135,7 @@
         listEl.innerHTML = matches.map(filePath => `
             <div 
                 class="neu-dropdown-item"
+                style="padding: 10px 14px; font-size: 11.5px; cursor: pointer; text-align: left;"
                 onclick="window.KuyaB.selectFileSuggestion('${filePath.replace(/'/g, "\\'")}')"
             >
                 📄 ${filePath}
