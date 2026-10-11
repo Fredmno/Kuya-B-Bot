@@ -1,21 +1,21 @@
-<!-- Kuya B — File Committer Feature View -->
-<div id="committer-view" class="view-container" style="display: none; padding-bottom: 30px;">
+<!-- Kuya B — File Committer Feature View (Neumorphic) -->
+<div id="committer-view" class="view-container neu-view" style="display: none; padding-bottom: 30px;">
     <div class="view-header">
-        <button type="button" class="btn-back" onclick="closeCommitterView()">← Back</button>
-        <h2>⚡ File Committer</h2>
-        <button type="button" class="btn-action-small" onclick="window.KuyaB.loadRepoTree()" title="Refresh file list">🔄 Refresh</button>
+        <button type="button" class="neu-btn neu-btn-sm" onclick="closeCommitterView()">← Back</button>
+        <h2 class="neu-title">⚡ File Committer</h2>
+        <button type="button" class="neu-btn neu-btn-sm" onclick="window.KuyaB.loadRepoTree()" title="Refresh file list">🔄 Refresh</button>
     </div>
 
     <!-- Search File with Autocomplete Dropdown -->
-    <div class="form-group" style="position: relative; margin-top: 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label for="fileSearchInput" style="font-weight: 600; font-size: 12px; color: var(--text-main);">Search File Name</label>
-            <span id="repoScanStatus" style="font-size: 11px; color: var(--text-sub);">Loading files...</span>
+    <div class="neu-form-group" style="position: relative; margin-top: 14px;">
+        <div class="neu-label-row">
+            <label for="fileSearchInput" class="neu-label">Search File Name</label>
+            <span id="repoScanStatus" class="neu-subtext">Loading files...</span>
         </div>
         <input 
             type="text" 
             id="fileSearchInput" 
-            class="input-field" 
+            class="neu-input" 
             placeholder="Type to search repo files (e.g. routes.py)..."
             autocomplete="off"
             oninput="window.KuyaB.filterRepoFiles(this.value)"
@@ -23,52 +23,51 @@
         />
         
         <!-- Dropdown Suggestion List -->
-        <div id="fileSuggestionsList" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border-radius: 10px; max-height: 220px; overflow-y: auto; z-index: 999; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; margin-top: 4px;"></div>
+        <div id="fileSuggestionsList" class="neu-dropdown" style="display: none;"></div>
     </div>
 
     <!-- Target File Path -->
-    <div class="form-group" style="margin-top: 14px;">
-        <label for="commitFilePath" style="font-weight: 600; font-size: 12px; color: var(--text-main); display: block; margin-bottom: 6px;">Target File Path</label>
+    <div class="neu-form-group" style="margin-top: 14px;">
+        <label for="commitFilePath" class="neu-label">Target File Path</label>
         <input 
             type="text" 
             id="commitFilePath" 
-            class="input-field" 
+            class="neu-input" 
             placeholder="webapp/core/routes.py" 
         />
     </div>
 
     <!-- Commit Message -->
-    <div class="form-group" style="margin-top: 14px;">
-        <label for="commitMsgInput" style="font-weight: 600; font-size: 12px; color: var(--text-main); display: block; margin-bottom: 6px;">Commit Message</label>
+    <div class="neu-form-group" style="margin-top: 14px;">
+        <label for="commitMsgInput" class="neu-label">Commit Message</label>
         <input 
             type="text" 
             id="commitMsgInput" 
-            class="input-field" 
+            class="neu-input" 
             placeholder="feat: update routes" 
         />
     </div>
 
     <!-- File Content Editor -->
-    <div class="form-group" style="margin-top: 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label for="commitContentInput" style="font-weight: 600; font-size: 12px; color: var(--text-main);">File Content</label>
+    <div class="neu-form-group" style="margin-top: 14px;">
+        <div class="neu-label-row">
+            <label for="commitContentInput" class="neu-label">File Content</label>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <span id="fileLoadStatus" style="font-size: 11px; color: #2563eb;"></span>
-                <button type="button" class="btn-action-small" onclick="window.KuyaB.pasteCommitterContent()">📋 Paste</button>
-                <button type="button" class="btn-action-small" onclick="window.KuyaB.clearCommitterContent()">🗑️ Clear</button>
+                <span id="fileLoadStatus" class="neu-badge-info"></span>
+                <button type="button" class="neu-btn neu-btn-xs" onclick="window.KuyaB.pasteCommitterContent()">📋 Paste</button>
+                <button type="button" class="neu-btn neu-btn-xs" onclick="window.KuyaB.clearCommitterContent()">🗑️ Clear</button>
             </div>
         </div>
         <textarea 
             id="commitContentInput" 
-            class="textarea-field" 
-            style="width: 100%; min-height: 240px; font-family: monospace; font-size: 11px; line-height: 1.4; padding: 10px; border-radius: 10px; box-sizing: border-box; resize: vertical;" 
+            class="neu-textarea" 
             placeholder="# Paste updated code here..."
         ></textarea>
     </div>
 
     <!-- Action Buttons -->
-    <div style="display: flex; gap: 10px; margin-top: 18px;">
-        <button type="button" class="btn-secondary" style="flex: 1; padding: 12px;" onclick="closeCommitterView()">Cancel</button>
-        <button type="button" id="btnSubmitCommit" class="btn-primary" style="flex: 2; padding: 12px;" onclick="window.KuyaB.submitFileCommit()">Commit & Deploy 🚀</button>
+    <div class="neu-btn-row" style="margin-top: 18px;">
+        <button type="button" class="neu-btn neu-btn-cancel" onclick="closeCommitterView()">Cancel</button>
+        <button type="button" id="btnSubmitCommit" class="neu-btn neu-btn-submit" onclick="window.KuyaB.submitFileCommit()">Commit & Deploy 🚀</button>
     </div>
 </div>
