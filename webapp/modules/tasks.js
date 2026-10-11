@@ -46,7 +46,7 @@
             if (!grid) return;
 
             if (folders.length === 0) {
-                // Show default General folder if empty
+                // Default to General folder if no tasks exist
                 folders = [{ name: "General", count: 0 }];
             }
 
@@ -155,7 +155,8 @@
             if (data.success) {
                 triggerHaptic("success");
                 if (titleInput) titleInput.value = "";
-                document.getElementById("taskForm").style.display = "none";
+                var form = document.getElementById("taskForm");
+                if (form) form.style.display = "none";
 
                 // Refresh tasks data and view
                 var fetchRes = await fetch("/api/tasks?t=" + Date.now());
@@ -205,7 +206,7 @@
             });
             var data = await res.json();
             if (data.success) {
-                tasks.allTasks = tasks.allTasks.filter(function (t) { return t.id !== id });
+                tasks.allTasks = tasks.allTasks.filter(function (t) { return t.id !== id; });
                 tasks.renderFolderItems();
             }
         } catch (e) {
