@@ -6,22 +6,20 @@
         <button type="button" class="btn-action-small" onclick="fetchRepoTree()">🔄 Refresh</button>
     </div>
 
-    <!-- Repository File Tree / Quick Select -->
+    <!-- Live Typing / Auto-suggest File Input -->
     <div class="committer-section">
-        <label class="committer-label" for="committerFileSelect">Target File</label>
-        <div class="committer-input-wrapper">
-            <select id="committerFileSelect" class="committer-select" onchange="onCommitterFileSelected(this.value)">
-                <option value="">-- Select an existing file or enter path below --</option>
-            </select>
-        </div>
+        <label class="committer-label" for="committerFilePath">Target File (Type to filter)</label>
         <input 
             type="text" 
             id="committerFilePath" 
+            list="repoFileList"
             class="committer-text-input" 
-            placeholder="e.g. webapp/core/dashboard/dashboard.html"
+            placeholder="Type file path (e.g., admin_panel.css)..."
             autocomplete="off"
             spellcheck="false"
+            oninput="handleFilePathInput(this.value)"
         >
+        <datalist id="repoFileList"></datalist>
     </div>
 
     <!-- Commit Message Input -->
@@ -31,7 +29,7 @@
             type="text" 
             id="committerCommitMsg" 
             class="committer-text-input" 
-            placeholder="e.g. Update dashboard styling and button actions"
+            placeholder="e.g. style(admin_panel): update action grid"
             autocomplete="off"
         >
     </div>
