@@ -13,20 +13,22 @@
     <div class="admin-card-grid">
         <button type="button" class="admin-card" onclick="openRenderStatusView()">
             <div class="icon">🟢</div>
-            <div class="title">Deployments</div>
-            <div class="desc">Render status & history</div>
+            <div class="title">Deploy</div>
         </button>
 
-        <button type="button" class="admin-card" onclick="triggerRegenerateTree()">
+        <button type="button" class="admin-card" onclick="openCommitterView()">
+            <div class="icon">✏️</div>
+            <div class="title">Committer</div>
+        </button>
+
+        <button type="button" class="admin-card" onclick="window.fetchRepoTree ? window.fetchRepoTree() : null">
             <div class="icon">📁</div>
-            <div class="title">STRUCTURE.md</div>
-            <div class="desc">Sync directory tree</div>
+            <div class="title">Tree</div>
         </button>
 
-        <button type="button" class="admin-card" onclick="checkServerHealth()">
+        <button type="button" class="admin-card" onclick="window.KuyaB && window.KuyaB.renderStatus ? window.KuyaB.renderStatus.check() : null">
             <div class="icon">🩺</div>
-            <div class="title">Server Health</div>
-            <div class="desc">Verify backend API</div>
+            <div class="title">Health</div>
         </button>
     </div>
 </div>
