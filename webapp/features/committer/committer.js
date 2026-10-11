@@ -84,9 +84,9 @@
         if (statusEl) statusEl.innerText = "Loading repo files...";
 
         let { res, data } = await safeFetchJson("/api/repo-tree?_t=" + Date.now());
-        if (!res.ok || !data.files) {
+        if (!res.ok || !data.files || data.files.length === 0) {
             const retry = await safeFetchJson("/app/api/repo-tree?_t=" + Date.now());
-            if (retry.res.ok && retry.data.files) {
+            if (retry.res.ok && retry.data.files && retry.data.files.length > 0) {
                 res = retry.res;
                 data = retry.data;
             }
@@ -96,13 +96,12 @@
             cachedRepoFiles = data.files;
             if (statusEl) statusEl.innerText = `${cachedRepoFiles.length} files available`;
             
-            // Re-render suggestions if user had already typed something
             const searchInput = document.getElementById("fileSearchInput");
-            if (searchInput && searchInput.value.trim()) {
+            if (searchInput && document.activeElement === searchInput) {
                 window.KuyaB.filterRepoFiles(searchInput.value);
             }
         } else {
-            if (statusEl) statusEl.innerText = data.error || "0 files loaded (check GITHUB_TOKEN)";
+            if (statusEl) statusEl.innerText = data.error || "0 files loaded";
         }
     };
 
@@ -110,32 +109,31 @@
         const listEl = document.getElementById("fileSuggestionsList");
         if (!listEl) return;
 
-        const val = (query || "").trim().toLowerCase();
-        if (!val) {
-            listEl.innerHTML = "";
-            listEl.style.display = "none";
-            return;
-        }
-
         if (cachedRepoFiles.length === 0) {
-            listEl.innerHTML = '<div style="padding: 10px 14px; font-size: 11px; color: #ef4444;">No file list cached. Tap 🔄 Refresh above.</div>';
+            listEl.innerHTML = '<div class="neu-dropdown-item" style="color: #ef4444;">No files loaded. Tap 🔄 Refresh above.</div>';
             listEl.style.display = "block";
             return;
         }
 
-        const matches = cachedRepoFiles.filter(p => p.toLowerCase().includes(val)).slice(0, 30);
+        const val = (query || "").trim().toLowerCase();
+        let matches = [];
+        if (!val) {
+            // Show first 25 files on focus before typing
+            matches = cachedRepoFiles.slice(0, 25);
+        } else {
+            matches = cachedRepoFiles.filter(p => p.toLowerCase().includes(val)).slice(0, 30);
+        }
+
         if (matches.length === 0) {
-            listEl.innerHTML = '<div style="padding: 10px 14px; font-size: 11px; color: #94a3b8;">No matching files found</div>';
+            listEl.innerHTML = '<div class="neu-dropdown-item" style="color: var(--neu-text-muted);">No matching files found</div>';
             listEl.style.display = "block";
             return;
         }
 
         listEl.innerHTML = matches.map(filePath => `
             <div 
-                onclick="window.KuyaB.selectFileSuggestion('${filePath.replace(/'/g, "\\'")}')" 
-                style="padding: 9px 14px; font-size: 11px; color: #1e293b; cursor: pointer; border-bottom: 1px solid #f1f5f9; text-align: left;"
-                onmouseover="this.style.background='#f8fafc'" 
-                onmouseout="this.style.background='transparent'"
+                class="neu-dropdown-item"
+                onclick="window.KuyaB.selectFileSuggestion('${filePath.replace(/'/g, "\\'")}')"
             >
                 📄 ${filePath}
             </div>
@@ -157,7 +155,7 @@
         if (pathInput) pathInput.value = filePath;
         if (listEl) listEl.style.display = "none";
 
-        if (statusEl) statusEl.innerText = "Loading file content...";
+        if (statusEl) statusEl.innerText = "Loading content...";
 
         let { res, data } = await safeFetchJson(`/api/file-content?path=${encodeURIComponent(filePath)}`);
         if (!res.ok) {
