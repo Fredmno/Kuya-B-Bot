@@ -63,18 +63,29 @@
         }
     };
 
-    window.KuyaB.loadRepoTree = async function (forceRefresh = false) {
+    window.KuyaB.loadRepoTree = async function () {
         const statusEl = document.getElementById("repoScanStatus");
-        if (statusEl) statusEl.innerText = "Scanning repo...";
+        if (statusEl) statusEl.innerText = "Loading repo tree...";
 
         try {
             const res = await fetch("/api/repo-tree");
-            if (!res.ok) throw new Error("Status " + res.status);
-            const data = await res.json();
-            cachedRepoFiles = data.files || [];
-            if (statusEl) statusEl.innerText = `${cachedRepoFiles.length} files found`;
+            const rawText = await res.text();
+            let data = {};
+            try {
+                data = JSON.parse(rawText);
+            } catch (e) {
+                if (statusEl) statusEl.innerText = "Server returned non-JSON";
+                return;
+            }
+
+            if (res.ok && data.files) {
+                cachedRepoFiles = data.files;
+                if (statusEl) statusEl.innerText = `${cachedRepoFiles.length} files found`;
+            } else {
+                if (statusEl) statusEl.innerText = data.error || "Failed to load files";
+            }
         } catch (err) {
-            if (statusEl) statusEl.innerText = "Manual mode";
+            if (statusEl) statusEl.innerText = "Connection error";
         }
     };
 
@@ -89,7 +100,7 @@
             return;
         }
 
-        const matches = cachedRepoFiles.filter(p => p.toLowerCase().includes(val)).slice(0, 25);
+        const matches = cachedRepoFiles.filter(p => p.toLowerCase().includes(val)).slice(0, 30);
         if (matches.length === 0) {
             listEl.innerHTML = '<div style="padding: 10px 14px; font-size: 0.8rem; color: #94a3b8;">No matching files</div>';
             listEl.style.display = "block";
@@ -123,19 +134,27 @@
         if (pathInput) pathInput.value = filePath;
         if (listEl) listEl.style.display = "none";
 
-        if (statusEl) statusEl.innerText = "Loading...";
+        if (statusEl) statusEl.innerText = "Loading content...";
 
         try {
             const res = await fetch(`/api/file-content?path=${encodeURIComponent(filePath)}`);
-            if (res.ok) {
-                const data = await res.json();
-                if (contentInput) contentInput.value = data.content || "";
+            const rawText = await res.text();
+            let data = {};
+            try {
+                data = JSON.parse(rawText);
+            } catch (e) {
+                if (statusEl) statusEl.innerText = "Error reading response";
+                return;
+            }
+
+            if (res.ok && data.content !== undefined) {
+                if (contentInput) contentInput.value = data.content;
                 if (statusEl) statusEl.innerText = "Loaded";
             } else {
-                if (statusEl) statusEl.innerText = "Empty / New";
+                if (statusEl) statusEl.innerText = data.error || "Failed to load";
             }
         } catch (e) {
-            if (statusEl) statusEl.innerText = "Error loading";
+            if (statusEl) statusEl.innerText = "Network error";
         }
     };
 
@@ -152,7 +171,7 @@
             const text = await navigator.clipboard.readText();
             if (contentInput && text) contentInput.value = text;
         } catch (err) {
-            alert("Clipboard access not permitted. Please paste directly into the box.");
+            alert("Clipboard permission denied. Please paste manually into the editor.");
         }
     };
 
@@ -160,54 +179,74 @@
         const filePath = document.getElementById("commitFilePath")?.value.trim();
         const commitMsg = document.getElementById("commitMsgInput")?.value.trim();
         const content = document.getElementById("commitContentInput")?.value;
-        const btn = document.getElementById("btnSubmitCommit");
+        const btn = document.getElementById("btnSubmitCommit") || document.querySelector("button[onclick*='submitFileCommit']");
 
         if (!filePath) {
-            alert("Please select or enter a Target File Path.");
+            alert("Please specify Target File Path.");
             return;
         }
 
         if (!commitMsg) {
-            alert("Please enter a Commit Message.");
+            alert("Please provide a Commit Message.");
             return;
         }
 
         triggerHaptic("medium");
+        const originalText = btn ? btn.innerText : "Commit & Deploy 🚀";
         if (btn) {
             btn.disabled = true;
-            btn.innerText = "Pushing...";
+            btn.innerText = "Committing to GitHub...";
         }
 
+        const payload = JSON.stringify({
+            file_path: filePath,
+            path: filePath,
+            commit_message: commitMsg,
+            message: commitMsg,
+            content: content
+        });
+
         try {
-            const res = await fetch("/api/commit-file", {
+            // Send request to /api/commit-file with fallback to /api/commit
+            let res = await fetch("/api/commit-file", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    file_path: filePath,
-                    commit_message: commitMsg,
-                    content: content
-                })
+                body: payload
             });
 
-            const result = await res.json();
+            if (res.status === 404) {
+                res = await fetch("/api/commit", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: payload
+                });
+            }
+
+            const rawText = await res.text();
+            let result = {};
+            try {
+                result = JSON.parse(rawText);
+            } catch (err) {
+                throw new Error(`Server returned status ${res.status}: ${rawText.slice(0, 150)}`);
+            }
+
             if (res.ok && result.ok) {
                 triggerHaptic("heavy");
-                alert("Commit pushed successfully! GitHub and Render webhooks will trigger automatically.");
+                alert("Commit pushed successfully! GitHub and Render deployment started.");
                 window.closeCommitterView();
             } else {
-                alert("Commit failed: " + (result.error || "Unknown error"));
+                alert("Commit failed: " + (result.error || result.message || "Unknown error"));
             }
         } catch (err) {
-            alert("Error: " + err.message);
+            alert("Commit Error: " + err.message);
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerText = "Commit & Deploy 🚀";
+                btn.innerText = originalText;
             }
         }
     };
 
-    // Close suggestion list on document click outside
     document.addEventListener("click", function (e) {
         const listEl = document.getElementById("fileSuggestionsList");
         const searchInput = document.getElementById("fileSearchInput");
@@ -215,7 +254,4 @@
             listEl.style.display = "none";
         }
     });
-
-    window.openCommitterView = window.openCommitterView;
-    window.closeCommitterView = window.closeCommitterView;
 })();
