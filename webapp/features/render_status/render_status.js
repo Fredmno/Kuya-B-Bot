@@ -6,6 +6,7 @@
 (function () {
     "use strict";
 
+    // Recent deployment log history
     const DEPLOYMENTS = [
         {
             id: "dep-103",
@@ -33,6 +34,12 @@
         }
     ];
 
+    function triggerHaptic(type) {
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred(type || "light");
+        }
+    }
+
     function renderDeploymentList() {
         const container = document.getElementById("deploymentList");
         if (!container) return;
@@ -57,10 +64,9 @@
         });
     }
 
+    // Open Render Status Full View
     window.openRenderStatusView = function () {
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred("light");
-        }
+        triggerHaptic("light");
 
         const appRoot = document.getElementById("app") || document.body;
         for (let child of appRoot.children) {
@@ -77,7 +83,10 @@
         }
     };
 
+    // Close Render Status View & Return to Admin Panel or Dashboard
     window.closeRenderStatusView = function () {
+        triggerHaptic("light");
+
         const view = document.getElementById("render-status-view");
         if (view) view.style.display = "none";
 
@@ -94,22 +103,53 @@
         }
     };
 
+    // Open Committer Directly from the Deployment Header Button
+    window.openCommitterFromDeploy = function () {
+        triggerHaptic("light");
+
+        const deployView = document.getElementById("render-status-view");
+        if (deployView) {
+            deployView.dataset.openedFromHere = "true";
+            deployView.style.display = "none";
+        }
+
+        if (window.openCommitterView) {
+            window.openCommitterView();
+        } else {
+            const committerView = document.getElementById("committer-view") || 
+                                  document.getElementById("adminUpdaterPage");
+            if (committerView) committerView.style.display = "block";
+            if (window.fetchRepoTree) window.fetchRepoTree();
+        }
+    };
+
+    // Open Modal Details for Selected Deploy
     window.openDeployModal = function (deploy) {
-        document.getElementById("modalDeployName").innerText = deploy.name;
-        document.getElementById("modalDeployStatus").innerText = deploy.status;
-        document.getElementById("modalDeployDate").innerText = deploy.date;
-        document.getElementById("modalDeployCommit").innerText = deploy.commit;
-        document.getElementById("modalDeployMessage").innerText = deploy.message;
+        triggerHaptic("light");
+
+        const nameEl = document.getElementById("modalDeployName");
+        const statusEl = document.getElementById("modalDeployStatus");
+        const dateEl = document.getElementById("modalDeployDate");
+        const commitEl = document.getElementById("modalDeployCommit");
+        const messageEl = document.getElementById("modalDeployMessage");
+
+        if (nameEl) nameEl.innerText = deploy.name;
+        if (statusEl) statusEl.innerText = deploy.status;
+        if (dateEl) dateEl.innerText = deploy.date;
+        if (commitEl) commitEl.innerText = deploy.commit;
+        if (messageEl) messageEl.innerText = deploy.message;
 
         const modal = document.getElementById("deploymentDetailModal");
         if (modal) modal.style.display = "flex";
     };
 
+    // Close Modal Details
     window.closeDeployModal = function () {
         const modal = document.getElementById("deploymentDetailModal");
         if (modal) modal.style.display = "none";
     };
 
+    // Global Registry
     window.KuyaB = window.KuyaB || {};
     window.KuyaB.renderStatus = {
         open: window.openRenderStatusView,
