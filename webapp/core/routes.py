@@ -87,7 +87,7 @@ async def repo_tree_endpoint(request: Request):
         except Exception:
             pass
 
-    # 2. Try GitHub Git Trees API with mandatory User-Agent
+    # 2. Try GitHub Git Trees API with User-Agent
     if token:
         headers = {
             "Authorization": f"Bearer {token}",
