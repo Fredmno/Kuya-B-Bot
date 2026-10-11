@@ -3,15 +3,15 @@ from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 from webapp.core.index_consolidator import serve_index
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-WEBAPP_DIR = os.path.join(BASE_DIR, "webapp")
+# webapp/core/ -> webapp/
+WEBAPP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, webhook_path="/webhook"):
     routes = [
-        # Mini App Main Dynamic Route
+        # Main consolidated entry route
         Route("/app", endpoint=serve_index, methods=["GET"]),
         
-        # Static assets (JS, CSS, images)
+        # Static asset mounts pointing inside webapp/
         Mount("/app/features", StaticFiles(directory=os.path.join(WEBAPP_DIR, "features")), name="features"),
         Mount("/app/modules", StaticFiles(directory=os.path.join(WEBAPP_DIR, "modules")), name="modules"),
         Mount("/app/dashboard", StaticFiles(directory=os.path.join(WEBAPP_DIR, "dashboard")), name="dashboard"),
