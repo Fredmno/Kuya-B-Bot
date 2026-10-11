@@ -5,11 +5,13 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 # Base directory for local reading (local server context)
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+BASE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..")
+)
 
 # GitHub configuration from environment variables
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
-GITHUB_REPO = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")  # e.g. "username/repo"
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "alfredodimaano/Kuya-B-Bot-1")
 GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
 
 def get_repo_files():
@@ -72,7 +74,6 @@ async def commit_file_endpoint(request: Request):
     if not token:
         return JSONResponse({"error": "GITHUB_TOKEN environment variable is not configured on Render"}, status_code=500)
 
-    # Clean repo slug in case a full URL was provided
     if "github.com/" in repo:
         repo = repo.split("github.com/")[-1].replace(".git", "").strip("/")
 
@@ -84,13 +85,11 @@ async def commit_file_endpoint(request: Request):
     api_url = f"https://api.github.com/repos/{repo}/contents/{rel_path}"
 
     async with httpx.AsyncClient() as client:
-        # Step 1: Check if the file already exists on GitHub to grab its SHA
         sha = None
         get_res = await client.get(f"{api_url}?ref={branch}", headers=headers)
         if get_res.status_code == 200:
             sha = get_res.json().get("sha")
 
-        # Step 2: Base64 encode the updated file content
         encoded_content = base64.b64encode(content_str.encode("utf-8")).decode("utf-8")
 
         payload = {
@@ -101,7 +100,6 @@ async def commit_file_endpoint(request: Request):
         if sha:
             payload["sha"] = sha
 
-        # Step 3: PUT request to create or update the file on GitHub
         put_res = await client.put(api_url, json=payload, headers=headers)
 
         if put_res.status_code in (200, 201):
