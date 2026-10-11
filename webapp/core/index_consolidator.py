@@ -15,7 +15,6 @@ def read_file_safe(path: str) -> str:
     return ""
 
 def find_file(filename: str) -> str:
-    """Finds the first matching file inside the webapp directory."""
     for root, _, files in os.walk(BASE_DIR):
         if filename in files:
             return os.path.join(root, filename)
@@ -35,6 +34,7 @@ def sort_scripts(scripts: list) -> list:
     def priority(path: str):
         if "utils" in path: return 10
         if "router" in path: return 20
+        if "dashboard_buttons.js" in path: return 35
         if "admin_panel.js" in path: return 60
         if "app.js" in path: return 90
         return 40
@@ -43,21 +43,21 @@ def sort_scripts(scripts: list) -> list:
 def build_consolidated_index() -> str:
     version = int(time.time())
 
-    # 1. Inline neomorphic and dashboard CSS to ensure 100% style application
+    # 1. Inline CSS stylesheets
     neomorphic_path = find_file("neomorphic.css")
     dashboard_css_path = find_file("dashboard.css")
 
     inline_neomorphic = read_file_safe(neomorphic_path)
     inline_dashboard_css = read_file_safe(dashboard_css_path)
 
-    # 2. Collect other feature CSS links
+    # 2. Collect other CSS links
     css_files = [
         f for f in collect_assets(".css")
         if "neomorphic.css" not in f and "dashboard.css" not in f
     ]
     css_tags = "\n    ".join([f'<link rel="stylesheet" href="{css}?v={version}">' for css in css_files])
 
-    # 3. Collect JS scripts
+    # 3. Collect JS links (automatically finds dashboard_buttons.js wherever placed)
     js_files = sort_scripts(collect_assets(".js"))
     js_tags = "\n    ".join([f'<script src="{js}?v={version}"></script>' for js in js_files])
 
