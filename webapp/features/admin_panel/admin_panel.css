@@ -1,73 +1,25 @@
-.admin-top-btn {
+#admin-panel-btn {
+    display: none;
     align-self: flex-end;
     margin-left: auto;
+    margin-right: 4px;
     margin-bottom: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 10px;
+    padding: 6px 12px;
     font-size: 12px;
     font-weight: 600;
     color: #ffffff;
     background-color: var(--tg-theme-button-color, #2481cc);
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-    transition: opacity 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
-.admin-top-btn:hover {
+#admin-panel-btn:active {
+    transform: scale(0.95);
     opacity: 0.9;
 }
 
-.admin-top-btn:active {
-    transform: scale(0.96);
-}
-
-.admin-content-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.admin-tool-card {
-    padding: 14px;
-    border-radius: 10px;
-    background: var(--tg-theme-secondary-bg-color, #232e3c);
-    color: var(--tg-theme-text-color, #ffffff);
-    text-align: center;
-    cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: transform 0.15s ease;
-}
-
-.admin-tool-card:hover {
-    transform: translateY(-2px);
-}
-
-.admin-tool-card .tool-icon {
-    font-size: 24px;
-    margin-bottom: 6px;
-}
-
-.admin-tool-card .tool-name {
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.admin-tool-card .tool-desc {
-    font-size: 11px;
-    opacity: 0.7;
-    margin-top: 4px;
-}
-
-.btn-back {
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: none;
-    background: var(--tg-theme-button-color, #2481cc);
-    color: var(--tg-theme-button-text-color, #ffffff);
-    cursor: pointer;
+#admin-panel-view {
+    padding: 16px;
 }
