@@ -116,21 +116,21 @@ async def commit_file_endpoint(request: Request):
     try:
         data = await request.json()
     except Exception:
-        return JSONResponse({"error": "Invalid JSON payload", "ok": False}, status_code=400)
+        return JSONResponse({"error": "Invalid JSON body", "ok": False}, status_code=400)
 
     rel_path = (data.get("file_path") or data.get("path") or "").strip().lstrip("/")
     commit_msg = (data.get("commit_message") or data.get("message") or "").strip()
     content_str = data.get("content", "")
 
     if not rel_path or not commit_msg:
-        return JSONResponse({"error": "Target file path and commit message are required", "ok": False}, status_code=400)
+        return JSONResponse({"error": "File path and commit message are required", "ok": False}, status_code=400)
 
     token = os.environ.get("GITHUB_TOKEN")
     repo = get_clean_repo()
     branch = os.environ.get("GITHUB_BRANCH", "main")
 
     if not token:
-        return JSONResponse({"error": "GITHUB_TOKEN is missing in Render environment", "ok": False}, status_code=500)
+        return JSONResponse({"error": "GITHUB_TOKEN is missing on Render", "ok": False}, status_code=500)
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -163,7 +163,7 @@ async def commit_file_endpoint(request: Request):
                     err_msg = err_json.get("message", put_res.text)
                 except Exception:
                     err_msg = put_res.text
-                return JSONResponse({"error": f"GitHub API: {err_msg}", "ok": False}, status_code=put_res.status_code)
+                return JSONResponse({"error": f"GitHub API error: {err_msg}", "ok": False}, status_code=put_res.status_code)
     except Exception as e:
         return JSONResponse({"error": str(e), "ok": False}, status_code=500)
 
@@ -300,20 +300,27 @@ def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, web
         Route("/app", endpoint=serve_index, methods=["GET"]),
         Mount("/app/core", StaticFiles(directory=CORE_DIR), name="core"),
 
-        # Deployments
+        # Deployments (root and /app prefix aliases)
         Route("/api/deployment-history", endpoint=get_deployments_endpoint, methods=["GET"]),
+        Route("/app/api/deployment-history", endpoint=get_deployments_endpoint, methods=["GET"]),
         Route("/api/github-webhook", endpoint=webhook_dummy, methods=["POST"]),
         Route("/api/render-webhook", endpoint=webhook_dummy, methods=["POST"]),
 
-        # Committer Endpoints (includes aliases /api/commit and /api/commit-file)
+        # Committer Endpoints (includes /api/commit, /api/commit-file, and /app/api aliases)
         Route("/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
+        Route("/app/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
         Route("/api/file-content", endpoint=file_content_endpoint, methods=["GET"]),
+        Route("/app/api/file-content", endpoint=file_content_endpoint, methods=["GET"]),
         Route("/api/commit-file", endpoint=commit_file_endpoint, methods=["POST"]),
+        Route("/app/api/commit-file", endpoint=commit_file_endpoint, methods=["POST"]),
         Route("/api/commit", endpoint=commit_file_endpoint, methods=["POST"]),
+        Route("/app/api/commit", endpoint=commit_file_endpoint, methods=["POST"]),
 
         # Tree Endpoints
         Route("/api/repo-tree-details", endpoint=get_tree_endpoint, methods=["GET"]),
+        Route("/app/api/repo-tree-details", endpoint=get_tree_endpoint, methods=["GET"]),
         Route("/api/regenerate-tree", endpoint=regenerate_tree_endpoint, methods=["POST"]),
+        Route("/app/api/regenerate-tree", endpoint=regenerate_tree_endpoint, methods=["POST"]),
     ]
 
     features_dir = os.path.join(WEBAPP_DIR, "features")
