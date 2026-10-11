@@ -1,48 +1,36 @@
-<!-- Kuya B — Admin Panel View -->
+<!-- Kuya B — Admin Panel View (4-Column Grid) -->
 <div id="admin-panel-view" class="view-container neu-view" style="display: none; padding: 14px 16px 30px;">
     <!-- Top Navigation Header -->
-    <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
         <button type="button" class="btn-icon-back" onclick="window.showDashboardView()" style="background: #e2e8f0; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.95rem; font-weight: 700; color: #334155;">← Back</button>
         <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">⚙️ Admin Panel</h2>
         <div style="width: 32px;"></div>
     </div>
 
-    <!-- Admin Action Cards -->
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-        <!-- GitHub Form Action Card -->
-        <div class="neu-card" onclick="window.openGitHubFormView()" style="cursor: pointer; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 14px; background: #e6ecf5; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 1.5rem;">🐙</span>
-                <div>
-                    <div style="font-size: 0.92rem; font-weight: 700; color: #1e293b;">GitHub Form</div>
-                    <div style="font-size: 0.74rem; color: #64748b;">Direct JSON payload parser & committer</div>
-                </div>
-            </div>
-            <span style="font-size: 1rem; color: #2563eb; font-weight: bold;">→</span>
+    <!-- 4-Column Grid per Row -->
+    <div class="admin-grid-4col" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+        <!-- Column 1: GitHub Form -->
+        <div class="neu-card admin-grid-btn" onclick="window.openGitHubFormView()" style="background: #e6ecf5; border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+            <div style="font-size: 24px; margin-bottom: 6px;">🐙</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; line-height: 1.2;">GitHub Form</div>
         </div>
 
-        <!-- Render Deployments Status Card -->
-        <div class="neu-card" onclick="window.openRenderStatusView()" style="cursor: pointer; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 14px; background: #e6ecf5; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 1.5rem;">🟢</span>
-                <div>
-                    <div style="font-size: 0.92rem; font-weight: 700; color: #1e293b;">Render Deployments</div>
-                    <div style="font-size: 0.74rem; color: #64748b;">Build statuses, commit hashes & history</div>
-                </div>
-            </div>
-            <span style="font-size: 1rem; color: #2563eb; font-weight: bold;">→</span>
+        <!-- Column 2: Deployments -->
+        <div class="neu-card admin-grid-btn" onclick="window.openRenderStatusView()" style="background: #e6ecf5; border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+            <div style="font-size: 24px; margin-bottom: 6px;">🟢</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; line-height: 1.2;">Deploy</div>
         </div>
 
-        <!-- Repo Tree Card -->
-        <div class="neu-card" onclick="window.KuyaB && window.KuyaB.openTreeView ? window.KuyaB.openTreeView() : null" style="cursor: pointer; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 14px; background: #e6ecf5; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 1.5rem;">🌳</span>
-                <div>
-                    <div style="font-size: 0.92rem; font-weight: 700; color: #1e293b;">Repo Tree</div>
-                    <div style="font-size: 0.74rem; color: #64748b;">Repository structure & commit diffs</div>
-                </div>
-            </div>
-            <span style="font-size: 1rem; color: #2563eb; font-weight: bold;">→</span>
+        <!-- Column 3: Repo Tree -->
+        <div class="neu-card admin-grid-btn" onclick="window.KuyaB && window.KuyaB.openTreeView ? window.KuyaB.openTreeView() : null" style="background: #e6ecf5; border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+            <div style="font-size: 24px; margin-bottom: 6px;">🌳</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; line-height: 1.2;">Repo Tree</div>
+        </div>
+
+        <!-- Column 4: Health Status -->
+        <div class="neu-card admin-grid-btn" onclick="fetch('/health').then(r => r.json()).then(d => alert(JSON.stringify(d, null, 2))).catch(e => alert(e))" style="background: #e6ecf5; border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+            <div style="font-size: 24px; margin-bottom: 6px;">🩺</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; line-height: 1.2;">Health</div>
         </div>
     </div>
 </div>
