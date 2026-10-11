@@ -19,11 +19,14 @@ def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, web
 
     features_dir = os.path.join(WEBAPP_DIR, "features")
     modules_dir = os.path.join(WEBAPP_DIR, "modules")
+    root_dashboard_dir = os.path.join(WEBAPP_DIR, "dashboard")
 
     if os.path.exists(features_dir):
         routes.append(Mount("/app/features", StaticFiles(directory=features_dir), name="features"))
     if os.path.exists(modules_dir):
         routes.append(Mount("/app/modules", StaticFiles(directory=modules_dir), name="modules"))
+    if os.path.exists(root_dashboard_dir):
+        routes.append(Mount("/app/dashboard", StaticFiles(directory=root_dashboard_dir), name="root_dashboard"))
 
     if health_check_handler:
         routes.append(Route("/health", endpoint=health_check_handler, methods=["GET"]))
