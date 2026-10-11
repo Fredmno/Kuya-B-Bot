@@ -43,11 +43,9 @@ def sort_scripts(scripts: list) -> list:
 def build_consolidated_index() -> str:
     version = int(time.time())
 
-    # 1. Inline neomorphic and dashboard CSS to prevent 404s and cache drops
+    # 1. Inline neomorphic and dashboard CSS to ensure 100% style application
     neomorphic_path = find_file("neomorphic.css")
-    dashboard_css_path = os.path.join(CORE_DIR, "dashboard", "dashboard.css")
-    if not os.path.exists(dashboard_css_path):
-        dashboard_css_path = find_file("dashboard.css")
+    dashboard_css_path = find_file("dashboard.css")
 
     inline_neomorphic = read_file_safe(neomorphic_path)
     inline_dashboard_css = read_file_safe(dashboard_css_path)
