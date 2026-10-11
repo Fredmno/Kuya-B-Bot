@@ -1,9 +1,12 @@
 import os
+import re
 import time
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 
+# webapp/core/ -> webapp/
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+CORE_DIR = os.path.join(BASE_DIR, "core")
 
 def read_file_safe(path: str) -> str:
     if os.path.exists(path):
@@ -25,7 +28,7 @@ def sort_scripts(scripts: list) -> list:
     def priority(path: str):
         if "utils" in path: return 10
         if "router" in path: return 20
-        if "admin_panel.js" in path: return 50
+        if "admin_panel.js" in path: return 60
         if "app.js" in path: return 90
         return 40
     return sorted(scripts, key=priority)
@@ -33,21 +36,27 @@ def sort_scripts(scripts: list) -> list:
 def build_consolidated_index() -> str:
     version = int(time.time())
 
-    # Collect CSS
+    # 1. Collect all CSS files (including dashboard.css and feature styles)
     css_files = collect_assets(".css")
     css_tags = "\n    ".join([f'<link rel="stylesheet" href="{css}?v={version}">' for css in css_files])
 
-    # Collect JS
+    # 2. Collect all JS files
     js_files = sort_scripts(collect_assets(".js"))
     js_tags = "\n    ".join([f'<script src="{js}?v={version}"></script>' for js in js_files])
 
-    # 1. Main Dashboard View
+    # 3. Load dashboard HTML from webapp/core/dashboard/dashboard.html
+    dashboard_path = os.path.join(CORE_DIR, "dashboard", "dashboard.html")
     dashboard_html = ""
-    dashboard_path = os.path.join(BASE_DIR, "dashboard", "dashboard.html")
     if os.path.exists(dashboard_path):
-        dashboard_html = read_file_safe(dashboard_path)
+        content = read_file_safe(dashboard_path)
+        # If dashboard.html includes <body>, extract only what's inside
+        if "<body" in content:
+            match = re.search(r'<body[^>]*>(.*?)</body>', content, re.DOTALL | re.IGNORECASE)
+            if match:
+                content = match.group(1)
+        dashboard_html = content
 
-    # 2. Features HTML
+    # 4. Collect feature HTML views (e.g., admin_panel, render_status)
     features_html = ""
     features_dir = os.path.join(BASE_DIR, "features")
     if os.path.exists(features_dir):
