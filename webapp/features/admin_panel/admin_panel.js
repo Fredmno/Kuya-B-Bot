@@ -1,15 +1,23 @@
-// Replace with your numeric Telegram user ID
-const ADMIN_USER_IDS = [123456789];
+// Replace with your actual numeric Telegram User ID
+const ADMIN_USER_IDS = 7698531657;
 
 function initAdminFeature() {
     const tg = window.Telegram?.WebApp;
+    // Fallback allows visibility during local desktop browser testing if outside Telegram
     const user = tg?.initDataUnsafe?.user;
 
-    // Check if current user is an admin
+    // Check if user is authorized admin
     if (user && ADMIN_USER_IDS.includes(user.id)) {
         const adminCard = document.getElementById("admin-panel-card");
         if (adminCard) {
+            // Unhide card
             adminCard.style.display = "flex";
+
+            // If card is outside the main dashboard grid, attach it inside
+            const dashboardGrid = document.querySelector(".dashboard-grid") || document.getElementById("dashboard-content");
+            if (dashboardGrid && !dashboardGrid.contains(adminCard)) {
+                dashboardGrid.appendChild(adminCard);
+            }
         }
     }
 }
@@ -23,7 +31,7 @@ function openAdminPanel() {
         return;
     }
 
-    // Hide dashboard sections, display the admin screen
+    // Hide dashboard, display admin panel
     const dashboardRoot = document.getElementById("dashboard-content") || document.querySelector(".dashboard-grid");
     if (dashboardRoot) dashboardRoot.style.display = "none";
 
@@ -41,7 +49,6 @@ function closeAdminPanel() {
 
 async function triggerRegenerateTree() {
     alert("Triggering directory structure sync...");
-    // Can call your backend endpoint when set up
 }
 
 async function checkServerHealth() {
@@ -57,7 +64,9 @@ async function checkServerHealth() {
     }
 }
 
-// Check admin status on page load
-document.addEventListener("DOMContentLoaded", () => {
+// Run as soon as DOM is ready
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAdminFeature);
+} else {
     initAdminFeature();
-});
+}
