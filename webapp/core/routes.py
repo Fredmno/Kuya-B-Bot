@@ -6,7 +6,7 @@ import httpx
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse
 from starlette.background import BackgroundTask
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -36,7 +36,7 @@ def get_clean_repo():
         repo = repo.split("github.com/")[-1].replace(".git", "").strip("/")
     return repo.strip()
 
-# --- Built-in Fallback Commit & Telegram Notifier ---
+# --- Telegram Notifier Helpers ---
 async def send_tg_message(text: str) -> int:
     if not BOT_TOKEN or not ADMIN_CHAT_ID:
         return 0
@@ -117,6 +117,7 @@ async def monitor_render_deployment(commit_sha: str, file_path: str, commit_msg:
         except Exception:
             pass
 
+# --- Committer Handler ---
 async def commit_file_endpoint(request: Request):
     try:
         data = await request.json()
@@ -164,11 +165,15 @@ async def commit_file_endpoint(request: Request):
     except Exception as e:
         return JSONResponse({"error": str(e), "ok": False}, status_code=500)
 
+# --- Master Route Aggregator ---
 def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, webhook_path="/webhook"):
     routes = [
+        # Serve the app on both root "/" and "/app"
+        Route("/", endpoint=serve_index, methods=["GET"]),
         Route("/app", endpoint=serve_index, methods=["GET"]),
         Mount("/app/core", StaticFiles(directory=CORE_DIR), name="core"),
-        # Built-in endpoints accessible immediately
+
+        # Universal commit endpoints
         Route("/api/commit-file", endpoint=commit_file_endpoint, methods=["POST"]),
         Route("/api/commit", endpoint=commit_file_endpoint, methods=["POST"]),
         Route("/app/api/commit-file", endpoint=commit_file_endpoint, methods=["POST"]),
