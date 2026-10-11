@@ -15,6 +15,18 @@
         }
     }
 
+    async function safeFetchJson(url, options = {}) {
+        const res = await fetch(url, options);
+        const text = await res.text();
+        let data = {};
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            data = { error: text.slice(0, 150) || `HTTP ${res.status}` };
+        }
+        return { res, data, status: res.status };
+    }
+
     window.openCommitterView = function () {
         triggerHaptic("light");
 
@@ -68,14 +80,11 @@
         if (statusEl) statusEl.innerText = "Loading repo tree...";
 
         try {
-            const res = await fetch("/api/repo-tree");
-            const rawText = await res.text();
-            let data = {};
-            try {
-                data = JSON.parse(rawText);
-            } catch (e) {
-                if (statusEl) statusEl.innerText = "Server returned non-JSON";
-                return;
+            let { res, data } = await safeFetchJson("/api/repo-tree");
+            if (!res.ok) {
+                const retry = await safeFetchJson("/app/api/repo-tree");
+                res = retry.res;
+                data = retry.data;
             }
 
             if (res.ok && data.files) {
@@ -137,14 +146,11 @@
         if (statusEl) statusEl.innerText = "Loading content...";
 
         try {
-            const res = await fetch(`/api/file-content?path=${encodeURIComponent(filePath)}`);
-            const rawText = await res.text();
-            let data = {};
-            try {
-                data = JSON.parse(rawText);
-            } catch (e) {
-                if (statusEl) statusEl.innerText = "Error reading response";
-                return;
+            let { res, data } = await safeFetchJson(`/api/file-content?path=${encodeURIComponent(filePath)}`);
+            if (!res.ok) {
+                const retry = await safeFetchJson(`/app/api/file-content?path=${encodeURIComponent(filePath)}`);
+                res = retry.res;
+                data = retry.data;
             }
 
             if (res.ok && data.content !== undefined) {
@@ -206,44 +212,47 @@
             content: content
         });
 
-        try {
-            // Send request to /api/commit-file with fallback to /api/commit
-            let res = await fetch("/api/commit-file", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: payload
-            });
+        const endpoints = [
+            "/api/commit-file",
+            "/api/commit",
+            "/app/api/commit-file",
+            "/app/api/commit"
+        ];
 
-            if (res.status === 404) {
-                res = await fetch("/api/commit", {
+        let success = false;
+        let lastError = "Unable to reach commit endpoint";
+
+        for (const ep of endpoints) {
+            try {
+                const { res, data } = await safeFetchJson(ep, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: payload
                 });
-            }
 
-            const rawText = await res.text();
-            let result = {};
-            try {
-                result = JSON.parse(rawText);
+                if (res.ok && data.ok) {
+                    success = true;
+                    break;
+                } else if (res.status !== 404) {
+                    lastError = data.error || data.message || `HTTP ${res.status}`;
+                    break;
+                }
             } catch (err) {
-                throw new Error(`Server returned status ${res.status}: ${rawText.slice(0, 150)}`);
+                lastError = err.message;
             }
+        }
 
-            if (res.ok && result.ok) {
-                triggerHaptic("heavy");
-                alert("Commit pushed successfully! GitHub and Render deployment started.");
-                window.closeCommitterView();
-            } else {
-                alert("Commit failed: " + (result.error || result.message || "Unknown error"));
-            }
-        } catch (err) {
-            alert("Commit Error: " + err.message);
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+
+        if (success) {
+            triggerHaptic("heavy");
+            alert("Commit pushed successfully! GitHub and Render deployment started.");
+            window.closeCommitterView();
+        } else {
+            alert("Commit failed: " + lastError);
         }
     };
 
