@@ -1,34 +1,46 @@
-<!-- Admin Top-Right Small Button -->
-<button id="admin-panel-btn" class="admin-top-btn" type="button" style="display: none;" onclick="openAdminPanel()">
-    ⚙️ Admin
-</button>
-
-<!-- Admin Panel Full View Container -->
-<div id="admin-panel-view" class="view-container" style="display: none;">
-    <div class="view-header">
-        <button type="button" class="btn-back" onclick="closeAdminPanel()">← Back</button>
-        <h2>Admin Management</h2>
+<!-- Kuya B — Admin Panel View -->
+<div id="admin-panel-view" class="view-container neu-view" style="display: none; padding-bottom: 30px;">
+    <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <button type="button" class="btn-icon-back" onclick="window.closeAdminPanel ? window.closeAdminPanel() : window.showDashboardView()">←</button>
+        <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">⚙️ Admin Panel</h2>
+        <div style="width: 32px;"></div>
     </div>
 
-    <div class="admin-card-grid">
-        <button type="button" class="admin-card" onclick="openRenderStatusView()">
-            <div class="icon">🟢</div>
-            <div class="title">Deploy</div>
-        </button>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- GitHub Form Action Card -->
+        <div class="neu-card" onclick="window.openGitHubFormView()" style="cursor: pointer; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 14px; background: #e6ecf5; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">🐙</span>
+                <div>
+                    <div style="font-size: 0.92rem; font-weight: 700; color: #1e293b;">GitHub Form</div>
+                    <div style="font-size: 0.74rem; color: #64748b;">Direct JSON payload parser & committer</div>
+                </div>
+            </div>
+            <span style="font-size: 1rem; color: #2563eb; font-weight: bold;">→</span>
+        </div>
 
-        <button type="button" class="admin-card" onclick="openCommitterView()">
-            <div class="icon">✏️</div>
-            <div class="title">Committer</div>
-        </button>
+        <!-- Render Deployments Status Card -->
+        <div class="neu-card" onclick="window.openRenderStatusView()" style="cursor: pointer; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 14px; background: #e6ecf5; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">🟢</span>
+                <div>
+                    <div style="font-size: 0.92rem; font-weight: 700; color: #1e293b;">Render Deployments</div>
+                    <div style="font-size: 0.74rem; color: #64748b;">Build statuses, commit hashes & history</div>
+                </div>
+            </div>
+            <span style="font-size: 1rem; color: #2563eb; font-weight: bold;">→</span>
+        </div>
 
-        <button type="button" class="admin-card" onclick="openTreeView()">
-            <div class="icon">📁</div>
-            <div class="title">Tree</div>
-        </button>
-
-        <button type="button" class="admin-card" onclick="window.KuyaB && window.KuyaB.renderStatus ? window.KuyaB.renderStatus.check() : null">
-            <div class="icon">🩺</div>
-            <div class="title">Health</div>
-        </button>
+        <!-- Repo Tree Card -->
+        <div class="neu-card" onclick="window.KuyaB.openTreeView && window.KuyaB.openTreeView()" style="cursor: pointer; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-radius: 14px; background: #e6ecf5; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">🌳</span>
+                <div>
+                    <div style="font-size: 0.92rem; font-weight: 700; color: #1e293b;">Repo Tree</div>
+                    <div style="font-size: 0.74rem; color: #64748b;">Repository structure & commit diffs</div>
+                </div>
+            </div>
+            <span style="font-size: 1rem; color: #2563eb; font-weight: bold;">→</span>
+        </div>
     </div>
 </div>
