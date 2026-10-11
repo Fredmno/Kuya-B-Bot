@@ -36,27 +36,27 @@ def sort_scripts(scripts: list) -> list:
 def build_consolidated_index() -> str:
     version = int(time.time())
 
-    # 1. Collect all CSS files (including dashboard.css and feature styles)
-    css_files = collect_assets(".css")
+    # 1. Inline dashboard.css directly so styles never fail to load
+    dashboard_css_path = os.path.join(CORE_DIR, "dashboard", "dashboard.css")
+    inline_dashboard_css = read_file_safe(dashboard_css_path)
+
+    # 2. Collect other CSS links
+    css_files = [f for f in collect_assets(".css") if "dashboard.css" not in f]
     css_tags = "\n    ".join([f'<link rel="stylesheet" href="{css}?v={version}">' for css in css_files])
 
-    # 2. Collect all JS files
+    # 3. Collect JS links
     js_files = sort_scripts(collect_assets(".js"))
     js_tags = "\n    ".join([f'<script src="{js}?v={version}"></script>' for js in js_files])
 
-    # 3. Load dashboard HTML from webapp/core/dashboard/dashboard.html
+    # 4. Load dashboard HTML
     dashboard_path = os.path.join(CORE_DIR, "dashboard", "dashboard.html")
-    dashboard_html = ""
-    if os.path.exists(dashboard_path):
-        content = read_file_safe(dashboard_path)
-        # If dashboard.html includes <body>, extract only what's inside
-        if "<body" in content:
-            match = re.search(r'<body[^>]*>(.*?)</body>', content, re.DOTALL | re.IGNORECASE)
-            if match:
-                content = match.group(1)
-        dashboard_html = content
+    dashboard_html = read_file_safe(dashboard_path)
+    if "<body" in dashboard_html:
+        match = re.search(r'<body[^>]*>(.*?)</body>', dashboard_html, re.DOTALL | re.IGNORECASE)
+        if match:
+            dashboard_html = match.group(1)
 
-    # 4. Collect feature HTML views (e.g., admin_panel, render_status)
+    # 5. Collect features HTML
     features_html = ""
     features_dir = os.path.join(BASE_DIR, "features")
     if os.path.exists(features_dir):
@@ -73,6 +73,9 @@ def build_consolidated_index() -> str:
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kuya B Hub</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+{inline_dashboard_css}
+    </style>
     {css_tags}
 </head>
 <body>
