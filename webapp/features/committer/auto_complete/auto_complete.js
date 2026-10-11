@@ -31,24 +31,12 @@
         }
     }
 
-    function normalizeFileList(rawList) {
-        if (!Array.isArray(rawList)) return [];
-        return rawList.map(item => {
-            if (typeof item === "string") return item;
-            if (item && typeof item === "object") {
-                return item.file || item.path || item.filename || "";
-            }
-            return "";
-        }).filter(p => p.length > 0);
-    }
-
     function getCommitterViewEl() {
         return document.getElementById("adminUpdaterPage") || document.getElementById("committer-view");
     }
 
     window.openCommitterView = function () {
         triggerHaptic("light");
-
         const view = getCommitterViewEl();
         const appRoot = document.getElementById("app") || document.body;
 
@@ -67,19 +55,11 @@
 
     window.closeCommitterView = function () {
         triggerHaptic("light");
-
         const view = getCommitterViewEl();
         if (view) view.style.display = "none";
 
         const suggestions = document.getElementById("fileSuggestionsList");
         if (suggestions) suggestions.style.display = "none";
-
-        const deployView = document.getElementById("render-status-view");
-        if (deployView && deployView.dataset.openedFromHere === "true") {
-            deployView.style.display = "block";
-            delete deployView.dataset.openedFromHere;
-            return;
-        }
 
         const adminView = document.getElementById("admin-panel-view");
         if (adminView) {
@@ -104,34 +84,17 @@
             return;
         }
 
-        let rawFiles = [];
-
-        // 1. Try /api/repo-tree
         let { res, data } = await safeFetchJson("/api/repo-tree?_t=" + Date.now());
-        if (res.ok && data.files && data.files.length > 0) {
-            rawFiles = data.files;
-        } else {
-            // 2. Try /app/api/repo-tree alias
+        if (!res.ok || !data.files || data.files.length === 0) {
             const retry = await safeFetchJson("/app/api/repo-tree?_t=" + Date.now());
             if (retry.res.ok && retry.data.files && retry.data.files.length > 0) {
-                rawFiles = retry.data.files;
+                res = retry.res;
+                data = retry.data;
             }
         }
 
-        // 3. Fallback to /api/repo-tree-details (the Tree feature endpoint)
-        if (rawFiles.length === 0) {
-            let treeRes = await safeFetchJson("/api/repo-tree-details?_t=" + Date.now());
-            if (!treeRes.res.ok) {
-                treeRes = await safeFetchJson("/app/api/repo-tree-details?_t=" + Date.now());
-            }
-            if (treeRes.res.ok && treeRes.data?.data?.files) {
-                rawFiles = treeRes.data.data.files;
-            }
-        }
-
-        const normalized = normalizeFileList(rawFiles);
-        if (normalized.length > 0) {
-            cachedRepoFiles = Array.from(new Set(normalized)).sort();
+        if (res.ok && Array.isArray(data.files) && data.files.length > 0) {
+            cachedRepoFiles = Array.from(new Set(data.files)).sort();
             if (statusEl) statusEl.innerText = `${cachedRepoFiles.length} files`;
 
             const searchInput = document.getElementById("fileSearchInput");
@@ -139,7 +102,7 @@
                 window.KuyaB.filterRepoFiles(searchInput.value);
             }
         } else {
-            if (statusEl) statusEl.innerText = "0 files found";
+            if (statusEl) statusEl.innerText = "Ready (Manual Input)";
         }
     };
 
@@ -147,25 +110,17 @@
         const listEl = document.getElementById("fileSuggestionsList");
         if (!listEl) return;
 
-        if (cachedRepoFiles.length === 0) {
-            listEl.innerHTML = '<div style="padding: 10px 14px; font-size: 0.8rem; color: #ef4444;">No files loaded. Tap 🔄 to reload.</div>';
-            listEl.style.display = "block";
-            return;
-        }
-
         const val = (query || "").trim().toLowerCase();
         let matches = [];
 
         if (!val) {
             matches = cachedRepoFiles.slice(0, 25);
         } else {
-            matches = cachedRepoFiles.filter(item => {
-                return String(item).toLowerCase().includes(val);
-            }).slice(0, 30);
+            matches = cachedRepoFiles.filter(item => String(item).toLowerCase().includes(val)).slice(0, 30);
         }
 
         if (matches.length === 0) {
-            listEl.innerHTML = '<div style="padding: 10px 14px; font-size: 0.8rem; color: #94a3b8;">No matching files found</div>';
+            listEl.innerHTML = '<div style="padding: 10px 14px; font-size: 0.8rem; color: #94a3b8;">Create new file (path above)</div>';
             listEl.style.display = "block";
             return;
         }
@@ -174,15 +129,7 @@
             const escapedPath = filePath.replace(/"/g, '&quot;').replace(/'/g, "\\'");
             return `
                 <div 
-                    style="
-                        padding: 9px 14px; 
-                        font-size: 0.82rem; 
-                        color: #1e293b; 
-                        cursor: pointer; 
-                        border-bottom: 1px solid #e2e8f0; 
-                        text-align: left; 
-                        word-break: break-all;
-                    "
+                    style="padding: 9px 14px; font-size: 0.82rem; color: #1e293b; cursor: pointer; border-bottom: 1px solid #e2e8f0; text-align: left; word-break: break-all;"
                     onmouseover="this.style.background='#e2e8f0'"
                     onmouseout="this.style.background='transparent'"
                     onmousedown="event.preventDefault(); window.KuyaB.selectFileSuggestion('${escapedPath}')"
@@ -223,7 +170,7 @@
             if (contentInput) contentInput.value = data.content;
             if (statusEl) statusEl.innerText = "✓ Loaded";
         } else {
-            if (statusEl) statusEl.innerText = data.error || "Load failed";
+            if (statusEl) statusEl.innerText = "Ready for new content";
         }
     };
 
@@ -240,23 +187,18 @@
             const text = await navigator.clipboard.readText();
             if (contentInput && text) contentInput.value = text;
         } catch (err) {
-            alert("Clipboard access not allowed. Please paste directly into the box.");
+            alert("Clipboard permission denied. Please paste manually into the editor.");
         }
     };
 
     window.KuyaB.submitFileCommit = async function () {
         const filePath = document.getElementById("commitFilePath")?.value.trim();
-        const commitMsg = document.getElementById("commitMsgInput")?.value.trim();
+        const commitMsg = document.getElementById("commitMsgInput")?.value.trim() || `Update ${filePath}`;
         const content = document.getElementById("commitContentInput")?.value;
         const btn = document.getElementById("btnSubmitCommit");
 
         if (!filePath) {
-            alert("Please provide the Target File Path.");
-            return;
-        }
-
-        if (!commitMsg) {
-            alert("Please provide a Commit Message.");
+            alert("Please specify the Target File Path (e.g. webapp/core/routes.py).");
             return;
         }
 
@@ -269,21 +211,13 @@
 
         const payload = JSON.stringify({
             file_path: filePath,
-            path: filePath,
             commit_message: commitMsg,
-            message: commitMsg,
             content: content
         });
 
-        const endpoints = [
-            "/api/commit-file",
-            "/api/commit",
-            "/app/api/commit-file",
-            "/app/api/commit"
-        ];
-
+        const endpoints = ["/api/commit-file", "/app/api/commit-file"];
         let success = false;
-        let lastError = "Unable to reach commit endpoint";
+        let resultMsg = "";
 
         for (const ep of endpoints) {
             const { res, data } = await safeFetchJson(ep, {
@@ -294,9 +228,10 @@
 
             if (res.ok && data.ok) {
                 success = true;
+                resultMsg = data.message || "Commit pushed successfully";
                 break;
             } else if (res.status !== 404 && res.status !== 0) {
-                lastError = data.error || data.message || `HTTP ${res.status}`;
+                resultMsg = data.error || `HTTP ${res.status}`;
                 break;
             }
         }
@@ -308,10 +243,10 @@
 
         if (success) {
             triggerHaptic("heavy");
-            alert("Commit pushed successfully! GitHub and Render deployment initiated.");
+            alert(`🚀 ${resultMsg}\n\nRender deployment has been triggered.`);
             window.closeCommitterView();
         } else {
-            alert("Commit failed: " + lastError);
+            alert("Commit failed: " + (resultMsg || "Could not reach server endpoint"));
         }
     };
 
