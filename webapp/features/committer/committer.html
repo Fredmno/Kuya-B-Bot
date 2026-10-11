@@ -1,0 +1,58 @@
+<!-- Kuya B — File Committer Feature View -->
+<div id="committer-view" class="view-container" style="display: none;">
+    <div class="view-header">
+        <button type="button" class="btn-back" onclick="closeCommitterView()">← Back</button>
+        <h2>File Committer</h2>
+        <button type="button" class="btn-action-small" onclick="fetchRepoTree()">🔄 Refresh</button>
+    </div>
+
+    <!-- Repository File Tree / Quick Select -->
+    <div class="committer-section">
+        <label class="committer-label" for="committerFileSelect">Target File</label>
+        <div class="committer-input-wrapper">
+            <select id="committerFileSelect" class="committer-select" onchange="onCommitterFileSelected(this.value)">
+                <option value="">-- Select an existing file or enter path below --</option>
+            </select>
+        </div>
+        <input 
+            type="text" 
+            id="committerFilePath" 
+            class="committer-text-input" 
+            placeholder="e.g. webapp/core/dashboard/dashboard.html"
+            autocomplete="off"
+            spellcheck="false"
+        >
+    </div>
+
+    <!-- Commit Message Input -->
+    <div class="committer-section">
+        <label class="committer-label" for="committerCommitMsg">Commit Message</label>
+        <input 
+            type="text" 
+            id="committerCommitMsg" 
+            class="committer-text-input" 
+            placeholder="e.g. Update dashboard styling and button actions"
+            autocomplete="off"
+        >
+    </div>
+
+    <!-- File Content Editor -->
+    <div class="committer-section">
+        <div class="editor-header-bar">
+            <label class="committer-label" for="committerContent">File Content</label>
+            <span id="committerFileStatus" class="editor-status-tag">Ready</span>
+        </div>
+        <textarea 
+            id="committerContent" 
+            class="committer-textarea" 
+            placeholder="Paste or write your updated code/markup here..." 
+            spellcheck="false"
+        ></textarea>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="committer-actions-grid">
+        <button type="button" class="btn-committer-secondary" onclick="clearCommitterForm()">Clear</button>
+        <button type="button" id="btnSubmitCommit" class="btn-committer-primary" onclick="submitCommit()">🚀 Push Commit</button>
+    </div>
+</div>
