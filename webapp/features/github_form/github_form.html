@@ -6,7 +6,6 @@
         <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">🐙 GitHub Form</h2>
         <div style="display: flex; gap: 6px;">
             <button type="button" onclick="window.KuyaB.clearGitHubFormContent()" style="border: none; background: #e2e8f0; color: #475569; font-size: 0.76rem; font-weight: 600; padding: 6px 10px; border-radius: 8px; cursor: pointer;">🗑️ Clear</button>
-            <button type="button" onclick="window.KuyaB.pasteGitHubFormContent()" style="border: none; background: #2563eb; color: #ffffff; font-size: 0.76rem; font-weight: 600; padding: 6px 10px; border-radius: 8px; cursor: pointer;">📋 Paste</button>
         </div>
     </div>
 
@@ -16,7 +15,7 @@
         <span id="githubFileLoadStatus" style="font-size: 0.75rem; color: #2563eb; font-weight: 600;"></span>
     </div>
 
-    <!-- The Single JSON Input Box -->
+    <!-- The Single JSON Input Box (Height Reduced by Half) -->
     <textarea 
         class="neu-input" 
         id="githubCommitContentInput" 
@@ -28,8 +27,8 @@
   "message": "fix: update endpoints",
   "content": "..."
 }' 
-        rows="17" 
-        style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f8fafc; color: #1e293b; font-family: monospace; font-size: 0.82rem; line-height: 1.45; white-space: pre; outline: none; resize: vertical;"
+        rows="8" 
+        style="width: 100%; box-sizing: border-box; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f8fafc; color: #1e293b; font-family: monospace; font-size: 0.82rem; line-height: 1.45; white-space: pre; outline: none; resize: vertical; min-height: 150px;"
     ></textarea>
 
     <!-- Bottom Actions -->
