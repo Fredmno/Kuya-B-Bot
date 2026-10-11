@@ -1,10 +1,12 @@
 /* =========================================================
-   KUYA B — ADMIN PANEL (NEUMORPHIC THEME)
+   KUYA B — ADMIN PANEL (STRICT 4 COLUMNS PER ROW)
    webapp/features/admin_panel/admin_panel.css
    ========================================================= */
 
 #admin-panel-view {
   padding: 10px 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .view-header {
@@ -12,6 +14,7 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 /* Neumorphic Back Button */
@@ -27,6 +30,7 @@
   box-shadow: 4px 4px 8px var(--shadow-dark, #c5d0e0), 
              -4px -4px 8px var(--shadow-light, #ffffff);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
+  white-space: nowrap;
 }
 
 .btn-back:active {
@@ -42,56 +46,61 @@
   margin: 0;
 }
 
-/* Grid matching other folders */
+/* Strict 4-Column Grid Container */
 .admin-card-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-top: 10px;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin-top: 10px !important;
+  box-sizing: border-box !important;
 }
 
-/* Neumorphic Raised Action Tiles */
+/* Compact Neumorphic 4-Column Card */
 .admin-card {
   background: var(--bg-color, #e6ecf5);
-  border-radius: 18px;
-  padding: 16px 14px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: left;
+  border-radius: 12px;
+  padding: 10px 4px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center;
   border: none;
-  box-shadow: 6px 6px 12px var(--shadow-dark, #c5d0e0), 
-             -6px -6px 12px var(--shadow-light, #ffffff);
+  box-shadow: 3px 3px 6px var(--shadow-dark, #c5d0e0), 
+             -3px -3px 6px var(--shadow-light, #ffffff);
   transition: transform 0.1s ease, box-shadow 0.1s ease;
   cursor: pointer;
-  width: 100%;
+  box-sizing: border-box !important;
 }
 
 .admin-card:active {
-  box-shadow: inset 3px 3px 6px var(--shadow-dark, #c5d0e0), 
-              inset -3px -3px 6px var(--shadow-light, #ffffff);
-  transform: scale(0.98);
+  box-shadow: inset 2px 2px 4px var(--shadow-dark, #c5d0e0), 
+              inset -2px -2px 4px var(--shadow-light, #ffffff);
+  transform: scale(0.96);
 }
 
 .admin-card .icon {
-  font-size: 24px;
-  margin-bottom: 8px;
+  font-size: 20px;
+  margin-bottom: 4px;
+  line-height: 1;
 }
 
 .admin-card .title {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 10px;
   color: var(--text-main, #1a2530);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  display: block;
 }
 
-.admin-card .desc {
-  font-size: 11px;
-  color: var(--text-sub, #7a8b9e);
-  margin-top: 3px;
-  line-height: 1.3;
-}
-
-/* Top Dashboard Admin Button */
+/* Top Dashboard Admin Pill */
 #admin-btn-wrapper {
   display: flex;
   justify-content: flex-end;
