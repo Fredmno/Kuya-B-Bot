@@ -20,61 +20,51 @@ except ImportError:
     except ImportError:
         from index_consolidator import serve_index
 
-def load_render_backend():
-    try:
-        from webapp.features.render_status.render_status_backend import (
-            github_webhook_handler,
-            render_webhook_handler,
-            get_deployments_endpoint,
-        )
-        return github_webhook_handler, render_webhook_handler, get_deployments_endpoint
-    except ImportError:
-        pass
-
-    try:
-        from features.render_status.render_status_backend import (
-            github_webhook_handler,
-            render_webhook_handler,
-            get_deployments_endpoint,
-        )
-        return github_webhook_handler, render_webhook_handler, get_deployments_endpoint
-    except ImportError:
-        pass
-
-    target_filename = "render_status_backend.py"
+def load_backend_module(filename, candidates):
     target_path = None
     for root, _, files in os.walk(WEBAPP_DIR):
-        if target_filename in files:
-            target_path = os.path.join(root, target_filename)
+        if filename in files:
+            target_path = os.path.join(root, filename)
             break
 
     if target_path and os.path.exists(target_path):
-        spec = importlib.util.spec_from_file_location("render_status_backend", target_path)
+        mod_name = os.path.splitext(filename)[0]
+        spec = importlib.util.spec_from_file_location(mod_name, target_path)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        return (
-            getattr(mod, "github_webhook_handler", None),
-            getattr(mod, "render_webhook_handler", None),
-            getattr(mod, "get_deployments_endpoint", None),
-        )
+        return [getattr(mod, name, None) for name in candidates]
 
-    async def dummy_handler(request):
+    async def dummy_endpoint(request):
         from starlette.responses import JSONResponse
-        return JSONResponse({"deployments": []})
+        return JSONResponse({"error": "Module not configured"}, status_code=404)
 
-    return dummy_handler, dummy_handler, dummy_handler
+    return [dummy_endpoint for _ in candidates]
 
-github_webhook_handler, render_webhook_handler, get_deployments_endpoint = load_render_backend()
+# Load Render & Committer handlers dynamically
+github_webhook_handler, render_webhook_handler, get_deployments_endpoint = load_backend_module(
+    "render_status_backend.py",
+    ["github_webhook_handler", "render_webhook_handler", "get_deployments_endpoint"]
+)
+
+repo_tree_endpoint, file_content_endpoint, commit_file_endpoint = load_backend_module(
+    "committer_backend.py",
+    ["repo_tree_endpoint", "file_content_endpoint", "commit_file_endpoint"]
+)
 
 def get_all_routes(health_check_handler=None, telegram_webhook_handler=None, webhook_path="/webhook"):
     routes = [
         Route("/app", endpoint=serve_index, methods=["GET"]),
         Mount("/app/core", StaticFiles(directory=CORE_DIR), name="core"),
 
-        # Render & deployment webhooks/API
+        # Render Deploy History & Webhooks
         Route("/api/deployment-history", endpoint=get_deployments_endpoint, methods=["GET"]),
         Route("/api/github-webhook", endpoint=github_webhook_handler, methods=["POST"]),
         Route("/api/render-webhook", endpoint=render_webhook_handler, methods=["POST"]),
+
+        # Committer Endpoints
+        Route("/api/repo-tree", endpoint=repo_tree_endpoint, methods=["GET"]),
+        Route("/api/file-content", endpoint=file_content_endpoint, methods=["GET"]),
+        Route("/api/commit-file", endpoint=commit_file_endpoint, methods=["POST"]),
     ]
 
     features_dir = os.path.join(WEBAPP_DIR, "features")
