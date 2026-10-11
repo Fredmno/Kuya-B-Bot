@@ -1,0 +1,145 @@
+:root {
+  --bg-color: #e6ecf5;
+  --text-main: #1a2530;
+  --text-sub: #7a8b9e;
+  --shadow-light: #ffffff;
+  --shadow-dark: #c5d0e0;
+  --primary-accent: #2481cc;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  min-height: 100vh;
+  padding: 16px 20px 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+  max-width: 440px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Text */
+.welcome-tag, p:has(+ h1), small {
+  color: var(--primary-accent);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.sub-header, p:first-of-type {
+  color: var(--text-sub);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* Neumorphic Inset Search Bar */
+.search-container, .search-box, .search-bar, div:has(> input[type="text"]) {
+  width: 100%;
+  margin-bottom: 20px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+input[type="text"], input[type="search"] {
+  width: 100%;
+  padding: 14px 18px 14px 44px;
+  background-color: var(--bg-color);
+  border: none;
+  border-radius: 20px;
+  color: var(--text-main);
+  font-size: 14px;
+  outline: none;
+  box-shadow: inset 4px 4px 8px var(--shadow-dark), 
+              inset -4px -4px 8px var(--shadow-light);
+}
+
+input::placeholder {
+  color: #9cb0c6;
+}
+
+/* Category Headers (Personal, Media & Content) */
+h2, h3, .category-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 16px 0 10px;
+}
+
+/* Neumorphic Cards Grid */
+.grid, .card-grid, .menu-grid, div:has(> .card) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+/* Neumorphic Raised Card */
+.card, .dashboard-item, .menu-card, a.button {
+  background: var(--bg-color);
+  border-radius: 18px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 6px 6px 12px var(--shadow-dark), 
+             -6px -6px 12px var(--shadow-light);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.card:active, .dashboard-item:active {
+  box-shadow: inset 3px 3px 6px var(--shadow-dark), 
+              inset -3px -3px 6px var(--shadow-light);
+  transform: scale(0.98);
+}
+
+.card .icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.card .title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.card .desc {
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-top: 3px;
+}
+
+/* Footer text */
+.footer-text {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-top: 24px;
+}
