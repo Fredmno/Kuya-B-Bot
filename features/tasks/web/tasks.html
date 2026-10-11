@@ -1,0 +1,37 @@
+<!-- TASKS PAGE -->
+<div id="tasksPage" style="display: none;">
+    <div class="top-bar">
+        <button type="button" class="btn-icon-back" id="tasksBackButton">←</button>
+        <h2 id="tasksPageTitle">✅ Tasks</h2>
+        <button type="button" class="btn-icon-add" id="addTaskButton">+</button>
+    </div>
+
+    <!-- Create Folder / Task Form -->
+    <div class="form-box" id="taskForm" style="display: none; padding: 16px; margin: 0 16px 16px 16px;">
+        <input type="text" class="neu-input" id="taskTitle" placeholder="Task description..." style="margin-bottom: 10px;">
+        <input type="text" class="neu-input" id="taskFolderInput" placeholder="Folder name (e.g. Work, Personal, General)" style="margin-bottom: 14px;">
+        <div class="form-actions" style="display: flex; gap: 10px;">
+            <button type="button" class="btn-soft cancel" id="cancelTaskButton" style="flex: 1;" onclick="document.getElementById('taskForm').style.display='none'">Cancel</button>
+            <button type="button" class="btn-soft save" id="saveTaskButton" style="flex: 1;" onclick="window.KuyaB.features.tasks.save()">Save</button>
+        </div>
+    </div>
+
+    <!-- View 1: Top-level Folders View (Matches Vault / Pics / Vids) -->
+    <div id="tasksFoldersView" style="padding: 0 16px 20px 16px;">
+        <div class="section-title" style="margin-bottom: 12px;">Folders</div>
+        <div id="tasksFoldersGrid" class="grid-2">
+            <!-- Dynamically injected folder cards -->
+        </div>
+    </div>
+
+    <!-- View 2: Inside Folder View -->
+    <div id="tasksInsideFolderView" style="display: none; padding: 0 16px 20px 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <button type="button" class="btn-soft cancel" onclick="window.KuyaB.features.tasks.backToFolders()" style="padding: 6px 12px; font-size: 0.8rem;">
+                ← Folders
+            </button>
+            <span id="tasksCurrentFolderLabel" style="font-size: 0.88rem; font-weight: 600; color: var(--text-muted, #94a3b8);"></span>
+        </div>
+        <div id="tasksItemsList"></div>
+    </div>
+</div>
