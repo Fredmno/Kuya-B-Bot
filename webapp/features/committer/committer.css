@@ -1,99 +1,61 @@
 /* =========================================================
-   KUYA B — FILE COMMITTER FEATURE (NEUMORPHIC THEME)
+   KUYA B — FILE COMMITTER FEATURE (AUTOCOMPLETE THEME)
    webapp/features/committer/committer.css
    ========================================================= */
 
 #committer-view {
     padding: 10px 0 30px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.committer-section {
-    margin-bottom: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.committer-label {
-    font-size: 12px;
-    font-weight: 700;
+.committer-text-input {
+    width: 100%;
+    background-color: var(--bg-color, #e6ecf5);
+    border: none;
+    border-radius: 12px;
     color: var(--text-main, #1a2530);
-    letter-spacing: 0.3px;
+    font-size: 13px;
+    padding: 11px 14px;
+    outline: none;
+    box-shadow: inset 3px 3px 6px var(--shadow-dark, #c5d0e0), 
+                inset -3px -3px 6px var(--shadow-light, #ffffff);
+    box-sizing: border-box;
 }
 
-.editor-header-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.editor-status-tag {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-sub, #7a8b9e);
-}
-
-/* Inset inputs matching neumorphic search box */
-.committer-text-input,
-.committer-select,
 .committer-textarea {
     width: 100%;
     background-color: var(--bg-color, #e6ecf5);
     border: none;
     border-radius: 14px;
     color: var(--text-main, #1a2530);
-    font-size: 13px;
     padding: 12px 14px;
     outline: none;
     box-shadow: inset 3px 3px 6px var(--shadow-dark, #c5d0e0), 
                 inset -3px -3px 6px var(--shadow-light, #ffffff);
     box-sizing: border-box;
-    font-family: inherit;
-}
-
-.committer-textarea {
-    min-height: 220px;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-family: monospace;
     font-size: 12px;
-    line-height: 1.45;
+    line-height: 1.4;
     resize: vertical;
     white-space: pre;
-    tab-size: 4;
 }
 
-.committer-input-wrapper {
-    margin-bottom: 4px;
-}
-
-.committer-select {
-    cursor: pointer;
-}
-
-/* Action Buttons Grid */
 .committer-actions-grid {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 12px;
-    margin-top: 20px;
-}
-
-.btn-committer-secondary,
-.btn-committer-primary {
-    border: none;
-    border-radius: 14px;
-    padding: 14px;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 .btn-committer-secondary {
     background: var(--bg-color, #e6ecf5);
-    color: var(--text-sub, #7a8b9e);
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-sub, #64748b);
+    cursor: pointer;
     box-shadow: 4px 4px 8px var(--shadow-dark, #c5d0e0), 
                -4px -4px 8px var(--shadow-light, #ffffff);
 }
@@ -106,7 +68,13 @@
 
 .btn-committer-primary {
     background: var(--primary-accent, #2481cc);
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 700;
     color: #ffffff;
+    cursor: pointer;
     box-shadow: 0 4px 10px rgba(36, 129, 204, 0.35);
 }
 
@@ -115,20 +83,20 @@
     opacity: 0.92;
 }
 
-.btn-action-small {
-    background: var(--bg-color, #e6ecf5);
+.btn-small-tool {
     border: none;
-    border-radius: 12px;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--primary-accent, #2481cc);
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
     cursor: pointer;
-    box-shadow: 4px 4px 8px var(--shadow-dark, #c5d0e0), 
-               -4px -4px 8px var(--shadow-light, #ffffff);
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.08);
 }
 
-.btn-action-small:active {
-    box-shadow: inset 2px 2px 5px var(--shadow-dark, #c5d0e0), 
-                inset -2px -2px 5px var(--shadow-light, #ffffff);
+.btn-small-tool.primary {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 1px 1px 3px rgba(37,99,235,0.3);
 }
