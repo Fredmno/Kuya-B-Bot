@@ -17,11 +17,12 @@
     async function fetchDeployments() {
         const container = document.getElementById("deploymentList");
         if (container) {
-            container.innerHTML = '<div style="text-align: center; color: var(--text-sub, #64748b); font-size: 12px; padding: 14px;">Fetching repository commit history...</div>';
+            container.innerHTML = '<div style="text-align: center; color: var(--text-sub, #64748b); font-size: 12px; padding: 14px;">Fetching live deployment data...</div>';
         }
 
         try {
-            const res = await fetch("/api/deployment-history");
+            // Append timestamp query parameter to bypass webview caching
+            const res = await fetch("/api/deployment-history?_t=" + Date.now());
             if (res.ok) {
                 const data = await res.json();
                 cachedDeployments = data.deployments || [];
@@ -40,8 +41,8 @@
         if (cachedDeployments.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; color: var(--text-sub, #64748b); font-size: 12px; padding: 20px;">
-                    No recent commits or deployments found.<br>
-                    <span style="font-size: 11px; opacity: 0.8;">Ensure GITHUB_TOKEN has access to the repository.</span>
+                    No recent deployments found.<br>
+                    <span style="font-size: 11px; opacity: 0.8;">Tap Refresh or ensure GITHUB_TOKEN has access to the repo.</span>
                 </div>`;
             return;
         }
@@ -49,19 +50,19 @@
         container.innerHTML = "";
         cachedDeployments.forEach(item => {
             const statusLower = (item.status || "").toLowerCase();
-            const badgeClass = statusLower === "live"
+            const badgeClass = (statusLower === "live" || statusLower === "succeeded")
                 ? "badge-live" 
-                : (statusLower === "building" ? "badge-success" : (statusLower === "success" ? "badge-success" : "badge-failed"));
+                : (statusLower === "building" ? "badge-success" : (statusLower === "success" ? "badge-live" : "badge-failed"));
 
             const div = document.createElement("div");
             div.className = "deploy-item";
             div.onclick = () => openDeployModal(item);
             div.innerHTML = `
                 <div class="deploy-info">
-                    <div class="deploy-name">${item.name || "Commit"}</div>
+                    <div class="deploy-name">${item.name || "Deployment"}</div>
                     <div class="deploy-date">📅 ${item.date || "Recent"}</div>
                 </div>
-                <span class="deploy-badge ${badgeClass}">${item.status || "Success"}</span>
+                <span class="deploy-badge ${badgeClass}">${item.status || "Live"}</span>
             `;
             container.appendChild(div);
         });
@@ -132,7 +133,7 @@
         if (statusEl) statusEl.innerText = deploy.status || "Unknown";
         if (dateEl) dateEl.innerText = deploy.date || "N/A";
         if (commitEl) commitEl.innerText = deploy.commit || "N/A";
-        if (authorEl) authorEl.innerText = deploy.author || "GitHub";
+        if (authorEl) authorEl.innerText = deploy.author || "Render / Git";
         if (messageEl) messageEl.innerText = deploy.message || "No commit message";
 
         const modal = document.getElementById("deploymentDetailModal");
