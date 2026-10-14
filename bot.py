@@ -106,7 +106,7 @@ async def poll_render_deploy(status_msg, commit_sha: str, rel_path: str, commit_
                                     f"❌ *Render Deployment Failed*\n\n"
                                     f"📄 *File:* `{rel_path}`\n"
                                     f"🔗 *Commit SHA:* `{commit_sha}`\n\n"
-                                    f"⚠️ Status: *{status.replace('_', ' ').title()}*",
+                                    "⚠️ Status: *{status.replace('_', ' ').title()}*",
                                     parse_mode="Markdown"
                                 )
                                 return
@@ -212,7 +212,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await update.message.reply_text(
         f"Kumusta {user.first_name}! Ako si Kuya B. 🤖\n\n"
-        "Send your commit JSON payload directly here to push updates to GitHub."
+        "• Send your commit JSON payload here to push updates to GitHub.\n"
+        "• Or use `/push_drive <drive_link> <repo_path>` to commit directly from Google Drive!"
     )
 
 tg_app = None
@@ -256,6 +257,14 @@ async def lifespan(app: Starlette):
                 MessageHandler(filters.TEXT & ~filters.COMMAND, active_committer_handler),
                 group=0
             )
+
+            # Register modular push_drive command handler
+            try:
+                from webapp.features.push_drive import get_command_handler
+                tg_app.add_handler(get_command_handler())
+                logger.info("Registered /push_drive command handler.")
+            except Exception as e:
+                logger.warning(f"push_drive feature not loaded: {e}")
 
             await tg_app.start()
 
