@@ -10,7 +10,9 @@ import httpx
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, HTMLResponse, RedirectResponse
+from starlette.routing import Route, Mount
+from starlette.staticfiles import StaticFiles
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -31,11 +33,16 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
+# Safe import for modular routes
+get_all_routes = None
 try:
     from webapp.core.routes import get_all_routes
 except Exception as e:
-    logger.error(f"Failed to import routes: {e}")
-    get_all_routes = None
+    logger.warning(f"Could not import webapp.core.routes: {e}")
+    try:
+        from routes import get_all_routes
+    except Exception as e2:
+        logger.error(f"Failed to import routes from fallback: {e2}")
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID", "7698531657")
@@ -90,7 +97,7 @@ async def poll_render_deploy(status_msg, commit_sha: str, rel_path: str, commit_
                                     f"📄 *File:* `{rel_path}`\n"
                                     f"💬 *Message:* {commit_msg}\n"
                                     f"🔗 *Commit SHA:* `{commit_sha}`\n\n"
-                                    f"🟢 Status: *Success (Live)*",
+                                    "🟢 Status: *Success (Live)*",
                                     parse_mode="Markdown"
                                 )
                                 return
@@ -225,6 +232,16 @@ async def telegram_webhook_handler(request: Request):
         logger.error(f"Error processing webhook: {e}")
         return JSONResponse({"error": str(e)}, status_code=400)
 
+async def fallback_redirect(request: Request):
+    return RedirectResponse(url="/app/")
+
+async def fallback_index(request: Request):
+    webapp_index = os.path.join(BASE_DIR, "webapp", "index.html")
+    if os.path.isfile(webapp_index):
+        with open(webapp_index, "r", encoding="utf-8") as f:
+            return HTMLResponse(f.read())
+    return HTMLResponse("<h2>Kuya B Hub is loading... Please refresh.</h2>")
+
 @asynccontextmanager
 async def lifespan(app: Starlette):
     global tg_app
@@ -281,12 +298,20 @@ def create_application() -> Starlette:
             logger.error(f"Failed calling get_all_routes: {e}")
             logger.error(traceback.format_exc())
 
+    # Failsafe: Always guarantee root, /app, and static files resolve
     if not routes:
-        from starlette.routing import Route
+        logger.warning("Using failsafe routes for Starlette application.")
         routes = [
+            Route("/", endpoint=fallback_redirect, methods=["GET"]),
+            Route("/app", endpoint=fallback_redirect, methods=["GET"]),
+            Route("/app/", endpoint=fallback_index, methods=["GET"]),
             Route("/health", endpoint=health_handler, methods=["GET"]),
             Route("/webhook", endpoint=telegram_webhook_handler, methods=["POST"]),
         ]
+
+        webapp_dir = os.path.join(BASE_DIR, "webapp")
+        if os.path.exists(webapp_dir):
+            routes.append(Mount("/app", app=StaticFiles(directory=webapp_dir, html=True), name="static_app"))
 
     return Starlette(routes=routes, lifespan=lifespan)
 
@@ -309,4 +334,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"Server crashed: {e}")
         traceback.print_exc()
-        sys.exit(1)
