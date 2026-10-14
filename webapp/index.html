@@ -1,32 +1,251 @@
+﻿index.html Shell Implementation
+The clean parent shell structure for Kuya B Hub is set up below.
+Source Code (index.html)
 <!DOCTYPE html>
+
+
 <html lang="en">
+
+
 <head>
+
+
     <meta charset="UTF-8">
+
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
     <title>Kuya B Hub</title>
+
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="/app/features/stylesheet/dashboard.css?v=1.0.2">
+
+
+    <link rel="stylesheet" href="/app/features/stylesheet/dashboard.css?v=1.0.3">
+
+
+    <link rel="stylesheet" href="/app/features/admin_panel/admin_panel.css?v=1.0.3">
+
+
 </head>
+
+
 <body>
+
+
     <div id="app">
+
+
         <!-- Kuya B — Personal Hub Dashboard View -->
+
+
         <div id="dashboard-view" class="dashboard-container">
+
+
             <!-- Personal Hub Header Row with Inline Admin Button -->
+
+
             <div class="personal-hub-header">
+
+
                 <div class="hub-profile-info">
+
+
                     <div class="hub-avatar">👤</div>
+
+
                     <div class="hub-text">
+
+
                         <h1 class="hub-title">Your Personal Hub</h1>
+
+
                         <p class="hub-subtitle">Manage your daily tasks & tools</p>
+
+
                     </div>
+
+
                 </div>
 
+
                 <!-- Admin Button -> Routes directly to Admin Panel -->
-                <button type="button" class="btn-admin-header" id="btnAdminPanel" onclick="window.openAdminPanel ? window.openAdminPanel() : alert('Opening Admin Panel...')">
+
+
+                <button type="button" class="btn-admin-header" id="btnAdminPanel" onclick="window.openAdminPanel ? window.openAdminPanel() : alert('Admin panel script loading...')">
+
+
                     ⚡ Admin
+
+
                 </button>
+
+
             </div>
+
+
+        </div>
+
+
+
+
+        <!-- Kuya B — Admin Panel View (4-Column Grid) -->
+
+
+        <div id="admin-panel-view" class="view-container neu-view" style="display: none; padding: 14px 16px 30px;">
+
+
+            <!-- Top Navigation Header -->
+
+
+            <div class="view-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+
+
+                <button type="button" class="btn-icon-back" onclick="window.showDashboardView()" style="background: #e2e8f0; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.95rem; font-weight: 700; color: #334155;">← Back</button>
+
+
+                <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">⚙️ Admin Panel</h2>
+
+
+                <div style="width: 32px;"></div>
+
+
+            </div>
+
+
+            <!-- 4-Column Grid per Row -->
+
+
+            <div class="admin-grid-4col" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+
+
+                <!-- Column 1: GitHub Form -->
+
+
+                <div class="neu-card admin-grid-btn" onclick="window.openGitHubFormView ? window.openGitHubFormView() : alert('GitHub Form')" style="background: #e6ecf5; border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+
+
+                    <div style="font-size: 24px; margin-bottom: 6px;">🐙</div>
+
+
+                    <div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; line-height: 1.2;">GitHub Form</div>
+
+
+                </div>
+
+
+                <!-- Column 2: Deployments -->
+
+
+                <div class="neu-card admin-grid-btn" onclick="window.openRenderStatusView ? window.openRenderStatusView() : alert('Deploy Status')" style="background: #e6ecf5; border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+
+
+                    <div style="font-size: 24px; margin-bottom: 6px;">🟢</div>
+
+
+                    <div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; line-height: 1.2;">Deploy</div>
+
+
+                </div>
+
+
+                <!-- Column 3: Repo Tree -->
+
+
+                <div class="neu-card admin-grid-btn" onclick="window.KuyaB && window.KuyaB.openTreeView ? window.KuyaB.openTreeView() : alert('Repo Tree')" style="background: #e6ecf5; border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+
+
+                    <div style="font-size: 24px; margin-bottom: 6px;">🌳</div>
+
+
+                    <div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; line-height: 1.2;">Repo Tree</div>
+
+
+                </div>
+
+
+                <!-- Column 4: Health Status -->
+
+
+                <div class="neu-card admin-grid-btn" onclick="fetch('/health').then(r => r.json()).then(d => alert(JSON.stringify(d, null, 2))).catch(e => alert(e))" style="background: #e6ecf5; border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; box-shadow: 4px 4px 9px #c5d0e0, -4px -4px 9px #ffffff;">
+
+
+                    <div style="font-size: 24px; margin-bottom: 6px;">🩺</div>
+
+
+                    <div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; line-height: 1.2;">Health</div>
+
+
+                </div>
+
+
+            </div>
+
+
         </div>
     </div>
+
+
+
+
+    <!-- Admin Panel Logic -->
+
+
+    <script src="/app/features/admin_panel/admin_panel.js?v=1.0.3"></script>
+
+
+    <script>
+
+
+        window.showDashboardView = function() {
+
+
+            if (typeof closeAdminPanel === "function") {
+
+
+                closeAdminPanel();
+
+
+            } else {
+
+
+                var adminView = document.getElementById("admin-panel-view");
+
+
+                var dashView = document.getElementById("dashboard-view");
+
+
+                if (adminView) adminView.style.display = "none";
+
+
+                if (dashView) dashView.style.display = "block";
+
+
+            }
+
+
+        };
+
+
+    </script>
 </body>
+
+
 </html>
+Structure Overview
+Element / Selector
+	Type
+	Purpose
+	#app
+	div
+	Root application container for single-page view mounting
+	#dashboard-view
+	div
+	Main layout container for the Personal Hub Dashboard
+	.personal-hub-header
+	div
+	Top bar wrapping profile info and header actions
+	#btnAdminPanel
+	button
+	Inline admin action button triggering administrative panel routing
