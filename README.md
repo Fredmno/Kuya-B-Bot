@@ -31,28 +31,30 @@ Kuya B is a personal Telegram-based assistant and Mini App dashboard hosted on R
 ```text
 Kuya-B-Bot/
 ├── bot.py                  # Main backend server (Starlette + Bot Webhook)
+├── core/                   # Shared Telegram command handlers
 ├── database.py             # PostgreSQL connection & migrations
 ├── requirements.txt        # Python dependencies
-├── features/               # Bot commands & backend handlers
-│   ├── BirthDay/           # Birthday database & API endpoints
-│   ├── menu.py             # Mini App menu triggers
-│   └── word_game.py        # Word Scramble game logic
+├── features/               # Backend feature modules and bot commands
+│   ├── BirthDay/
+│   ├── daily_logs/
+│   ├── tasks/
+│   ├── vault/
+│   └── word_game.py
 ├── data/
 │   └── words.json          # Game dictionary data
 └── webapp/                 # Frontend Mini App (Static files served at /app)
-    ├── index.html          # Main SPA layout & view sections
-    ├── style.css           # Modern dark-mode UI with green accents
-    ├── app.js              # Application conductor & view router
-    └── modules/            # Modular feature components
-        ├── helpers.js      # Telegram WebApp SDK, haptics & sanitization
-        ├── birthdays.js    # Birthday tracking & countdown engine
-        ├── dailyLogs.js    # Journaling engine with mood selector
-        ├── tasks.js        # Personal task manager (done/undone toggles)
-        ├── reminders.js    # Time-sensitive reminder tracker
-        └── vault.js        # Channel media indexer with folder categorization
+    ├── index.html          # Current static entry point
+    ├── core/routes/        # Modular API route handlers and registry
+    │   ├── __init__.py     # get_all_routes() registry
+    │   ├── routes_github_form.py
+    │   └── routes_deployments.py
+    ├── features/           # Admin and Mini App feature assets
+    └── modules/            # Older JavaScript feature modules
 ```
 
-## 🚀 Active Features
+The current `webapp/index.html` loads the admin panel script; the older `webapp/app.js` and `webapp/modules/` files are not loaded by that entry point. They are left in place because other legacy views refer to the module APIs.
+
+## 🚀 Feature Modules
 
 ```text
 👤 Personal Hub
@@ -86,10 +88,7 @@ Kuya-B-Bot/
  * Deploying Updates:
    Pushes to the main branch automatically trigger a deploy on Render.
  * Frontend Cache-Busting:
-   When editing files inside webapp/, always bump the query string version in webapp/index.html to bypass Telegram's mobile cache:
-
-   <link rel="stylesheet" href="/app/style.css?v=X"/>
-<script type="module" src="/app/app.js?v=X"></script>
+   When editing a web asset loaded by webapp/index.html, bump that asset's query-string version in the entry point to bypass Telegram's mobile cache.
 
  * Telegram Channel Permissions:
    Ensure @KuyaBBot is added as an Administrator in your vault channel with permission to post and read messages.
