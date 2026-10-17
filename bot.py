@@ -261,6 +261,15 @@ async def lifespan(app: Starlette):
                 logger.info("Registered /push_drive command handler.")
             except Exception as e:
                 logger.warning(f"push_drive feature not loaded: {e}")
+                
+            try:
+    from features.ai_chat import get_handlers
+    for h in get_handlers():
+        tg_app.add_handler(h, group=1)
+    logger.info("Registered AI chat handlers.")
+except Exception as e:
+    logger.warning(f"ai_chat feature not loaded: {e}")
+
 
             await tg_app.start()
 
